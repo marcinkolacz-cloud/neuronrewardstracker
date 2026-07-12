@@ -148,7 +148,7 @@ export function WtnDetailPage() {
   const idParam =
     typeof positionId === "string" ? positionId : String(positionId ?? "");
   const numericId = Number(idParam);
-  const validId = Number.isFinite(numericId) && numericId > 0 ? idParam : null;
+  const validId = Number.isFinite(numericId) && numericId >= 0 ? idParam : null;
 
   const { data: position, isLoading: positionLoading } =
     useWtnPosition(validId);
