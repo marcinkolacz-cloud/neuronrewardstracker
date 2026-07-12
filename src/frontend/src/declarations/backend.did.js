@@ -62,6 +62,7 @@ export const PriceSnapshot = IDL.Record({
   'usd' : IDL.Float64,
   'timestamp' : IDL.Int,
   'cached' : IDL.Bool,
+  'unavailable' : IDL.Bool,
 });
 export const E8s = IDL.Nat64;
 export const MonthlyBreakdown = IDL.Record({
@@ -182,6 +183,7 @@ export const TransformationOutput = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+  '___dailySyncInstalled' : IDL.Func([], [IDL.Bool], ['query']),
   '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
   '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
   '__nextWtnPositionId' : IDL.Func([], [IDL.Reserved], ['query']),
@@ -321,6 +323,7 @@ export const idlFactory = ({ IDL }) => {
     'usd' : IDL.Float64,
     'timestamp' : IDL.Int,
     'cached' : IDL.Bool,
+    'unavailable' : IDL.Bool,
   });
   const E8s = IDL.Nat64;
   const MonthlyBreakdown = IDL.Record({
@@ -441,6 +444,7 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
+    '___dailySyncInstalled' : IDL.Func([], [IDL.Bool], ['query']),
     '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
     '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
     '__nextWtnPositionId' : IDL.Func([], [IDL.Reserved], ['query']),

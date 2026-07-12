@@ -65,6 +65,7 @@ export interface PriceSnapshot {
     usd: number;
     timestamp: bigint;
     cached: boolean;
+    unavailable: boolean;
 }
 export interface SyncResult {
     status: SyncStatus;

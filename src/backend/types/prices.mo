@@ -5,11 +5,22 @@ module {
   /// without making a fresh CoinGecko HTTP outcall (within the TTL for the
   /// "current" key, or any historical date — historical prices never change
   /// so they are cached indefinitely after the first fetch).
+  ///
+  /// `unavailable` is true when the price could not be determined: the HTTP
+  /// outcall errored, returned a non-success status, or produced unparseable
+  /// JSON, AND no cached entry existed for the requested date/key. In that case
+  /// `usd`/`pln` are zero and the UI should show "price unavailable" instead of
+  /// treating the zeros as a real price. This lets the frontend distinguish a
+  /// genuine fetch failure from a legitimately-fetched price and avoids the
+  /// "Fetching historical prices..." spinner hanging forever — the function
+  /// always returns within bounded time (the outcall either resolves, errors,
+  /// or traps, and the trap is caught).
   public type PriceSnapshot = {
     usd : Float;
     pln : Float;
     timestamp : Int;   // IC Time.now() in ns at the moment the price was recorded
     cached : Bool;     // true when served from cache, false when freshly fetched
+    unavailable : Bool; // true when no price could be fetched AND none was cached
   };
 
   /// Cached price entry stored in the stable `priceCache` Map.

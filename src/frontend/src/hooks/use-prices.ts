@@ -17,6 +17,32 @@ import { useQuery } from "@tanstack/react-query";
 const CURRENT_PRICE_STALE_MS = 10 * 60 * 1000;
 
 /**
+ * Per-date historical price fetch timeout. If a single
+ * `getHistoricalIcpPrice` call has not resolved within this bound, it is
+ * treated as a failure for that date (resolved to `null`) so the overall
+ * batch always settles. 18s is generous enough for a cold CoinGecko
+ * outcall + cache write, but bounded so the UI can never spin forever.
+ */
+const HISTORICAL_PRICE_TIMEOUT_MS = 18_000;
+
+/**
+ * Race a promise against a timeout. Resolves to `null` if the timeout
+ * fires first, so callers can treat a timed-out date as "no price" without
+ * rejecting the whole batch. The underlying actor call is not cancelled
+ * (JS promises are not cancellable), but its result is simply ignored once
+ * the timeout has won the race.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
+/**
  * Current ICP price in USD and PLN. Refetches on mount so a returning user
  * always sees a fresh-ish price; stays fresh for 10 minutes (matching the
  * backend cache TTL) to avoid hammering CoinGecko.
@@ -40,10 +66,28 @@ export function useIcpPrice() {
  * (`dd-mm-yyyy` per the CoinGecko historical endpoint spec). Returns a
  * Map<date, PriceSnapshot> so callers can look up a price by date in O(1).
  *
- * Each date is fetched as its own query so React Query can cache them
+ * Each date is fetched as its own actor call so the backend can cache them
  * independently (historical prices never change, so they are cached
  * indefinitely on the backend and effectively forever in the React Query
  * cache via staleTime: Infinity).
+ *
+ * Robustness: uses `Promise.allSettled` + a per-call timeout so a single
+ * hanging or rejected date never sinks the whole batch. Dates that time
+ * out or reject are simply omitted from the returned Map; callers should
+ * treat a missing key as "price unavailable" (which they already do via
+ * `Map.get(key) ?? null`). The query therefore always settles within
+ * ~HISTORICAL_PRICE_TIMEOUT_MS — it can never stay pending forever.
+ *
+ * `unavailable` flag: the backend may mark a PriceSnapshot as
+ * `unavailable: true` when CoinGecko had no data for that date (e.g. a
+ * holiday or a date outside CoinGecko's history). Such a snapshot is a
+ * real entry in the backend cache but carries no usable price, so we
+ * treat it exactly like a timed-out / missing date: it is omitted from
+ * the returned Map. The field is additive on the backend side and may not
+ * yet be present in the generated bindings, so we read it defensively via
+ * a runtime presence check (`(snap as ...).unavailable === true`) rather
+ * than relying on the TypeScript type. This keeps the frontend correct
+ * both before and after `pnpm bindgen` regenerates the bindings.
  */
 export function useHistoricalPrices(dates: string[]) {
   const { actor, isFetching } = useBackendActor();
@@ -51,15 +95,52 @@ export function useHistoricalPrices(dates: string[]) {
     queryKey: ["icp-price", "historical", dates] as const,
     queryFn: async () => {
       if (!actor) return new Map();
-      const results = await Promise.all(
+      const settled = await Promise.allSettled(
         dates.map(async (date) => {
-          const snapshot = await actor.getHistoricalIcpPrice(date);
+          const snapshot = await withTimeout(
+            actor.getHistoricalIcpPrice(date),
+            HISTORICAL_PRICE_TIMEOUT_MS,
+          );
           return [date, snapshot] as const;
         }),
       );
-      return new Map(results);
+      const map = new Map<string, PriceSnapshot>();
+      for (const result of settled) {
+        if (result.status === "fulfilled") {
+          const [date, snapshot] = result.value;
+          // Timed-out calls resolve to null; skip them so callers see a
+          // missing key rather than a null entry.
+          if (snapshot == null) continue;
+          // The backend may return a snapshot flagged `unavailable: true`
+          // when CoinGecko had no price for that date. Treat it the same
+          // as a missing key so the UI shows "price unavailable". The
+          // field is additive and may be absent from the generated type,
+          // so check for its presence at runtime.
+          if (isPriceUnavailable(snapshot)) continue;
+          map.set(date, snapshot);
+        }
+        // Rejected calls are intentionally swallowed: a single date
+        // failing (e.g. CoinGecko 429 for one date) should not prevent
+        // the rest of the batch from populating the Map.
+      }
+      return map;
     },
     enabled: !!actor && !isFetching && dates.length > 0,
     staleTime: Number.POSITIVE_INFINITY,
   });
+}
+
+/**
+ * Runtime check for the backend's additive `unavailable` flag on
+ * PriceSnapshot. The field is `true` when CoinGecko had no price for the
+ * requested date. It is additive on the backend side and may not yet be
+ * present in the generated `PriceSnapshot` TypeScript type (until
+ * `pnpm bindgen` regenerates the bindings), so we narrow via a runtime
+ * presence check rather than `snap.unavailable`. This keeps the frontend
+ * compiling against the current bindings and correct once the field
+ * arrives.
+ */
+function isPriceUnavailable(snap: PriceSnapshot): boolean {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (snap as any).unavailable === true;
 }

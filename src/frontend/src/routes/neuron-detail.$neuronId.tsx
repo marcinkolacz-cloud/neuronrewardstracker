@@ -868,45 +868,68 @@ function RewardsSummaryCard({
   summaryPrices: Map<string, PriceSnapshot> | null;
   summaryPricesLoading: boolean;
 }) {
-  const { totalEarnedE8s, totalDisbursedE8s, totalUsd, totalPln, hasPrice } =
-    useMemo(() => {
-      let earned = 0n;
-      let disbursed = 0n;
-      let usd = 0;
-      let pln = 0;
-      let sawPrice = false;
-      // Only normalGrowth positive deltas count as earned rewards. External
-      // top-ups (externalTopUp) are capital additions from outside, not
-      // income, so they are excluded from the earned total and its USD/PLN
-      // value. Compare externalTopUp as a string for forward-compat with
-      // pre-bindgen bindings (see EventType mapped-type pattern).
-      for (const r of rewards) {
-        const isExternalTopUp = r.eventType === ("externalTopUp" as EventType);
-        if (r.deltaE8s > 0n && !isExternalTopUp) {
-          earned += r.deltaE8s;
-          if (summaryPrices) {
-            const key = nsToDateKey(r.timestamp);
-            const snap = key ? summaryPrices.get(key) : undefined;
-            if (snap && snap.usd > 0) {
-              const icp = e8sToIcpNumber(r.deltaE8s);
-              usd += icp * snap.usd;
-              pln += icp * snap.pln;
-              sawPrice = true;
-            }
+  const {
+    totalEarnedE8s,
+    totalDisbursedE8s,
+    totalUsd,
+    totalPln,
+    hasPrice,
+    pricedCount,
+    earnedDateCount,
+  } = useMemo(() => {
+    let earned = 0n;
+    let disbursed = 0n;
+    let usd = 0;
+    let pln = 0;
+    let sawPrice = false;
+    let priced = 0;
+    let earnedDates = 0;
+    // Only normalGrowth positive deltas count as earned rewards. External
+    // top-ups (externalTopUp) are capital additions from outside, not
+    // income, so they are excluded from the earned total and its USD/PLN
+    // value. Compare externalTopUp as a string for forward-compat with
+    // pre-bindgen bindings (see EventType mapped-type pattern).
+    for (const r of rewards) {
+      const isExternalTopUp = r.eventType === ("externalTopUp" as EventType);
+      if (r.deltaE8s > 0n && !isExternalTopUp) {
+        earned += r.deltaE8s;
+        earnedDates += 1;
+        if (summaryPrices) {
+          const key = nsToDateKey(r.timestamp);
+          const snap = key ? summaryPrices.get(key) : undefined;
+          if (snap && snap.usd > 0) {
+            const icp = e8sToIcpNumber(r.deltaE8s);
+            usd += icp * snap.usd;
+            pln += icp * snap.pln;
+            sawPrice = true;
+            priced += 1;
           }
         }
-        if (r.eventType === EventType.disburseOrSpawn) {
-          disbursed += r.deltaE8s < 0n ? -r.deltaE8s : r.deltaE8s;
-        }
       }
-      return {
-        totalEarnedE8s: earned,
-        totalDisbursedE8s: disbursed,
-        totalUsd: usd,
-        totalPln: pln,
-        hasPrice: sawPrice,
-      };
-    }, [rewards, summaryPrices]);
+      if (r.eventType === EventType.disburseOrSpawn) {
+        disbursed += r.deltaE8s < 0n ? -r.deltaE8s : r.deltaE8s;
+      }
+    }
+    return {
+      totalEarnedE8s: earned,
+      totalDisbursedE8s: disbursed,
+      totalUsd: usd,
+      totalPln: pln,
+      hasPrice: sawPrice,
+      pricedCount: priced,
+      earnedDateCount: earnedDates,
+    };
+  }, [rewards, summaryPrices]);
+
+  // Whether the historical price query has settled (not still fetching).
+  // The hook guarantees settlement within ~18s via per-call timeouts +
+  // Promise.allSettled, so this loading state is always bounded.
+  const pricesSettled = !summaryPricesLoading;
+  // Some (but not all) earned reward dates have a historical price — show a
+  // "partial data" hint rather than hiding the value pills entirely.
+  const hasPartialPrice = hasPrice && pricedCount < earnedDateCount;
+  // Query settled but no prices resolved at all for earned reward dates.
+  const pricesUnavailable = pricesSettled && !hasPrice && earnedDateCount > 0;
 
   return (
     <Card className="bg-card/60 border-border/60">
@@ -948,10 +971,29 @@ function RewardsSummaryCard({
                   >
                     {formatPln(totalPln)}
                   </span>
+                  {hasPartialPrice && (
+                    <span
+                      className="text-muted-foreground/70 font-mono text-[11px]"
+                      data-ocid="neuron_detail.summary.partial_prices_note"
+                    >
+                      Historical prices unavailable for some dates — showing
+                      partial data
+                    </span>
+                  )}
                 </div>
-              ) : summaryPricesLoading && summaryPrices === null ? (
-                <p className="text-muted-foreground/70 mt-2 font-mono text-[11px]">
+              ) : !pricesSettled ? (
+                <p
+                  className="text-muted-foreground/70 mt-2 font-mono text-[11px]"
+                  data-ocid="neuron_detail.summary.prices_loading_state"
+                >
                   Fetching historical prices…
+                </p>
+              ) : pricesUnavailable ? (
+                <p
+                  className="text-muted-foreground/70 mt-2 font-mono text-[11px]"
+                  data-ocid="neuron_detail.summary.prices_unavailable_state"
+                >
+                  Could not load historical prices
                 </p>
               ) : (
                 rewards.length > 0 && (

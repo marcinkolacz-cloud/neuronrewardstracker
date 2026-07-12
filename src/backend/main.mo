@@ -458,11 +458,16 @@ actor {
     );
   };
 
-  // Transient flag recording whether the daily sync timer has been installed.
-  // `false` is a static literal, so this transient let is a valid static
-  // initializer. The first timer is installed lazily from a system-capable
-  // context via `startDailySync()` (called on first sync or canister init).
-  transient var _dailySyncInstalled : Bool = false;
+  // Stable flag recording whether the daily sync timer has been installed.
+  // This MUST be stable (not transient) so it persists across canister
+  // restarts/upgrades: a transient flag resets to `false` on every restart,
+  // which would let a subsequent `startDailySync()` call install a SECOND
+  // timer alongside the one the reschedule loop already re-armed — causing
+  // the daily sync to fire multiple times per day. As a stable Bool, the
+  // "timer installed" guard survives restarts and `startDailySync()` stays
+  // idempotent across the canister's lifetime. The initial value (`false`)
+  // is supplied by the migration chain, not by an inline initializer.
+  var _dailySyncInstalled : Bool;
 
   /// Install the daily sync timer on first call. Public shared functions run
   /// in an async context that has the `<system>` capability, so

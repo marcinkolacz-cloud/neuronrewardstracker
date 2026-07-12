@@ -63,6 +63,40 @@ module {
 
     let combinedTotal : Int = Nat.toInt(unstakedMaturityE8s.toNat()) + Nat.toInt(stakedMaturityE8s.toNat());
 
+    // Zero-delta skip guard: for a NORMAL daily sync (no eventTypeOverride and
+    // no stakeDeltaE8sOverride), if a prior snapshot exists and the combined
+    // maturity total is unchanged since that last snapshot, do NOT append a
+    // new DailyReward. This prevents the activity feed from filling with
+    // consecutive "+0.0000" entries on days when maturity did not move.
+    //
+    // The first reading for a neuron (no prior snapshot) is always recorded.
+    // Explicitly-overridden event types (#mergedToStake, #externalTopUp,
+    // #disburseOrSpawn, #firstReading) and any non-zero stakeDeltaE8sOverride
+    // are always recorded too, because they carry meaningful stake/capital
+    // changes even when the maturity total happens to be unchanged.
+    //
+    // When skipping, return the existing latest snapshot so callers that use
+    // the returned DailyReward (e.g. governance sync's `ignore` of the result)
+    // do not break.
+    let isNormalSync : Bool = switch (eventTypeOverride) {
+      case null (stakeDeltaE8sOverride == (0 : E8s));
+      case _ false;
+    };
+    if (isNormalSync) {
+      switch (history.last()) {
+        case (?prev) {
+          let prevCombined : Int = Nat.toInt(prev.unstakedMaturityE8s.toNat()) + Nat.toInt(prev.stakedMaturityE8s.toNat());
+          if (combinedTotal == prevCombined) {
+            return prev;
+          };
+        };
+        case null {
+          // No prior snapshot — first reading must still be recorded. Fall
+          // through to the normal recording path below.
+        };
+      };
+    };
+
     let (delta, eventType) = switch (eventTypeOverride) {
       case (?override) {
         // Caller-provided eventType (e.g. #mergedToStake). Still compute the

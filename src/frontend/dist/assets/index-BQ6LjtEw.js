@@ -42402,7 +42402,8 @@ const PriceSnapshot = Record({
   "pln": Float64,
   "usd": Float64,
   "timestamp": Int,
-  "cached": Bool
+  "cached": Bool,
+  "unavailable": Bool
 });
 const E8s = Nat64;
 const MonthlyBreakdown = Record({
@@ -42522,6 +42523,7 @@ const TransformationOutput = Record({
   "headers": Vec(HttpHeader)
 });
 Service({
+  "___dailySyncInstalled": Func([], [Bool], ["query"]),
   "__accessControlState": Func([], [Reserved], ["query"]),
   "__neurons": Func([], [Reserved], ["query"]),
   "__nextWtnPositionId": Func([], [Reserved], ["query"]),
@@ -42657,7 +42659,8 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "pln": IDL2.Float64,
     "usd": IDL2.Float64,
     "timestamp": IDL2.Int,
-    "cached": IDL2.Bool
+    "cached": IDL2.Bool,
+    "unavailable": IDL2.Bool
   });
   const E8s2 = IDL2.Nat64;
   const MonthlyBreakdown2 = IDL2.Record({
@@ -42777,6 +42780,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "headers": IDL2.Vec(HttpHeader2)
   });
   return IDL2.Service({
+    "___dailySyncInstalled": IDL2.Func([], [IDL2.Bool], ["query"]),
     "__accessControlState": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__neurons": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__nextWtnPositionId": IDL2.Func([], [IDL2.Reserved], ["query"]),
@@ -42898,6 +42902,20 @@ class Backend {
     this._uploadFile = _uploadFile;
     this._downloadFile = _downloadFile;
     this.processError = processError2;
+  }
+  async ___dailySyncInstalled() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.___dailySyncInstalled();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.___dailySyncInstalled();
+      return result;
+    }
   }
   async __accessControlState() {
     if (this.processError) {
@@ -56160,6 +56178,16 @@ function TooltipContent({
   ) });
 }
 const CURRENT_PRICE_STALE_MS = 10 * 60 * 1e3;
+const HISTORICAL_PRICE_TIMEOUT_MS = 18e3;
+function withTimeout(promise, ms2) {
+  let timer;
+  const timeout2 = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), ms2);
+  });
+  return Promise.race([promise, timeout2]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
 function useIcpPrice() {
   const { actor, isFetching } = useBackendActor();
   return useQuery({
@@ -56179,17 +56207,32 @@ function useHistoricalPrices(dates) {
     queryKey: ["icp-price", "historical", dates],
     queryFn: async () => {
       if (!actor) return /* @__PURE__ */ new Map();
-      const results = await Promise.all(
+      const settled = await Promise.allSettled(
         dates.map(async (date2) => {
-          const snapshot = await actor.getHistoricalIcpPrice(date2);
+          const snapshot = await withTimeout(
+            actor.getHistoricalIcpPrice(date2),
+            HISTORICAL_PRICE_TIMEOUT_MS
+          );
           return [date2, snapshot];
         })
       );
-      return new Map(results);
+      const map2 = /* @__PURE__ */ new Map();
+      for (const result of settled) {
+        if (result.status === "fulfilled") {
+          const [date2, snapshot] = result.value;
+          if (snapshot == null) continue;
+          if (isPriceUnavailable(snapshot)) continue;
+          map2.set(date2, snapshot);
+        }
+      }
+      return map2;
     },
     enabled: !!actor && !isFetching && dates.length > 0,
     staleTime: Number.POSITIVE_INFINITY
   });
+}
+function isPriceUnavailable(snap) {
+  return snap.unavailable === true;
 }
 const PORTFOLIO_KEY = ["portfolio-stats"];
 const statsKey = (id2) => ["neuron-stats", id2];
@@ -81542,16 +81585,27 @@ function RewardsSummaryCard({
   summaryPrices,
   summaryPricesLoading
 }) {
-  const { totalEarnedE8s, totalDisbursedE8s, totalUsd, totalPln, hasPrice } = reactExports.useMemo(() => {
+  const {
+    totalEarnedE8s,
+    totalDisbursedE8s,
+    totalUsd,
+    totalPln,
+    hasPrice,
+    pricedCount,
+    earnedDateCount
+  } = reactExports.useMemo(() => {
     let earned = 0n;
     let disbursed = 0n;
     let usd = 0;
     let pln = 0;
     let sawPrice = false;
+    let priced = 0;
+    let earnedDates = 0;
     for (const r2 of rewards) {
       const isExternalTopUp = r2.eventType === "externalTopUp";
       if (r2.deltaE8s > 0n && !isExternalTopUp) {
         earned += r2.deltaE8s;
+        earnedDates += 1;
         if (summaryPrices) {
           const key = nsToDateKey(r2.timestamp);
           const snap = key ? summaryPrices.get(key) : void 0;
@@ -81560,6 +81614,7 @@ function RewardsSummaryCard({
             usd += icp * snap.usd;
             pln += icp * snap.pln;
             sawPrice = true;
+            priced += 1;
           }
         }
       }
@@ -81572,9 +81627,14 @@ function RewardsSummaryCard({
       totalDisbursedE8s: disbursed,
       totalUsd: usd,
       totalPln: pln,
-      hasPrice: sawPrice
+      hasPrice: sawPrice,
+      pricedCount: priced,
+      earnedDateCount: earnedDates
     };
   }, [rewards, summaryPrices]);
+  const pricesSettled = !summaryPricesLoading;
+  const hasPartialPrice = hasPrice && pricedCount < earnedDateCount;
+  const pricesUnavailable = pricesSettled && !hasPrice && earnedDateCount > 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Rewards summary" }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2", children: [
@@ -81606,8 +81666,30 @@ function RewardsSummaryCard({
               "data-ocid": "neuron_detail.summary.earned_pln_pill",
               children: formatPln(totalPln)
             }
+          ),
+          hasPartialPrice && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "text-muted-foreground/70 font-mono text-[11px]",
+              "data-ocid": "neuron_detail.summary.partial_prices_note",
+              children: "Historical prices unavailable for some dates — showing partial data"
+            }
           )
-        ] }) : summaryPricesLoading && summaryPrices === null ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground/70 mt-2 font-mono text-[11px]", children: "Fetching historical prices…" }) : rewards.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground/70 mt-2 font-mono text-[11px]", children: "Historical price unavailable" })
+        ] }) : !pricesSettled ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "p",
+          {
+            className: "text-muted-foreground/70 mt-2 font-mono text-[11px]",
+            "data-ocid": "neuron_detail.summary.prices_loading_state",
+            children: "Fetching historical prices…"
+          }
+        ) : pricesUnavailable ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "p",
+          {
+            className: "text-muted-foreground/70 mt-2 font-mono text-[11px]",
+            "data-ocid": "neuron_detail.summary.prices_unavailable_state",
+            children: "Could not load historical prices"
+          }
+        ) : rewards.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground/70 mt-2 font-mono text-[11px]", children: "Historical price unavailable" })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-accent/30 bg-accent/5 rounded-xl border p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-accent flex items-center gap-1.5 text-[11px] tracking-wider uppercase", children: [

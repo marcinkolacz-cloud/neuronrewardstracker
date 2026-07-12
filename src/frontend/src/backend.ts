@@ -111,6 +111,7 @@ export interface PriceSnapshot {
     usd: number;
     timestamp: bigint;
     cached: boolean;
+    unavailable: boolean;
 }
 export interface SyncResult {
     status: SyncStatus;
@@ -272,6 +273,7 @@ export enum WtnEventType {
     organicGrowth = "organicGrowth"
 }
 export interface backendInterface {
+    ___dailySyncInstalled(): Promise<boolean>;
     __accessControlState(): Promise<any>;
     __neurons(): Promise<any>;
     __nextWtnPositionId(): Promise<any>;
@@ -352,6 +354,20 @@ export interface backendInterface {
 import type { Cell as _Cell, DailyReward as _DailyReward, DeltaE8s as _DeltaE8s, E8s as _E8s, Error as _Error, EventType as _EventType, NeuronId as _NeuronId, Result as _Result, Result__1 as _Result__1, SyncResult as _SyncResult, SyncStatus as _SyncStatus, Timestamp as _Timestamp, UserRole as _UserRole, Value as _Value, WtnEventType as _WtnEventType, WtnPosition as _WtnPosition, WtnPositionId as _WtnPositionId, WtnSnapshot as _WtnSnapshot } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    async ___dailySyncInstalled(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.___dailySyncInstalled();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.___dailySyncInstalled();
+            return result;
+        }
+    }
     async __accessControlState(): Promise<any> {
         if (this.processError) {
             try {

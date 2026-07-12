@@ -96,6 +96,7 @@ export interface PriceSnapshot {
   'usd' : number,
   'timestamp' : bigint,
   'cached' : boolean,
+  'unavailable' : boolean,
 }
 export interface Result { 'hasMore' : boolean, 'rows' : Array<Array<Cell>> }
 export type Result__1 = { 'ok' : null } |
@@ -165,6 +166,7 @@ export interface WtnStats {
   'totalWithdrawn' : number,
 }
 export interface _SERVICE {
+  '___dailySyncInstalled' : ActorMethod<[], boolean>,
   '__accessControlState' : ActorMethod<[], any>,
   '__neurons' : ActorMethod<[], any>,
   '__nextWtnPositionId' : ActorMethod<[], any>,

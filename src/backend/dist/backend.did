@@ -96,6 +96,7 @@ type PriceSnapshot =
    cached: bool;
    pln: float64;
    timestamp: int;
+   unavailable: bool;
    usd: float64;
  };
 type PortfolioStats = 
@@ -205,6 +206,7 @@ type Cell =
    value: Value;
  };
 service : {
+  ___dailySyncInstalled: () -> (bool) query;
   __accessControlState: () -> (reserved) query;
   __neurons: () -> (reserved) query;
   __nextWtnPositionId: () -> (reserved) query;

@@ -20,15 +20,18 @@ module {
   let coinId : Text = "internet-computer";
 
   /// Build a zero PriceSnapshot used as the graceful-error fallback when no
-  /// cached price is available. `cached = false` so the UI can distinguish
-  /// "freshly fetched but unavailable" from "served from cache".
+  /// cached price is available. `cached = false` and `unavailable = true` so
+  /// the UI can distinguish "fetch failed and nothing was cached" from a
+  /// legitimately-fetched or cached price. The frontend uses `unavailable` to
+  /// show "price unavailable" instead of hanging on a spinner.
   func zeroSnapshot() : PriceSnapshot {
-    { usd = 0.0; pln = 0.0; timestamp = Time.now(); cached = false };
+    { usd = 0.0; pln = 0.0; timestamp = Time.now(); cached = false; unavailable = true };
   };
 
-  /// Build a PriceSnapshot from a CachedPrice entry, marking it as cached.
+  /// Build a PriceSnapshot from a CachedPrice entry, marking it as cached and
+  /// available (a cached price is, by definition, a known-good value).
   func snapshotFromCache(cached : CachedPrice) : PriceSnapshot {
-    { usd = cached.usd; pln = cached.pln; timestamp = cached.fetchedAtNanos; cached = true };
+    { usd = cached.usd; pln = cached.pln; timestamp = cached.fetchedAtNanos; cached = true; unavailable = false };
   };
 
   /// Fetch the current ICP price in USD and PLN from CoinGecko
@@ -67,7 +70,7 @@ module {
             case (#ok(usd), #ok(pln)) {
               let entry : CachedPrice = { usd; pln; fetchedAtNanos = nowNanos };
               priceCache.add("current", entry);
-              return { usd; pln; timestamp = nowNanos; cached = false };
+              return { usd; pln; timestamp = nowNanos; cached = false; unavailable = false };
             };
             case (_) {
               // JSON parsed but expected fields missing — fall back to cache.
@@ -102,7 +105,22 @@ module {
   /// indefinitely without re-fetching. On a fresh fetch the result is written
   /// back to the cache. On CoinGecko API error, the last cached price for that
   /// date is returned (with `cached = true`); if no cached price exists a zero
-  /// PriceSnapshot is returned so the UI can show "price unavailable".
+  /// PriceSnapshot with `unavailable = true` is returned so the UI can show
+  /// "price unavailable" instead of hanging on a spinner.
+  ///
+  /// TIMEOUT NOTE: The Internet Computer `http_request` management-canister
+  /// API has NO per-call wall-clock timeout parameter — `HttpRequestArgs`
+  /// exposes only `max_response_bytes`, not a deadline. The IC runtime itself
+  /// bounds outcall latency (the call either resolves, returns a non-success
+  /// status, or traps within the subnet's message deadline), so the `await`
+  /// cannot block forever at the platform level. To make this robust at the
+  /// application level we wrap the outcall in `try/catch`: any trap or error
+  /// from `httpGetRequest` (including its `Runtime.trap("empty HTTP
+  /// response")` on a null body, or an IC-level rejection) is caught and we
+  /// fall back to the cached price for the date if one exists, otherwise to a
+  /// zero snapshot with `unavailable = true`. The function therefore ALWAYS
+  /// returns a value (cached, zero, or fresh) within bounded time — it never
+  /// blocks indefinitely.
   public func getHistoricalIcpPrice(
     priceCache : Map.Map<Text, CachedPrice>,
     date : Text,
@@ -131,9 +149,11 @@ module {
             case (#ok(usd), #ok(pln)) {
               let entry : CachedPrice = { usd; pln; fetchedAtNanos = nowNanos };
               priceCache.add(date, entry);
-              return { usd; pln; timestamp = nowNanos; cached = false };
+              return { usd; pln; timestamp = nowNanos; cached = false; unavailable = false };
             };
             case (_) {
+              // JSON parsed but expected fields missing — fall back to cache
+              // or signal unavailable. Never hangs.
               switch (priceCache.get(date)) {
                 case (?cached) { return snapshotFromCache(cached) };
                 case null { return zeroSnapshot() };
@@ -142,6 +162,7 @@ module {
           };
         };
         case (#err(_)) {
+          // JSON parse failure — fall back to cache or signal unavailable.
           switch (priceCache.get(date)) {
             case (?cached) { return snapshotFromCache(cached) };
             case null { return zeroSnapshot() };
@@ -149,6 +170,10 @@ module {
         };
       };
     } catch (_) {
+      // HTTP outcall error or trap (e.g. empty body, IC rejection, timeout-
+      // equivalent runtime trap). Fall back to last cached price for this
+      // date, or signal unavailable. The function always returns here — it
+      // never re-throws and never blocks.
       switch (priceCache.get(date)) {
         case (?cached) { return snapshotFromCache(cached) };
         case null { return zeroSnapshot() };
