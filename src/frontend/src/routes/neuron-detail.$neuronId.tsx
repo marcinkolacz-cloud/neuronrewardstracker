@@ -39,7 +39,11 @@ import { useRemoveNeuron, useUpdateNeuron } from "@/hooks/use-neurons";
 import { useNeurons } from "@/hooks/use-neurons";
 import { useRewardHistory, useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats } from "@/hooks/use-stats";
-import { useRecordSnapshot, useSyncNeuron } from "@/hooks/use-sync";
+import {
+  useRecordSnapshot,
+  useSyncError,
+  useSyncNeuron,
+} from "@/hooks/use-sync";
 import type {
   DailyReward,
   EventType,
@@ -59,6 +63,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   Activity,
+  AlertTriangle,
   ArrowLeft,
   BrainCircuit,
   Calendar,
@@ -91,6 +96,8 @@ export function NeuronDetailPage() {
     useRewardHistory(neuronId);
   const { data: stats } = useNeuronStats(neuronId);
   const { data: syncStatus } = useSyncStatus(neuronId);
+  const isFailed = syncStatus === ("failed" as SyncStatus);
+  const { data: syncError } = useSyncError(isFailed ? neuronId : null);
   const syncNeuron = useSyncNeuron();
   const removeNeuron = useRemoveNeuron();
   const updateNeuron = useUpdateNeuron();
@@ -108,7 +115,10 @@ export function NeuronDetailPage() {
   const handleSync = () => {
     syncNeuron.mutate(BigInt(neuronId), {
       onSuccess: (res) => {
-        if (res.status === ("hotkeyRequired" as SyncStatus)) {
+        if (res.status === ("failed" as SyncStatus)) {
+          const reason = res.lastSyncError ?? "Unknown error";
+          toast.error(`Sync failed: ${reason}`);
+        } else if (res.status === ("hotkeyRequired" as SyncStatus)) {
           toast.warning("Sync needs a hotkey to fully complete");
         } else {
           toast.success("Synced with NNS governance");
@@ -208,6 +218,7 @@ export function NeuronDetailPage() {
           maturityE8s={maturityE8s}
           maturityPercent={maturityPercent}
           syncStatus={syncStatus ?? null}
+          errorReason={syncError ?? null}
           onSync={handleSync}
           syncing={syncNeuron.isPending}
           onEdit={handleEdit}
@@ -215,6 +226,25 @@ export function NeuronDetailPage() {
           onDelete={handleDelete}
           deleting={removeNeuron.isPending}
         />
+
+        {/* Sync failure callout */}
+        {isFailed && (
+          <div
+            role="alert"
+            className="border-destructive/40 bg-destructive/10 mt-4 flex items-start gap-3 rounded-xl border p-4"
+            data-ocid="neuron_detail.sync_error_callout"
+          >
+            <AlertTriangle className="text-destructive mt-0.5 size-5 shrink-0" />
+            <div className="min-w-0">
+              <p className="text-destructive text-sm font-semibold">
+                Sync failed
+              </p>
+              <p className="text-destructive/90 mt-0.5 break-words text-sm">
+                {syncError ?? "Sync failed for an unknown reason"}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Chart + Activity feed */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
@@ -252,6 +282,7 @@ function NeuronHeader({
   maturityE8s,
   maturityPercent,
   syncStatus,
+  errorReason,
   onSync,
   syncing,
   onEdit,
@@ -263,6 +294,7 @@ function NeuronHeader({
   maturityE8s: bigint;
   maturityPercent: number;
   syncStatus: SyncStatus | null;
+  errorReason?: string | null;
   onSync: () => void;
   syncing: boolean;
   onEdit: () => void;
@@ -283,7 +315,10 @@ function NeuronHeader({
                 <h1 className="text-foreground font-display text-xl font-semibold tracking-tight">
                   {neuron.name || `Neuron ${shortenNeuronId(neuron.id)}`}
                 </h1>
-                <SyncStatusBadge status={syncStatus} />
+                <SyncStatusBadge
+                  status={syncStatus}
+                  errorReason={errorReason}
+                />
               </div>
               <p className="text-muted-foreground font-mono text-xs mt-0.5">
                 Owner {shortenPrincipal(neuron.ownerId.toString(), 8)}
@@ -413,12 +448,33 @@ function Stat({
   );
 }
 
-function SyncStatusBadge({ status }: { status: SyncStatus | null }) {
+function SyncStatusBadge({
+  status,
+  errorReason,
+}: {
+  status: SyncStatus | null;
+  errorReason?: string | null;
+}) {
+  if (status === ("failed" as SyncStatus)) {
+    const label = errorReason ? `Sync failed: ${errorReason}` : "Sync failed";
+    return (
+      <Badge
+        variant="outline"
+        className="border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[10px] max-w-[220px] truncate"
+        data-ocid="neuron_detail.status.failed"
+        title={label}
+      >
+        <span className="bg-destructive size-1.5 rounded-full" />
+        <span className="truncate">{label}</span>
+      </Badge>
+    );
+  }
   if (status === ("hotkeyRequired" as SyncStatus)) {
     return (
       <Badge
         variant="outline"
         className="border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]"
+        data-ocid="neuron_detail.status.hotkey_required"
       >
         <span className="bg-accent size-1.5 rounded-full" />
         Hotkey required
@@ -430,6 +486,7 @@ function SyncStatusBadge({ status }: { status: SyncStatus | null }) {
       <Badge
         variant="outline"
         className="border-primary/30 bg-primary/5 text-primary gap-1 text-[10px]"
+        data-ocid="neuron_detail.status.synced"
       >
         <span className="bg-primary size-1.5 rounded-full" />
         Synced
@@ -440,6 +497,7 @@ function SyncStatusBadge({ status }: { status: SyncStatus | null }) {
     <Badge
       variant="outline"
       className="border-border bg-muted text-muted-foreground gap-1 text-[10px]"
+      data-ocid="neuron_detail.status.pending"
     >
       <span className="bg-muted-foreground size-1.5 rounded-full" />
       Pending

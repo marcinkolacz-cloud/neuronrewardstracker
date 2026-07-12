@@ -76,10 +76,12 @@ export type Result__1 = { 'ok' : null } |
 export interface SyncResult {
   'status' : SyncStatus,
   'maturityE8s' : [] | [bigint],
+  'lastSyncError' : [] | [string],
   'neuronId' : NeuronId,
 }
 export type SyncStatus = { 'hotkeyRequired' : null } |
   { 'neverSynced' : null } |
+  { 'failed' : null } |
   { 'synced' : null };
 export type Timestamp = bigint;
 export type UserRole = { 'admin' : null } |
@@ -93,15 +95,10 @@ export type Value = { 'int' : bigint } |
   { 'text' : string };
 export interface _SERVICE {
   '__accessControlState' : ActorMethod<[], any>,
-  '__neurons' : ActorMethod<
-    [[] | [NeuronId], [] | [bigint]],
-    Array<[NeuronId, Neuron]>
-  >,
+  '__neurons' : ActorMethod<[], any>,
   '__rewards' : ActorMethod<[], any>,
-  '__syncStatuses' : ActorMethod<
-    [[] | [NeuronId], [] | [bigint]],
-    Array<[NeuronId, SyncStatus]>
-  >,
+  '__syncErrors' : ActorMethod<[], any>,
+  '__syncStatuses' : ActorMethod<[], any>,
   '_initialize_access_control' : ActorMethod<[], undefined>,
   '_internet_identity_sign_in_finish' : ActorMethod<[], Result__1>,
   '_internet_identity_sign_in_start' : ActorMethod<[], Uint8Array>,
@@ -115,6 +112,7 @@ export interface _SERVICE {
   'getNeuronStats' : ActorMethod<[NeuronId], NeuronStats>,
   'getPortfolioStats' : ActorMethod<[], PortfolioStats>,
   'getRewardHistory' : ActorMethod<[NeuronId], Array<DailyReward>>,
+  'getSyncError' : ActorMethod<[NeuronId], [] | [string]>,
   'getSyncStatus' : ActorMethod<[NeuronId], SyncStatus>,
   'importHistoricalData' : ActorMethod<
     [NeuronId, Array<HistoricalEntry>],

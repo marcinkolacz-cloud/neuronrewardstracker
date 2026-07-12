@@ -103,6 +103,7 @@ export interface Cell {
 export interface SyncResult {
     status: SyncStatus;
     maturityE8s?: bigint;
+    lastSyncError?: string;
     neuronId: NeuronId;
 }
 export type NeuronId = bigint;
@@ -140,6 +141,7 @@ export enum EventType {
 export enum SyncStatus {
     hotkeyRequired = "hotkeyRequired",
     neverSynced = "neverSynced",
+    failed = "failed",
     synced = "synced"
 }
 export enum UserRole {
@@ -155,6 +157,7 @@ export interface backendInterface {
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
     getPortfolioStats(): Promise<PortfolioStats>;
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
+    getSyncError(neuronId: NeuronId): Promise<string | null>;
     getSyncStatus(neuronId: NeuronId): Promise<SyncStatus>;
     importHistoricalData(neuronId: NeuronId, entries: Array<HistoricalEntry>): Promise<void>;
     isCallerAdmin(): Promise<boolean>;

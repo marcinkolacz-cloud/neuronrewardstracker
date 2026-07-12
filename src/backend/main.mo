@@ -2,8 +2,6 @@ import List "mo:core/List";
 import Map "mo:core/Map";
 import Principal "mo:core/Principal";
 import Timer "mo:core/Timer";
-import Time "mo:core/Time";
-import Nat64 "mo:core/Nat64";
 
 import MixinViews "mo:caffeineai-data-viewer/MixinViews";
 import AccessControl "mo:caffeineai-authorization/access-control";
@@ -26,7 +24,6 @@ import RewardsApi "mixins/rewards-api";
 import GovernanceSyncApi "mixins/governance-sync-api";
 import StatsApi "mixins/stats-api";
 
-import RewardsLib "lib/rewards";
 import GovernanceSyncLib "lib/governance-sync";
 
 actor {
@@ -43,11 +40,13 @@ actor {
   let rewards : Map.Map<Common.NeuronId, List.List<RewardTypes.DailyReward>>;
   // Per-neuron governance sync status.
   let syncStatuses : Map.Map<Common.NeuronId, GovernanceSyncTypes.SyncStatus>;
+  // Per-neuron last sync error reason (present only when status is #failed).
+  let syncErrors : Map.Map<Common.NeuronId, Text>;
 
   // --- Domain mixins ---
   include NeuronsApi(neurons);
   include RewardsApi(rewards, neurons);
-  include GovernanceSyncApi(neurons, rewards, syncStatuses);
+  include GovernanceSyncApi(neurons, rewards, syncStatuses, syncErrors);
   include StatsApi(neurons, rewards);
 
   // --- OQL: expose stored collections for natural-language queries ---
@@ -119,8 +118,25 @@ actor {
             case (#synced) "synced";
             case (#hotkeyRequired) "hotkeyRequired";
             case (#neverSynced) "neverSynced";
+            case (#failed) "failed";
           },
         )
+        .controllerOnly()
+        .build(),
+      // Per-neuron last sync error reason. The primary key (neuronId) lives in
+      // the Map key, so manual mode over .entries(): promote the key as a
+      // column + edge to the neuron entity, and expose the reason text.
+      // Controller-only — per-user access is enforced by the API layer
+      // (getSyncError checks ownership).
+      OQL.Entity.manual<(Common.NeuronId, Text)>(
+        "syncError",
+        func() = syncErrors.entries(),
+        "SyncError",
+        "neuronId",
+      )
+        .payload("neuronId", func((id, _)) = id)
+        .edge("neuronId", "neuron")
+        .payload("reason", func((_, reason)) = reason)
         .controllerOnly()
         .build(),
     ];
@@ -128,21 +144,26 @@ actor {
 
   // --- Daily timer: sync all neurons in the canister regardless of owner ---
   // Timers are not persisted across upgrades, so we install the recurring
-  // timer from a transient initializer that runs on every (re)start.
+  // timer from a transient initializer that runs on every (re)start. The loop
+  // delegates to GovernanceSyncLib.doSync so it shares the same error handling
+  // as the public endpoints: each neuron that fails is recorded as #failed
+  // with its real error reason, and the loop continues to the next neuron
+  // (doSync never traps — it catches and returns a SyncResult).
+  //
+  // `governance` is provided by the GovernanceSyncApi mixin (included above)
+  // as a transient binding; we reuse it here rather than redeclaring the
+  // canister id + actor handle, which would collide with the mixin's names.
   transient let _dailySyncTimer : Timer.TimerId = Timer.recurringTimer<system>(
     #hours(24),
     func() : async () {
-      // Iterate every tracked neuron in the canister and sync each one.
       for ((neuronId, _neuron) in neurons.entries()) {
-        let governance : GovernanceSyncTypes.Governance = actor (governanceCanisterId.toText());
-        try {
-          let result = await governance.get_full_neuron(neuronId);
-          let maturity = result.maturity_e8s_equivalent;
-          ignore RewardsLib.recordSnapshot(rewards, neuronId, maturity, Time.now());
-          GovernanceSyncLib.setSyncStatus(syncStatuses, neuronId, #synced);
-        } catch (_err) {
-          GovernanceSyncLib.setSyncStatus(syncStatuses, neuronId, #hotkeyRequired);
-        };
+        ignore await GovernanceSyncLib.doSync(
+          governance,
+          rewards,
+          syncStatuses,
+          syncErrors,
+          neuronId,
+        );
       };
     },
   );

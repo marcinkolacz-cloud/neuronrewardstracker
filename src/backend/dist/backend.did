@@ -16,12 +16,14 @@ type UserRole =
 type Timestamp = int;
 type SyncStatus = 
  variant {
+   failed;
    hotkeyRequired;
    neverSynced;
    synced;
  };
 type SyncResult = 
  record {
+   lastSyncError: opt text;
    maturityE8s: opt nat64;
    neuronId: NeuronId;
    status: SyncStatus;
@@ -118,17 +120,10 @@ type Cell =
  };
 service : {
   __accessControlState: () -> (reserved) query;
-  __neurons: (ko: opt NeuronId, count: opt nat) ->
-   (vec record {
-          NeuronId;
-          Neuron;
-        }) query;
+  __neurons: () -> (reserved) query;
   __rewards: () -> (reserved) query;
-  __syncStatuses: (ko: opt NeuronId, count: opt nat) ->
-   (vec record {
-          NeuronId;
-          SyncStatus;
-        }) query;
+  __syncErrors: () -> (reserved) query;
+  __syncStatuses: () -> (reserved) query;
   _initialize_access_control: () -> ();
   _internet_identity_sign_in_finish: () -> (Result__1);
   _internet_identity_sign_in_start: () -> (blob);
@@ -140,6 +135,7 @@ service : {
   getNeuronStats: (neuronId: NeuronId) -> (NeuronStats);
   getPortfolioStats: () -> (PortfolioStats);
   getRewardHistory: (neuronId: NeuronId) -> (vec DailyReward);
+  getSyncError: (neuronId: NeuronId) -> (opt text);
   getSyncStatus: (neuronId: NeuronId) -> (SyncStatus);
   importHistoricalData: (neuronId: NeuronId, entries: vec HistoricalEntry) ->
    ();

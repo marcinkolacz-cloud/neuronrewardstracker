@@ -21,7 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNeurons } from "@/hooks/use-neurons";
 import { useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats, usePortfolioStats } from "@/hooks/use-stats";
-import { useSyncAllNeurons } from "@/hooks/use-sync";
+import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
 import type { Neuron, SyncStatus } from "@/lib/backend-actor";
 import {
   formatIcp,
@@ -55,10 +55,17 @@ export function DashboardPage() {
   const handleSyncAll = () => {
     syncAll.mutate(undefined, {
       onSuccess: (results) => {
+        const failed = results.filter(
+          (r) => r.status === ("failed" as SyncStatus),
+        );
         const needsHotkey = results.some(
           (r) => r.status === ("hotkeyRequired" as SyncStatus),
         );
-        if (needsHotkey) {
+        if (failed.length > 0) {
+          toast.error(
+            `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`,
+          );
+        } else if (needsHotkey) {
           toast.warning("Synced — some neurons need a hotkey to fully sync");
         } else {
           toast.success("Synced all neurons with NNS governance");
@@ -234,6 +241,9 @@ function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
   const idStr = neuron.id.toString();
   const { data: stats } = useNeuronStats(idStr);
   const { data: syncStatus } = useSyncStatus(idStr);
+  const { data: syncError } = useSyncError(
+    syncStatus === ("failed" as SyncStatus) ? idStr : null,
+  );
 
   // Current maturity and % return come from getNeuronStats, not the Neuron record.
   const maturityE8s = stats?.totalRewardsE8s ?? 0n;
@@ -266,7 +276,10 @@ function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
                   </p>
                 </div>
               </div>
-              <SyncStatusBadge status={syncStatus ?? null} />
+              <SyncStatusBadge
+                status={syncStatus ?? null}
+                errorReason={syncError ?? null}
+              />
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -303,7 +316,27 @@ function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
   );
 }
 
-function SyncStatusBadge({ status }: { status: SyncStatus | null }) {
+function SyncStatusBadge({
+  status,
+  errorReason,
+}: {
+  status: SyncStatus | null;
+  errorReason?: string | null;
+}) {
+  if (status === ("failed" as SyncStatus)) {
+    const label = errorReason ? `Sync failed: ${errorReason}` : "Sync failed";
+    return (
+      <Badge
+        variant="outline"
+        className="border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[10px] max-w-[180px] truncate"
+        data-ocid="dashboard.neuron.status.failed"
+        title={label}
+      >
+        <span className="bg-destructive size-1.5 rounded-full" />
+        <span className="truncate">{label}</span>
+      </Badge>
+    );
+  }
   if (status === ("hotkeyRequired" as SyncStatus)) {
     return (
       <Badge

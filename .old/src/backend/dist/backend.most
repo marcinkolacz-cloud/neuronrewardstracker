@@ -1,4 +1,9 @@
 // Version: 4.0.0
+type AccessControlState__509257403 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__222667396<Principal, UserRole__1012927824>
+  };
 type AccessControlState__954572192 =
   {
     var adminAssigned : Bool;
@@ -10,6 +15,14 @@ type DailyReward__451108649 =
     eventType : {#disburseOrSpawn; #firstReading; #normalGrowth};
     maturityE8s : Nat64;
     neuronId : NeuronId__718533348;
+    timestamp : Int
+  };
+type DailyReward__858131868 =
+  {
+    deltaE8s : Int;
+    eventType : {#disburseOrSpawn; #firstReading; #normalGrowth};
+    maturityE8s : Nat64;
+    neuronId : NeuronId__61849652;
     timestamp : Int
   };
 type DailyReward__995244002 =
@@ -45,9 +58,19 @@ type Map__912772452<K, V> = Map__709709801<K, V>;
 type Nat__1040412405 = Nat__920180692;
 type Nat__920180692 = Nat;
 type NeuronId__542779660 = Nat64;
+type NeuronId__61849652 = Nat64;
 type NeuronId__718533348 = Nat64;
 type NeuronId__95609221 = NeuronId__542779660;
 type NeuronId__982282573 = NeuronId__542779660;
+type Neuron__182698231 =
+  {
+    dissolveDelaySeconds : Nat64;
+    id : NeuronId__61849652;
+    initialStakeE8s : Nat64;
+    name : Text;
+    ownerId : Principal;
+    startDate : Int
+  };
 type Neuron__339149340 =
   {
     dissolveDelaySeconds : Nat64;
@@ -76,18 +99,45 @@ type NewActor__299107891 =
     var syncStatuses :
       Map__222667396<NeuronId__718533348, SyncStatus__53123139>
   };
+type NewActor__472879847 =
+  {
+    var accessControlState : AccessControlState__509257403;
+    var neurons : Map__222667396<NeuronId__61849652, Neuron__182698231>;
+    var rewards :
+      Map__222667396<NeuronId__61849652,
+                      List__560604548<DailyReward__858131868>>;
+    var syncErrors : Map__222667396<NeuronId__61849652, Text>;
+    var syncStatuses :
+      Map__222667396<NeuronId__61849652, NewSyncStatus__40033319>
+  };
+type NewSyncStatus__40033319 =
+  {#failed; #hotkeyRequired; #neverSynced; #synced};
 type Node__1000929467<K, V> =
   {#internal : Internal__41346355<K, V>; #leaf : Leaf__712614010<K, V>};
 type OldActor__150656829 = {};
-type SyncStatus__186983160 = {#hotkeyRequired; #neverSynced; #synced};
+type OldActor__252756497 =
+  {
+    var accessControlState : AccessControlState__509257403;
+    var neurons : Map__222667396<NeuronId__61849652, Neuron__182698231>;
+    var rewards :
+      Map__222667396<NeuronId__61849652,
+                      List__560604548<DailyReward__858131868>>;
+    var syncStatuses :
+      Map__222667396<NeuronId__61849652, OldSyncStatus__900359465>
+  };
+type OldSyncStatus__900359465 = {#hotkeyRequired; #neverSynced; #synced};
+type SyncStatus__186983160 =
+  {#failed; #hotkeyRequired; #neverSynced; #synced};
 type SyncStatus__53123139 = {#hotkeyRequired; #neverSynced; #synced};
 type Timestamp__1042659080 = Timestamp__301639476;
 type Timestamp__209438455 = Timestamp__301639476;
 type Timestamp__301639476 = Int;
+type UserRole__1012927824 = {#admin; #guest; #user};
 type UserRole__199018766 = {#admin; #guest; #user};
 type UserRole__686137147 = {#admin; #guest; #user};
 {
-  "20260712_000000" : (_old : OldActor__150656829) -> NewActor__299107891
+  "20260712_000000" : (_old : OldActor__150656829) -> NewActor__299107891;
+  "20260712_000100" : (old : OldActor__252756497) -> NewActor__472879847
 }
 actor  {
   stable accessControlState :
@@ -105,6 +155,11 @@ actor  {
       var root :
         Node__1000929467<NeuronId__542779660,
                           List__560604548<DailyReward__995244002>>;
+      var size : Nat__1040412405
+    };
+  stable syncErrors :
+    {
+      var root : Node__1000929467<NeuronId__542779660, Text>;
       var size : Nat__1040412405
     };
   stable syncStatuses :

@@ -8,22 +8,6 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const NeuronId = IDL.Nat64;
-export const E8s = IDL.Nat64;
-export const Timestamp = IDL.Int;
-export const Neuron = IDL.Record({
-  'id' : NeuronId,
-  'dissolveDelaySeconds' : IDL.Nat64,
-  'ownerId' : IDL.Principal,
-  'name' : IDL.Text,
-  'initialStakeE8s' : E8s,
-  'startDate' : Timestamp,
-});
-export const SyncStatus = IDL.Variant({
-  'hotkeyRequired' : IDL.Null,
-  'neverSynced' : IDL.Null,
-  'synced' : IDL.Null,
-});
 export const Error = IDL.Variant({
   'FrontendOriginsNotConfigured' : IDL.Null,
   'MixedSsoSources' : IDL.Record({
@@ -46,6 +30,7 @@ export const Error = IDL.Variant({
   }),
 });
 export const Result__1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
+export const NeuronId = IDL.Nat64;
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -77,12 +62,14 @@ export const NeuronStats = IDL.Record({
   'neuronId' : NeuronId,
   'monthly' : IDL.Vec(MonthlyBreakdown),
 });
+export const E8s = IDL.Nat64;
 export const PortfolioStats = IDL.Record({
   'totalRewardsE8s' : IDL.Int,
   'totalStakedE8s' : E8s,
   'percentageReturn' : IDL.Float64,
   'neuronCount' : IDL.Nat,
 });
+export const Timestamp = IDL.Int;
 export const DeltaE8s = IDL.Int;
 export const EventType = IDL.Variant({
   'normalGrowth' : IDL.Null,
@@ -96,29 +83,37 @@ export const DailyReward = IDL.Record({
   'deltaE8s' : DeltaE8s,
   'eventType' : EventType,
 });
+export const SyncStatus = IDL.Variant({
+  'hotkeyRequired' : IDL.Null,
+  'neverSynced' : IDL.Null,
+  'failed' : IDL.Null,
+  'synced' : IDL.Null,
+});
 export const HistoricalEntry = IDL.Record({
   'maturityE8s' : E8s,
   'timestamp' : Timestamp,
 });
+export const Neuron = IDL.Record({
+  'id' : NeuronId,
+  'dissolveDelaySeconds' : IDL.Nat64,
+  'ownerId' : IDL.Principal,
+  'name' : IDL.Text,
+  'initialStakeE8s' : E8s,
+  'startDate' : Timestamp,
+});
 export const SyncResult = IDL.Record({
   'status' : SyncStatus,
   'maturityE8s' : IDL.Opt(IDL.Nat64),
+  'lastSyncError' : IDL.Opt(IDL.Text),
   'neuronId' : NeuronId,
 });
 
 export const idlService = IDL.Service({
   '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
-  '__neurons' : IDL.Func(
-      [IDL.Opt(NeuronId), IDL.Opt(IDL.Nat)],
-      [IDL.Vec(IDL.Tuple(NeuronId, Neuron))],
-      ['query'],
-    ),
+  '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
   '__rewards' : IDL.Func([], [IDL.Reserved], ['query']),
-  '__syncStatuses' : IDL.Func(
-      [IDL.Opt(NeuronId), IDL.Opt(IDL.Nat)],
-      [IDL.Vec(IDL.Tuple(NeuronId, SyncStatus))],
-      ['query'],
-    ),
+  '__syncErrors' : IDL.Func([], [IDL.Reserved], ['query']),
+  '__syncStatuses' : IDL.Func([], [IDL.Reserved], ['query']),
   '_initialize_access_control' : IDL.Func([], [], []),
   '_internet_identity_sign_in_finish' : IDL.Func([], [Result__1], []),
   '_internet_identity_sign_in_start' : IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
@@ -133,6 +128,7 @@ export const idlService = IDL.Service({
   'getNeuronStats' : IDL.Func([NeuronId], [NeuronStats], []),
   'getPortfolioStats' : IDL.Func([], [PortfolioStats], []),
   'getRewardHistory' : IDL.Func([NeuronId], [IDL.Vec(DailyReward)], []),
+  'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], []),
   'getSyncStatus' : IDL.Func([NeuronId], [SyncStatus], []),
   'importHistoricalData' : IDL.Func(
       [NeuronId, IDL.Vec(HistoricalEntry)],
@@ -152,22 +148,6 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const NeuronId = IDL.Nat64;
-  const E8s = IDL.Nat64;
-  const Timestamp = IDL.Int;
-  const Neuron = IDL.Record({
-    'id' : NeuronId,
-    'dissolveDelaySeconds' : IDL.Nat64,
-    'ownerId' : IDL.Principal,
-    'name' : IDL.Text,
-    'initialStakeE8s' : E8s,
-    'startDate' : Timestamp,
-  });
-  const SyncStatus = IDL.Variant({
-    'hotkeyRequired' : IDL.Null,
-    'neverSynced' : IDL.Null,
-    'synced' : IDL.Null,
-  });
   const Error = IDL.Variant({
     'FrontendOriginsNotConfigured' : IDL.Null,
     'MixedSsoSources' : IDL.Record({
@@ -190,6 +170,7 @@ export const idlFactory = ({ IDL }) => {
     }),
   });
   const Result__1 = IDL.Variant({ 'ok' : IDL.Null, 'err' : Error });
+  const NeuronId = IDL.Nat64;
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -221,12 +202,14 @@ export const idlFactory = ({ IDL }) => {
     'neuronId' : NeuronId,
     'monthly' : IDL.Vec(MonthlyBreakdown),
   });
+  const E8s = IDL.Nat64;
   const PortfolioStats = IDL.Record({
     'totalRewardsE8s' : IDL.Int,
     'totalStakedE8s' : E8s,
     'percentageReturn' : IDL.Float64,
     'neuronCount' : IDL.Nat,
   });
+  const Timestamp = IDL.Int;
   const DeltaE8s = IDL.Int;
   const EventType = IDL.Variant({
     'normalGrowth' : IDL.Null,
@@ -240,29 +223,37 @@ export const idlFactory = ({ IDL }) => {
     'deltaE8s' : DeltaE8s,
     'eventType' : EventType,
   });
+  const SyncStatus = IDL.Variant({
+    'hotkeyRequired' : IDL.Null,
+    'neverSynced' : IDL.Null,
+    'failed' : IDL.Null,
+    'synced' : IDL.Null,
+  });
   const HistoricalEntry = IDL.Record({
     'maturityE8s' : E8s,
     'timestamp' : Timestamp,
   });
+  const Neuron = IDL.Record({
+    'id' : NeuronId,
+    'dissolveDelaySeconds' : IDL.Nat64,
+    'ownerId' : IDL.Principal,
+    'name' : IDL.Text,
+    'initialStakeE8s' : E8s,
+    'startDate' : Timestamp,
+  });
   const SyncResult = IDL.Record({
     'status' : SyncStatus,
     'maturityE8s' : IDL.Opt(IDL.Nat64),
+    'lastSyncError' : IDL.Opt(IDL.Text),
     'neuronId' : NeuronId,
   });
   
   return IDL.Service({
     '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
-    '__neurons' : IDL.Func(
-        [IDL.Opt(NeuronId), IDL.Opt(IDL.Nat)],
-        [IDL.Vec(IDL.Tuple(NeuronId, Neuron))],
-        ['query'],
-      ),
+    '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
     '__rewards' : IDL.Func([], [IDL.Reserved], ['query']),
-    '__syncStatuses' : IDL.Func(
-        [IDL.Opt(NeuronId), IDL.Opt(IDL.Nat)],
-        [IDL.Vec(IDL.Tuple(NeuronId, SyncStatus))],
-        ['query'],
-      ),
+    '__syncErrors' : IDL.Func([], [IDL.Reserved], ['query']),
+    '__syncStatuses' : IDL.Func([], [IDL.Reserved], ['query']),
     '_initialize_access_control' : IDL.Func([], [], []),
     '_internet_identity_sign_in_finish' : IDL.Func([], [Result__1], []),
     '_internet_identity_sign_in_start' : IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
@@ -277,6 +268,7 @@ export const idlFactory = ({ IDL }) => {
     'getNeuronStats' : IDL.Func([NeuronId], [NeuronStats], []),
     'getPortfolioStats' : IDL.Func([], [PortfolioStats], []),
     'getRewardHistory' : IDL.Func([NeuronId], [IDL.Vec(DailyReward)], []),
+    'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], []),
     'getSyncStatus' : IDL.Func([NeuronId], [SyncStatus], []),
     'importHistoricalData' : IDL.Func(
         [NeuronId, IDL.Vec(HistoricalEntry)],

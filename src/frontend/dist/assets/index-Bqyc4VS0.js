@@ -41520,7 +41520,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [
+const __iconNode$f = [
   [
     "path",
     {
@@ -41529,7 +41529,18 @@ const __iconNode$e = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$e);
+const Activity = createLucideIcon("activity", __iconNode$f);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
+];
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41537,17 +41548,6 @@ const Activity = createLucideIcon("activity", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
-  ["path", { d: "M19 12H5", key: "x3x0zl" }]
-];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$d);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
   [
     "path",
     {
@@ -41568,28 +41568,40 @@ const __iconNode$c = [
   ["circle", { cx: "20", cy: "21", r: ".5", key: "yhc1fs" }],
   ["circle", { cx: "20", cy: "8", r: ".5", key: "1e43v0" }]
 ];
-const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$c);
+const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$b = [
+const __iconNode$c = [
   ["path", { d: "M8 2v4", key: "1cmpym" }],
   ["path", { d: "M16 2v4", key: "4m81vk" }],
   ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
   ["path", { d: "M3 10h18", key: "8toen8" }]
 ];
-const Calendar = createLucideIcon("calendar", __iconNode$b);
+const Calendar = createLucideIcon("calendar", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$a = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$a);
+const __iconNode$b = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$b);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$a = [
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
+];
+const LogOut = createLucideIcon("log-out", __iconNode$a);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41597,18 +41609,6 @@ const LoaderCircle = createLucideIcon("loader-circle", __iconNode$a);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$9 = [
-  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
-  ["path", { d: "M21 12H9", key: "dn1m92" }],
-  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
-];
-const LogOut = createLucideIcon("log-out", __iconNode$9);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$8 = [
   [
     "path",
     {
@@ -41618,7 +41618,18 @@ const __iconNode$8 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$8);
+const Pencil = createLucideIcon("pencil", __iconNode$9);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$8 = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41626,10 +41637,12 @@ const Pencil = createLucideIcon("pencil", __iconNode$8);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$7 = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-const Plus = createLucideIcon("plus", __iconNode$7);
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$7);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41637,19 +41650,6 @@ const Plus = createLucideIcon("plus", __iconNode$7);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$6 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$6);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$5 = [
   [
     "path",
     {
@@ -41659,14 +41659,14 @@ const __iconNode$5 = [
   ],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ShieldCheck = createLucideIcon("shield-check", __iconNode$5);
+const ShieldCheck = createLucideIcon("shield-check", __iconNode$6);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$4 = [
+const __iconNode$5 = [
   [
     "path",
     {
@@ -41679,7 +41679,21 @@ const __iconNode$4 = [
   ["path", { d: "M4 17v2", key: "vumght" }],
   ["path", { d: "M5 18H3", key: "zchphs" }]
 ];
-const Sparkles = createLucideIcon("sparkles", __iconNode$4);
+const Sparkles = createLucideIcon("sparkles", __iconNode$5);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$4 = [
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
+  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
+  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
+  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+];
+const Trash2 = createLucideIcon("trash-2", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41687,13 +41701,10 @@ const Sparkles = createLucideIcon("sparkles", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
-  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
-  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
-  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+  ["path", { d: "M16 7h6v6", key: "box55l" }],
+  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
 ];
-const Trash2 = createLucideIcon("trash-2", __iconNode$3);
+const TrendingUp = createLucideIcon("trending-up", __iconNode$3);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41701,10 +41712,17 @@ const Trash2 = createLucideIcon("trash-2", __iconNode$3);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$2 = [
-  ["path", { d: "M16 7h6v6", key: "box55l" }],
-  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
+  [
+    "path",
+    {
+      d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",
+      key: "wmoenq"
+    }
+  ],
+  ["path", { d: "M12 9v4", key: "juzpu7" }],
+  ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const TrendingUp = createLucideIcon("trending-up", __iconNode$2);
+const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -42001,22 +42019,6 @@ function Label$1({
     }
   );
 }
-const NeuronId = Nat64;
-const E8s = Nat64;
-const Timestamp = Int;
-const Neuron = Record({
-  "id": NeuronId,
-  "dissolveDelaySeconds": Nat64,
-  "ownerId": Principal2,
-  "name": Text$1,
-  "initialStakeE8s": E8s,
-  "startDate": Timestamp
-});
-const SyncStatus = Variant({
-  "hotkeyRequired": Null,
-  "neverSynced": Null,
-  "synced": Null
-});
 const Error$1 = Variant({
   "FrontendOriginsNotConfigured": Null,
   "MixedSsoSources": Record({
@@ -42039,6 +42041,7 @@ const Error$1 = Variant({
   })
 });
 const Result__1 = Variant({ "ok": Null, "err": Error$1 });
+const NeuronId = Nat64;
 const UserRole = Variant({
   "admin": Null,
   "user": Null,
@@ -42070,12 +42073,14 @@ const NeuronStats = Record({
   "neuronId": NeuronId,
   "monthly": Vec(MonthlyBreakdown)
 });
+const E8s = Nat64;
 const PortfolioStats = Record({
   "totalRewardsE8s": Int,
   "totalStakedE8s": E8s,
   "percentageReturn": Float64,
   "neuronCount": Nat
 });
+const Timestamp = Int;
 const DeltaE8s = Int;
 const EventType = Variant({
   "normalGrowth": Null,
@@ -42089,28 +42094,36 @@ const DailyReward = Record({
   "deltaE8s": DeltaE8s,
   "eventType": EventType
 });
+const SyncStatus = Variant({
+  "hotkeyRequired": Null,
+  "neverSynced": Null,
+  "failed": Null,
+  "synced": Null
+});
 const HistoricalEntry = Record({
   "maturityE8s": E8s,
   "timestamp": Timestamp
 });
+const Neuron = Record({
+  "id": NeuronId,
+  "dissolveDelaySeconds": Nat64,
+  "ownerId": Principal2,
+  "name": Text$1,
+  "initialStakeE8s": E8s,
+  "startDate": Timestamp
+});
 const SyncResult = Record({
   "status": SyncStatus,
   "maturityE8s": Opt(Nat64),
+  "lastSyncError": Opt(Text$1),
   "neuronId": NeuronId
 });
 Service({
   "__accessControlState": Func([], [Reserved], ["query"]),
-  "__neurons": Func(
-    [Opt(NeuronId), Opt(Nat)],
-    [Vec(Tuple(NeuronId, Neuron))],
-    ["query"]
-  ),
+  "__neurons": Func([], [Reserved], ["query"]),
   "__rewards": Func([], [Reserved], ["query"]),
-  "__syncStatuses": Func(
-    [Opt(NeuronId), Opt(Nat)],
-    [Vec(Tuple(NeuronId, SyncStatus))],
-    ["query"]
-  ),
+  "__syncErrors": Func([], [Reserved], ["query"]),
+  "__syncStatuses": Func([], [Reserved], ["query"]),
   "_initialize_access_control": Func([], [], []),
   "_internet_identity_sign_in_finish": Func([], [Result__1], []),
   "_internet_identity_sign_in_start": Func([], [Vec(Nat8)], []),
@@ -42125,6 +42138,7 @@ Service({
   "getNeuronStats": Func([NeuronId], [NeuronStats], []),
   "getPortfolioStats": Func([], [PortfolioStats], []),
   "getRewardHistory": Func([NeuronId], [Vec(DailyReward)], []),
+  "getSyncError": Func([NeuronId], [Opt(Text$1)], []),
   "getSyncStatus": Func([NeuronId], [SyncStatus], []),
   "importHistoricalData": Func(
     [NeuronId, Vec(HistoricalEntry)],
@@ -42141,22 +42155,6 @@ Service({
   "updateNeuron": Func([Neuron], [], [])
 });
 const idlFactory = ({ IDL: IDL2 }) => {
-  const NeuronId2 = IDL2.Nat64;
-  const E8s2 = IDL2.Nat64;
-  const Timestamp2 = IDL2.Int;
-  const Neuron2 = IDL2.Record({
-    "id": NeuronId2,
-    "dissolveDelaySeconds": IDL2.Nat64,
-    "ownerId": IDL2.Principal,
-    "name": IDL2.Text,
-    "initialStakeE8s": E8s2,
-    "startDate": Timestamp2
-  });
-  const SyncStatus2 = IDL2.Variant({
-    "hotkeyRequired": IDL2.Null,
-    "neverSynced": IDL2.Null,
-    "synced": IDL2.Null
-  });
   const Error2 = IDL2.Variant({
     "FrontendOriginsNotConfigured": IDL2.Null,
     "MixedSsoSources": IDL2.Record({
@@ -42179,6 +42177,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     })
   });
   const Result__12 = IDL2.Variant({ "ok": IDL2.Null, "err": Error2 });
+  const NeuronId2 = IDL2.Nat64;
   const UserRole2 = IDL2.Variant({
     "admin": IDL2.Null,
     "user": IDL2.Null,
@@ -42210,12 +42209,14 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "neuronId": NeuronId2,
     "monthly": IDL2.Vec(MonthlyBreakdown2)
   });
+  const E8s2 = IDL2.Nat64;
   const PortfolioStats2 = IDL2.Record({
     "totalRewardsE8s": IDL2.Int,
     "totalStakedE8s": E8s2,
     "percentageReturn": IDL2.Float64,
     "neuronCount": IDL2.Nat
   });
+  const Timestamp2 = IDL2.Int;
   const DeltaE8s2 = IDL2.Int;
   const EventType2 = IDL2.Variant({
     "normalGrowth": IDL2.Null,
@@ -42229,28 +42230,36 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "deltaE8s": DeltaE8s2,
     "eventType": EventType2
   });
+  const SyncStatus2 = IDL2.Variant({
+    "hotkeyRequired": IDL2.Null,
+    "neverSynced": IDL2.Null,
+    "failed": IDL2.Null,
+    "synced": IDL2.Null
+  });
   const HistoricalEntry2 = IDL2.Record({
     "maturityE8s": E8s2,
     "timestamp": Timestamp2
   });
+  const Neuron2 = IDL2.Record({
+    "id": NeuronId2,
+    "dissolveDelaySeconds": IDL2.Nat64,
+    "ownerId": IDL2.Principal,
+    "name": IDL2.Text,
+    "initialStakeE8s": E8s2,
+    "startDate": Timestamp2
+  });
   const SyncResult2 = IDL2.Record({
     "status": SyncStatus2,
     "maturityE8s": IDL2.Opt(IDL2.Nat64),
+    "lastSyncError": IDL2.Opt(IDL2.Text),
     "neuronId": NeuronId2
   });
   return IDL2.Service({
     "__accessControlState": IDL2.Func([], [IDL2.Reserved], ["query"]),
-    "__neurons": IDL2.Func(
-      [IDL2.Opt(NeuronId2), IDL2.Opt(IDL2.Nat)],
-      [IDL2.Vec(IDL2.Tuple(NeuronId2, Neuron2))],
-      ["query"]
-    ),
+    "__neurons": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__rewards": IDL2.Func([], [IDL2.Reserved], ["query"]),
-    "__syncStatuses": IDL2.Func(
-      [IDL2.Opt(NeuronId2), IDL2.Opt(IDL2.Nat)],
-      [IDL2.Vec(IDL2.Tuple(NeuronId2, SyncStatus2))],
-      ["query"]
-    ),
+    "__syncErrors": IDL2.Func([], [IDL2.Reserved], ["query"]),
+    "__syncStatuses": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "_initialize_access_control": IDL2.Func([], [], []),
     "_internet_identity_sign_in_finish": IDL2.Func([], [Result__12], []),
     "_internet_identity_sign_in_start": IDL2.Func([], [IDL2.Vec(IDL2.Nat8)], []),
@@ -42265,6 +42274,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getNeuronStats": IDL2.Func([NeuronId2], [NeuronStats2], []),
     "getPortfolioStats": IDL2.Func([], [PortfolioStats2], []),
     "getRewardHistory": IDL2.Func([NeuronId2], [IDL2.Vec(DailyReward2)], []),
+    "getSyncError": IDL2.Func([NeuronId2], [IDL2.Opt(IDL2.Text)], []),
     "getSyncStatus": IDL2.Func([NeuronId2], [SyncStatus2], []),
     "importHistoricalData": IDL2.Func(
       [NeuronId2, IDL2.Vec(HistoricalEntry2)],
@@ -42281,14 +42291,6 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "updateNeuron": IDL2.Func([Neuron2], [], [])
   });
 };
-function candid_some(value) {
-  return [
-    value
-  ];
-}
-function candid_none() {
-  return [];
-}
 function record_opt_to_undefined(arg) {
   return arg == null ? void 0 : arg;
 }
@@ -42313,17 +42315,17 @@ class Backend {
       return result;
     }
   }
-  async __neurons(arg0, arg1) {
+  async __neurons() {
     if (this.processError) {
       try {
-        const result = await this.actor.__neurons(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.__neurons();
         return result;
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.__neurons(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.__neurons();
       return result;
     }
   }
@@ -42341,18 +42343,32 @@ class Backend {
       return result;
     }
   }
-  async __syncStatuses(arg0, arg1) {
+  async __syncErrors() {
     if (this.processError) {
       try {
-        const result = await this.actor.__syncStatuses(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
-        return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+        const result = await this.actor.__syncErrors();
+        return result;
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.__syncStatuses(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
-      return from_candid_vec_n3(this._uploadFile, this._downloadFile, result);
+      const result = await this.actor.__syncErrors();
+      return result;
+    }
+  }
+  async __syncStatuses() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.__syncStatuses();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.__syncStatuses();
+      return result;
     }
   }
   async _initialize_access_control() {
@@ -42373,14 +42389,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor._internet_identity_sign_in_finish();
-        return from_candid_Result__1_n7(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result__1_n1(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor._internet_identity_sign_in_finish();
-      return from_candid_Result__1_n7(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result__1_n1(this._uploadFile, this._downloadFile, result);
     }
   }
   async _internet_identity_sign_in_start() {
@@ -42414,14 +42430,14 @@ class Backend {
   async assignCallerUserRole(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n11(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
         return result;
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n11(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -42429,28 +42445,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.execute(arg0);
-        return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_n7(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.execute(arg0);
-      return from_candid_Result_n13(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_n7(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole_n21(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole_n21(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
     }
   }
   async getNeuronStats(arg0) {
@@ -42485,28 +42501,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getRewardHistory(arg0);
-        return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getRewardHistory(arg0);
-      return from_candid_vec_n23(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getSyncError(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getSyncError(arg0);
+        return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getSyncError(arg0);
+      return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
     }
   }
   async getSyncStatus(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getSyncStatus(arg0);
-        return from_candid_SyncStatus_n5(this._uploadFile, this._downloadFile, result);
+        return from_candid_SyncStatus_n23(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSyncStatus(arg0);
-      return from_candid_SyncStatus_n5(this._uploadFile, this._downloadFile, result);
+      return from_candid_SyncStatus_n23(this._uploadFile, this._downloadFile, result);
     }
   }
   async importHistoricalData(arg0, arg1) {
@@ -42555,14 +42585,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.recordSnapshot(arg0, arg1);
-        return from_candid_DailyReward_n24(this._uploadFile, this._downloadFile, result);
+        return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.recordSnapshot(arg0, arg1);
-      return from_candid_DailyReward_n24(this._uploadFile, this._downloadFile, result);
+      return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
     }
   }
   async removeNeuron(arg0) {
@@ -42597,28 +42627,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.syncAllMyNeurons();
-        return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.syncAllMyNeurons();
-      return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
     }
   }
   async syncNeuron(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.syncNeuron(arg0);
-        return from_candid_SyncResult_n29(this._uploadFile, this._downloadFile, result);
+        return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.syncNeuron(arg0);
-      return from_candid_SyncResult_n29(this._uploadFile, this._downloadFile, result);
+      return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
     }
   }
   async updateNeuron(arg0) {
@@ -42636,74 +42666,111 @@ class Backend {
     }
   }
 }
-function from_candid_Cell_n17(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n18(_uploadFile, _downloadFile, value);
+function from_candid_Cell_n11(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n12(_uploadFile, _downloadFile, value);
 }
-function from_candid_DailyReward_n24(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n25(_uploadFile, _downloadFile, value);
+function from_candid_DailyReward_n18(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n19(_uploadFile, _downloadFile, value);
 }
-function from_candid_Error_n9(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n10(_uploadFile, _downloadFile, value);
+function from_candid_Error_n3(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function from_candid_EventType_n26(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n27(_uploadFile, _downloadFile, value);
+function from_candid_EventType_n20(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n21(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result__1_n7(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n8(_uploadFile, _downloadFile, value);
+function from_candid_Result__1_n1(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_n13(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n14(_uploadFile, _downloadFile, value);
+function from_candid_Result_n7(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n8(_uploadFile, _downloadFile, value);
 }
-function from_candid_SyncResult_n29(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n30(_uploadFile, _downloadFile, value);
+function from_candid_SyncResult_n26(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n27(_uploadFile, _downloadFile, value);
 }
-function from_candid_SyncStatus_n5(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n6(_uploadFile, _downloadFile, value);
+function from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n24(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n21(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n22(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n15(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n16(_uploadFile, _downloadFile, value);
 }
-function from_candid_Value_n19(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n20(_uploadFile, _downloadFile, value);
+function from_candid_Value_n13(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n14(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n31(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n22(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n14(_uploadFile, _downloadFile, value) {
-  return {
-    hasMore: value.hasMore,
-    rows: from_candid_vec_n15(_uploadFile, _downloadFile, value.rows)
-  };
+function from_candid_opt_n28(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n18(_uploadFile, _downloadFile, value) {
+function from_candid_record_n12(_uploadFile, _downloadFile, value) {
   return {
-    value: from_candid_Value_n19(_uploadFile, _downloadFile, value.value),
+    value: from_candid_Value_n13(_uploadFile, _downloadFile, value.value),
     name: value.name
   };
 }
-function from_candid_record_n25(_uploadFile, _downloadFile, value) {
+function from_candid_record_n19(_uploadFile, _downloadFile, value) {
   return {
     maturityE8s: value.maturityE8s,
     timestamp: value.timestamp,
     neuronId: value.neuronId,
     deltaE8s: value.deltaE8s,
-    eventType: from_candid_EventType_n26(_uploadFile, _downloadFile, value.eventType)
+    eventType: from_candid_EventType_n20(_uploadFile, _downloadFile, value.eventType)
   };
 }
-function from_candid_record_n30(_uploadFile, _downloadFile, value) {
+function from_candid_record_n27(_uploadFile, _downloadFile, value) {
   return {
-    status: from_candid_SyncStatus_n5(_uploadFile, _downloadFile, value.status),
-    maturityE8s: record_opt_to_undefined(from_candid_opt_n31(_uploadFile, _downloadFile, value.maturityE8s)),
+    status: from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value.status),
+    maturityE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.maturityE8s)),
+    lastSyncError: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.lastSyncError)),
     neuronId: value.neuronId
   };
 }
-function from_candid_tuple_n4(_uploadFile, _downloadFile, value) {
-  return [
-    value[0],
-    from_candid_SyncStatus_n5(_uploadFile, _downloadFile, value[1])
-  ];
+function from_candid_record_n8(_uploadFile, _downloadFile, value) {
+  return {
+    hasMore: value.hasMore,
+    rows: from_candid_vec_n9(_uploadFile, _downloadFile, value.rows)
+  };
 }
-function from_candid_variant_n10(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
+  return "int" in value ? {
+    __kind__: "int",
+    int: value.int
+  } : "nat" in value ? {
+    __kind__: "nat",
+    nat: value.nat
+  } : "float" in value ? {
+    __kind__: "float",
+    float: value.float
+  } : "bool" in value ? {
+    __kind__: "bool",
+    bool: value.bool
+  } : "null" in value ? {
+    __kind__: "null",
+    null: value.null
+  } : "text" in value ? {
+    __kind__: "text",
+    text: value.text
+  } : value;
+}
+function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
+  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
+}
+function from_candid_variant_n2(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: from_candid_Error_n3(_uploadFile, _downloadFile, value.err)
+  } : value;
+}
+function from_candid_variant_n21(_uploadFile, _downloadFile, value) {
+  return "normalGrowth" in value ? "normalGrowth" : "firstReading" in value ? "firstReading" : "disburseOrSpawn" in value ? "disburseOrSpawn" : value;
+}
+function from_candid_variant_n24(_uploadFile, _downloadFile, value) {
+  return "hotkeyRequired" in value ? "hotkeyRequired" : "neverSynced" in value ? "neverSynced" : "failed" in value ? "failed" : "synced" in value ? "synced" : value;
+}
+function from_candid_variant_n4(_uploadFile, _downloadFile, value) {
   return "FrontendOriginsNotConfigured" in value ? {
     __kind__: "FrontendOriginsNotConfigured",
     FrontendOriginsNotConfigured: value.FrontendOriginsNotConfigured
@@ -42736,70 +42803,22 @@ function from_candid_variant_n10(_uploadFile, _downloadFile, value) {
     FrontendOriginMismatch: value.FrontendOriginMismatch
   } : value;
 }
-function from_candid_variant_n20(_uploadFile, _downloadFile, value) {
-  return "int" in value ? {
-    __kind__: "int",
-    int: value.int
-  } : "nat" in value ? {
-    __kind__: "nat",
-    nat: value.nat
-  } : "float" in value ? {
-    __kind__: "float",
-    float: value.float
-  } : "bool" in value ? {
-    __kind__: "bool",
-    bool: value.bool
-  } : "null" in value ? {
-    __kind__: "null",
-    null: value.null
-  } : "text" in value ? {
-    __kind__: "text",
-    text: value.text
-  } : value;
+function from_candid_vec_n10(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_Cell_n11(_uploadFile, _downloadFile, x3));
 }
-function from_candid_variant_n22(_uploadFile, _downloadFile, value) {
-  return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
+function from_candid_vec_n17(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_DailyReward_n18(_uploadFile, _downloadFile, x3));
 }
-function from_candid_variant_n27(_uploadFile, _downloadFile, value) {
-  return "normalGrowth" in value ? "normalGrowth" : "firstReading" in value ? "firstReading" : "disburseOrSpawn" in value ? "disburseOrSpawn" : value;
+function from_candid_vec_n25(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_SyncResult_n26(_uploadFile, _downloadFile, x3));
 }
-function from_candid_variant_n6(_uploadFile, _downloadFile, value) {
-  return "hotkeyRequired" in value ? "hotkeyRequired" : "neverSynced" in value ? "neverSynced" : "synced" in value ? "synced" : value;
+function from_candid_vec_n9(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_vec_n10(_uploadFile, _downloadFile, x3));
 }
-function from_candid_variant_n8(_uploadFile, _downloadFile, value) {
-  return "ok" in value ? {
-    __kind__: "ok",
-    ok: value.ok
-  } : "err" in value ? {
-    __kind__: "err",
-    err: from_candid_Error_n9(_uploadFile, _downloadFile, value.err)
-  } : value;
+function to_candid_UserRole_n5(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n6(_uploadFile, _downloadFile, value);
 }
-function from_candid_vec_n15(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_vec_n16(_uploadFile, _downloadFile, x3));
-}
-function from_candid_vec_n16(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_Cell_n17(_uploadFile, _downloadFile, x3));
-}
-function from_candid_vec_n23(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_DailyReward_n24(_uploadFile, _downloadFile, x3));
-}
-function from_candid_vec_n28(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_SyncResult_n29(_uploadFile, _downloadFile, x3));
-}
-function from_candid_vec_n3(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_tuple_n4(_uploadFile, _downloadFile, x3));
-}
-function to_candid_UserRole_n11(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n12(_uploadFile, _downloadFile, value);
-}
-function to_candid_opt_n1(_uploadFile, _downloadFile, value) {
-  return value === null ? candid_none() : candid_some(value);
-}
-function to_candid_opt_n2(_uploadFile, _downloadFile, value) {
-  return value === null ? candid_none() : candid_some(value);
-}
-function to_candid_variant_n12(_uploadFile, _downloadFile, value) {
+function to_candid_variant_n6(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -42890,6 +42909,7 @@ const PORTFOLIO_KEY = ["portfolio-stats"];
 const statsKey = (id2) => ["neuron-stats", id2];
 const rewardsKey = (id2) => ["rewards", id2];
 const syncStatusKey = (id2) => ["sync-status", id2];
+const syncErrorKey = (id2) => ["sync-error", id2];
 function useSyncNeuron() {
   const queryClient2 = useQueryClient();
   const { actor } = useBackendActor();
@@ -42904,6 +42924,7 @@ function useSyncNeuron() {
       void queryClient2.invalidateQueries({ queryKey: statsKey(id2) });
       void queryClient2.invalidateQueries({ queryKey: rewardsKey(id2) });
       void queryClient2.invalidateQueries({ queryKey: syncStatusKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: syncErrorKey(id2) });
       void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
     }
   });
@@ -42920,7 +42941,7 @@ function useSyncAllNeurons() {
       void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
       void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
       void queryClient2.invalidateQueries({
-        predicate: (q2) => q2.queryKey[0] === "neuron-stats" || q2.queryKey[0] === "rewards" || q2.queryKey[0] === "sync-status"
+        predicate: (q2) => q2.queryKey[0] === "neuron-stats" || q2.queryKey[0] === "rewards" || q2.queryKey[0] === "sync-status" || q2.queryKey[0] === "sync-error"
       });
     }
   });
@@ -42940,6 +42961,17 @@ function useRecordSnapshot() {
       void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
       void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
     }
+  });
+}
+function useSyncError(neuronId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["sync-error", neuronId ?? "none"],
+    queryFn: async () => {
+      if (!actor || !neuronId) throw new Error("No actor or neuron id");
+      return actor.getSyncError(BigInt(neuronId));
+    },
+    enabled: !!actor && !isFetching && !!neuronId
   });
 }
 const LayoutGroupContext = reactExports.createContext({});
@@ -51427,10 +51459,17 @@ function DashboardPage() {
   const handleSyncAll = () => {
     syncAll.mutate(void 0, {
       onSuccess: (results) => {
+        const failed = results.filter(
+          (r2) => r2.status === "failed"
+        );
         const needsHotkey = results.some(
           (r2) => r2.status === "hotkeyRequired"
         );
-        if (needsHotkey) {
+        if (failed.length > 0) {
+          ue.error(
+            `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`
+          );
+        } else if (needsHotkey) {
           ue.warning("Synced — some neurons need a hotkey to fully sync");
         } else {
           ue.success("Synced all neurons with NNS governance");
@@ -51568,6 +51607,9 @@ function NeuronCard({ neuron, index: index2 }) {
   const idStr = neuron.id.toString();
   const { data: stats } = useNeuronStats(idStr);
   const { data: syncStatus } = useSyncStatus(idStr);
+  const { data: syncError } = useSyncError(
+    syncStatus === "failed" ? idStr : null
+  );
   const maturityE8s = (stats == null ? void 0 : stats.totalRewardsE8s) ?? 0n;
   const maturityPercent = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -51591,7 +51633,13 @@ function NeuronCard({ neuron, index: index2 }) {
                   /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px] truncate", children: shortenPrincipal(neuron.ownerId.toString(), 8) })
                 ] })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(SyncStatusBadge$1, { status: syncStatus ?? null })
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                SyncStatusBadge$1,
+                {
+                  status: syncStatus ?? null,
+                  errorReason: syncError ?? null
+                }
+              )
             ] }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -51621,7 +51669,26 @@ function NeuronCard({ neuron, index: index2 }) {
     }
   );
 }
-function SyncStatusBadge$1({ status }) {
+function SyncStatusBadge$1({
+  status,
+  errorReason
+}) {
+  if (status === "failed") {
+    const label = errorReason ? `Sync failed: ${errorReason}` : "Sync failed";
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Badge,
+      {
+        variant: "outline",
+        className: "border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[10px] max-w-[180px] truncate",
+        "data-ocid": "dashboard.neuron.status.failed",
+        title: label,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-destructive size-1.5 rounded-full" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: label })
+        ]
+      }
+    );
+  }
   if (status === "hotkeyRequired") {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(
       Badge,
@@ -75564,6 +75631,8 @@ function NeuronDetailPage() {
   const { data: rewards, isLoading: rewardsLoading } = useRewardHistory(neuronId);
   const { data: stats } = useNeuronStats(neuronId);
   const { data: syncStatus } = useSyncStatus(neuronId);
+  const isFailed = syncStatus === "failed";
+  const { data: syncError } = useSyncError(isFailed ? neuronId : null);
   const syncNeuron = useSyncNeuron();
   const removeNeuron = useRemoveNeuron();
   const updateNeuron = useUpdateNeuron();
@@ -75578,7 +75647,10 @@ function NeuronDetailPage() {
   const handleSync = () => {
     syncNeuron.mutate(BigInt(neuronId), {
       onSuccess: (res) => {
-        if (res.status === "hotkeyRequired") {
+        if (res.status === "failed") {
+          const reason = res.lastSyncError ?? "Unknown error";
+          ue.error(`Sync failed: ${reason}`);
+        } else if (res.status === "hotkeyRequired") {
           ue.warning("Sync needs a hotkey to fully complete");
         } else {
           ue.success("Synced with NNS governance");
@@ -75670,12 +75742,28 @@ function NeuronDetailPage() {
           maturityE8s,
           maturityPercent,
           syncStatus: syncStatus ?? null,
+          errorReason: syncError ?? null,
           onSync: handleSync,
           syncing: syncNeuron.isPending,
           onEdit: handleEdit,
           editing: updateNeuron.isPending,
           onDelete: handleDelete,
           deleting: removeNeuron.isPending
+        }
+      ),
+      isFailed && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "div",
+        {
+          role: "alert",
+          className: "border-destructive/40 bg-destructive/10 mt-4 flex items-start gap-3 rounded-xl border p-4",
+          "data-ocid": "neuron_detail.sync_error_callout",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "text-destructive mt-0.5 size-5 shrink-0" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-destructive text-sm font-semibold", children: "Sync failed" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-destructive/90 mt-0.5 break-words text-sm", children: syncError ?? "Sync failed for an unknown reason" })
+            ] })
+          ]
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5", children: [
@@ -75708,6 +75796,7 @@ function NeuronHeader({
   maturityE8s,
   maturityPercent,
   syncStatus,
+  errorReason,
   onSync,
   syncing,
   onEdit,
@@ -75722,7 +75811,13 @@ function NeuronHeader({
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-xl font-semibold tracking-tight", children: neuron.name || `Neuron ${shortenNeuronId(neuron.id)}` }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(SyncStatusBadge, { status: syncStatus })
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              SyncStatusBadge,
+              {
+                status: syncStatus,
+                errorReason
+              }
+            )
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-xs mt-0.5", children: [
             "Owner ",
@@ -75859,13 +75954,33 @@ function Stat({
     )
   ] });
 }
-function SyncStatusBadge({ status }) {
+function SyncStatusBadge({
+  status,
+  errorReason
+}) {
+  if (status === "failed") {
+    const label = errorReason ? `Sync failed: ${errorReason}` : "Sync failed";
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Badge,
+      {
+        variant: "outline",
+        className: "border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[10px] max-w-[220px] truncate",
+        "data-ocid": "neuron_detail.status.failed",
+        title: label,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-destructive size-1.5 rounded-full" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: label })
+        ]
+      }
+    );
+  }
   if (status === "hotkeyRequired") {
     return /* @__PURE__ */ jsxRuntimeExports.jsxs(
       Badge,
       {
         variant: "outline",
         className: "border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]",
+        "data-ocid": "neuron_detail.status.hotkey_required",
         children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent size-1.5 rounded-full" }),
           "Hotkey required"
@@ -75879,6 +75994,7 @@ function SyncStatusBadge({ status }) {
       {
         variant: "outline",
         className: "border-primary/30 bg-primary/5 text-primary gap-1 text-[10px]",
+        "data-ocid": "neuron_detail.status.synced",
         children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary size-1.5 rounded-full" }),
           "Synced"
@@ -75891,6 +76007,7 @@ function SyncStatusBadge({ status }) {
     {
       variant: "outline",
       className: "border-border bg-muted text-muted-foreground gap-1 text-[10px]",
+      "data-ocid": "neuron_detail.status.pending",
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-muted-foreground size-1.5 rounded-full" }),
         "Pending"
