@@ -237,6 +237,7 @@ actor {
         .payload(
           "eventType",
           func(s) = switch (s.eventType) {
+            case (#firstReading) "firstReading";
             case (#capitalAdded) "capitalAdded";
             case (#withdrawal) "withdrawal";
             case (#organicGrowth) "organicGrowth";

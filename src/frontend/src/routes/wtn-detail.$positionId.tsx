@@ -26,6 +26,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -57,10 +58,12 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  useDeleteWtnPosition,
   useDeleteWtnSnapshot,
   useEditWtnSnapshot,
   useImportWtnHistoricalData,
   useRecordWtnSnapshot,
+  useUpdateWtnPosition,
   useWtnPosition,
   useWtnSnapshots,
   useWtnStats,
@@ -87,6 +90,7 @@ import {
   ChevronDown,
   ClipboardPaste,
   Droplets,
+  Info,
   Loader2,
   Pencil,
   PlusCircle,
@@ -159,6 +163,8 @@ export function WtnDetailPage() {
   const editSnapshot = useEditWtnSnapshot();
   const deleteSnapshot = useDeleteWtnSnapshot();
   const importHistorical = useImportWtnHistoricalData();
+  const updatePosition = useUpdateWtnPosition();
+  const deletePosition = useDeleteWtnPosition();
   const navigate = useNavigate();
 
   // Sort snapshots chronologically (oldest first) for delta computation.
@@ -176,6 +182,34 @@ export function WtnDetailPage() {
     const safeId = idParam.replace(/[^a-zA-Z0-9_-]/g, "_");
     downloadCsv(`wtn-${safeId}-snapshots.csv`, csv);
     toast.success("CSV downloaded");
+  };
+
+  // Position-level edit: prompt for a new name, then update via the backend.
+  // Mirrors NeuronHeader's pencil button (neuron-detail line 247).
+  const handleEditPosition = () => {
+    if (!position) return;
+    const name = window.prompt("WTN position name", position.name);
+    if (name == null) return; // cancelled
+    updatePosition.mutate(
+      { ...position, name },
+      {
+        onSuccess: () => toast.success("Position updated"),
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  };
+
+  // Position-level delete: cascade-removes the position + its snapshots.
+  // Mirrors NeuronHeader's AlertDialog-wrapped trash button (neuron-detail
+  // line 237). Navigate to '/' after success.
+  const handleDeletePosition = () => {
+    deletePosition.mutate(BigInt(idParam), {
+      onSuccess: () => {
+        toast.success("WTN position removed from tracking");
+        navigate({ to: "/" });
+      },
+      onError: (err) => toast.error(err.message),
+    });
   };
 
   if (!validId) {
@@ -249,6 +283,10 @@ export function WtnDetailPage() {
           position={position}
           onExportCsv={handleExportCsv}
           exportDisabled={!sortedSnapshots || sortedSnapshots.length === 0}
+          onEditPosition={handleEditPosition}
+          editingPosition={updatePosition.isPending}
+          onDeletePosition={handleDeletePosition}
+          deletingPosition={deletePosition.isPending}
         />
 
         {/* Stats panel */}
@@ -338,10 +376,18 @@ function WtnHeader({
   position,
   onExportCsv,
   exportDisabled,
+  onEditPosition,
+  editingPosition,
+  onDeletePosition,
+  deletingPosition,
 }: {
   position: WtnPosition;
   onExportCsv: () => void;
   exportDisabled: boolean;
+  onEditPosition: () => void;
+  editingPosition: boolean;
+  onDeletePosition: () => void;
+  deletingPosition: boolean;
 }) {
   return (
     <motion.section
@@ -386,6 +432,58 @@ function WtnHeader({
                 <ArrowDownToLine className="size-4" />
                 Export CSV
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Edit WTN position"
+                data-ocid="wtn_detail.edit_button"
+                onClick={onEditPosition}
+                disabled={editingPosition}
+              >
+                <Pencil
+                  className={
+                    editingPosition ? "size-4 animate-pulse" : "size-4"
+                  }
+                />
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Delete WTN position"
+                    className="text-muted-foreground hover:text-destructive"
+                    data-ocid="wtn_detail.delete_button"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent data-ocid="wtn_detail.delete_dialog">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      Remove WTN position from tracking?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This stops tracking “{position.name || "WTN position"}”.
+                      Its recorded snapshots and stats will be permanently
+                      deleted. This cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel data-ocid="wtn_detail.delete.cancel_button">
+                      Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={onDeletePosition}
+                      disabled={deletingPosition}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      data-ocid="wtn_detail.delete.confirm_button"
+                    >
+                      {deletingPosition ? "Removing…" : "Remove position"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </CardHeader>
@@ -539,6 +637,7 @@ function WtnStatRow({
 /* ------------------------------------------------------------------ */
 
 const WTN_EVENT_LABEL: Record<WtnEventType, string> = {
+  firstReading: "Initial reading",
   capitalAdded: "Capital added",
   withdrawal: "Withdrawal",
   organicGrowth: "Organic growth",
@@ -736,6 +835,7 @@ function WtnActivityItem({
   const isCapital = event.eventType === WtnEventType.capitalAdded;
   const isWithdrawal = event.eventType === WtnEventType.withdrawal;
   const isOrganic = event.eventType === WtnEventType.organicGrowth;
+  const isFirstReading = event.eventType === WtnEventType.firstReading;
 
   const Icon = isCapital
     ? PlusCircle
@@ -743,14 +843,18 @@ function WtnActivityItem({
       ? TrendingDown
       : isOrganic
         ? TrendingUp
-        : Sparkles;
+        : isFirstReading
+          ? Sparkles
+          : Activity;
   const accent = isCapital
     ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15"
     : isWithdrawal
       ? "text-primary bg-primary/10"
       : isOrganic
         ? "text-accent bg-accent/10"
-        : "text-muted-foreground bg-muted";
+        : isFirstReading
+          ? "text-muted-foreground bg-muted"
+          : "text-muted-foreground bg-muted";
 
   const label = WTN_EVENT_LABEL[event.eventType];
 
@@ -759,9 +863,13 @@ function WtnActivityItem({
   const paidDelta = prev ? event.totalIcpPaid - prev.totalIcpPaid : 0;
   const prevRedeemable = prev ? prev.redeemableIcpValue : 0;
 
-  // Natural-language description per event type.
+  // Natural-language description per event type. firstReading is a neutral
+  // informational baseline — it is NOT a buy/sell transaction, so we show
+  // the recorded values as context rather than a delta-based narrative.
   let description: string;
-  if (isCapital) {
+  if (isFirstReading) {
+    description = `Baseline reading — nICP ${formatWtnIcp(event.nicpHeld, 4, false)}, paid ${formatWtnIcp(event.totalIcpPaid, 4, false)}, redeemable ${formatWtnIcp(event.redeemableIcpValue, 4, false)} ICP`;
+  } else if (isCapital) {
     description = `Bought ${formatWtnIcp(nicpDelta, 4, false)} nICP for ${formatWtnIcp(paidDelta, 4, false)} ICP`;
   } else if (isWithdrawal) {
     // Proportional redeemable value for the unstaked nICP.
@@ -803,7 +911,9 @@ function WtnActivityItem({
                 ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                 : isWithdrawal
                   ? "border-primary/40 bg-primary/10 text-primary"
-                  : "border-accent/40 bg-accent/10 text-accent",
+                  : isOrganic
+                    ? "border-accent/40 bg-accent/10 text-accent"
+                    : "border-border bg-muted text-muted-foreground",
             )}
             data-ocid={`wtn_detail.activity.badge.${index + 1}`}
           >
@@ -942,6 +1052,42 @@ function WtnSnapshotEntryForm({
             value to record a point in time. The backend classifies the snapshot
             automatically based on the deltas vs the previous reading.
           </p>
+          <div
+            className="bg-muted/40 border-border/60 rounded-lg border p-3"
+            data-ocid="wtn_detail.snapshot.guidance"
+          >
+            <div className="flex items-start gap-2">
+              <Info className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+              <div className="text-muted-foreground space-y-1 text-xs">
+                <p className="font-medium">
+                  How to fill in the three values for common scenarios:
+                </p>
+                <ol className="list-decimal space-y-1 pl-4">
+                  <li>
+                    <span className="text-foreground font-medium">
+                      Normal day (no transaction):
+                    </span>{" "}
+                    keep nICP held and Total ICP paid unchanged, only update
+                    Redeemable ICP value.
+                  </li>
+                  <li>
+                    <span className="text-foreground font-medium">
+                      Buying more nICP:
+                    </span>{" "}
+                    nICP held = old + new amount bought; Total ICP paid = old +
+                    new ICP spent (cumulative, not just the new payment).
+                  </li>
+                  <li>
+                    <span className="text-foreground font-medium">
+                      Unstaking/withdrawing nICP:
+                    </span>{" "}
+                    nICP held = old minus amount withdrawn; Total ICP paid =
+                    reduced proportionally (average cost basis).
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label

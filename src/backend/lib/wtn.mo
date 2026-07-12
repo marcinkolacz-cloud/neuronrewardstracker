@@ -122,8 +122,9 @@ module {
   ///     via average cost basis; record the ICP that left the position).
   ///   - nicpHeld unchanged → #organicGrowth (the delta in redeemableIcpValue
   ///     is the actual reward for that day).
-  /// The first snapshot for a position is classified as #capitalAdded (the
-  /// initial buy-in). Returns the recorded snapshot.
+  /// The first snapshot for a position (no prior entry to compare against) is
+  /// classified as #firstReading with zero deltas — mirroring the NNS neuron
+  /// pattern in lib/rewards.mo. Returns the recorded snapshot.
   public func recordWtnSnapshot(
     wtnSnapshots : Map.Map<WtnPositionId, List.List<WtnSnapshot>>,
     positionId : WtnPositionId,
@@ -143,7 +144,7 @@ module {
 
     let eventType : WtnEventType = switch (history.last()) {
       case (?prev) classify(nicpHeld, prev.nicpHeld);
-      case null #capitalAdded;
+      case null #firstReading;
     };
 
     let snapshot : WtnSnapshot = {
@@ -344,14 +345,15 @@ module {
 
     // Rebuild the history list from the merged, sorted array, recomputing
     // every eventType against the chronologically-previous entry. The first
-    // entry is #capitalAdded (initial buy-in).
+    // entry (no prior neighbor) is #firstReading — mirroring the NNS neuron
+    // pattern in lib/rewards.mo.
     let newHistory = List.empty<WtnSnapshot>();
     var prevNicpHeld : ?Float = null;
 
     for (entry in merged.vals()) {
       let eventType : WtnEventType = switch (prevNicpHeld) {
         case (?prev) classify(entry.nicpHeld, prev);
-        case null #capitalAdded;
+        case null #firstReading;
       };
 
       let snapshot : WtnSnapshot = {
@@ -431,6 +433,10 @@ module {
           // No reward and no withdrawal on a buy day. The increase in
           // totalIcpPaid is capital, not earned.
         };
+        case (#firstReading) {
+          // The very first snapshot on a fresh position: zero deltas, no
+          // reward and no withdrawal. Mirrors the NNS #firstReading pattern.
+        };
       };
       prevRedeemable := ?s.redeemableIcpValue;
       prevNicpHeld := ?s.nicpHeld;
@@ -484,6 +490,9 @@ module {
   ///   - nicpHeld increased → #capitalAdded
   ///   - nicpHeld decreased → #withdrawal
   ///   - nicpHeld unchanged → #organicGrowth
+  /// The no-previous-snapshot case (#firstReading) is handled by the callers
+  /// (recordWtnSnapshot, importWtnHistoricalData, recomputeAt) via a `switch
+  /// prevNicpHeld` on `null`, mirroring the NNS pattern in lib/rewards.mo.
   func classify(currentNicpHeld : Float, prevNicpHeld : Float) : WtnEventType {
     if (currentNicpHeld > prevNicpHeld) {
       #capitalAdded;
@@ -495,9 +504,11 @@ module {
   };
 
   /// Recompute the eventType for the entry at `idx` in a mutable array,
-  /// based on the nicpHeld of the entry at `idx - 1` (or #capitalAdded when
-  /// `idx` is 0). Returns the updated entry so the caller can chain further
-  /// recomputes using its new nicpHeld.
+  /// based on the nicpHeld of the entry at `idx - 1` (or #firstReading when
+  /// `idx` is 0, mirroring the NNS pattern: the first remaining snapshot
+  /// after an edit/delete has no prior neighbor to compare against). Returns
+  /// the updated entry so the caller can chain further recomputes using its
+  /// new nicpHeld.
   func recomputeAt(arr : [var WtnSnapshot], idx : Nat) : WtnSnapshot {
     let prevNicpHeld : ?Float = if (idx == 0) { null } else {
       ?arr[idx - 1].nicpHeld;
@@ -505,7 +516,7 @@ module {
     let s = arr[idx];
     let eventType : WtnEventType = switch (prevNicpHeld) {
       case (?prev) classify(s.nicpHeld, prev);
-      case null #capitalAdded;
+      case null #firstReading;
     };
     let updated = { s with eventType };
     arr[idx] := updated;

@@ -220,6 +220,7 @@ export enum UserRole {
     guest = "guest"
 }
 export enum WtnEventType {
+    firstReading = "firstReading",
     capitalAdded = "capitalAdded",
     withdrawal = "withdrawal",
     organicGrowth = "organicGrowth"

@@ -1316,6 +1316,9 @@ video {
   scroll-padding-top: 0.25rem;
   scroll-padding-bottom: 0.25rem;
 }
+.list-decimal {
+  list-style-type: decimal;
+}
 .list-none {
   list-style-type: none;
 }

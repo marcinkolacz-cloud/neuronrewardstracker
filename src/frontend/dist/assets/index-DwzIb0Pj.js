@@ -41621,7 +41621,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$u = [
+const __iconNode$v = [
   [
     "path",
     {
@@ -41630,7 +41630,19 @@ const __iconNode$u = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$u);
+const Activity = createLucideIcon("activity", __iconNode$v);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$u = [
+  ["path", { d: "M12 17V3", key: "1cwfxf" }],
+  ["path", { d: "m6 11 6 6 6-6", key: "12ii2o" }],
+  ["path", { d: "M19 21H5", key: "150jfl" }]
+];
+const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$u);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41638,11 +41650,10 @@ const Activity = createLucideIcon("activity", __iconNode$u);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$t = [
-  ["path", { d: "M12 17V3", key: "1cwfxf" }],
-  ["path", { d: "m6 11 6 6 6-6", key: "12ii2o" }],
-  ["path", { d: "M19 21H5", key: "150jfl" }]
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$t);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$t);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41650,17 +41661,6 @@ const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$t);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$s = [
-  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
-  ["path", { d: "M19 12H5", key: "x3x0zl" }]
-];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$s);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$r = [
   [
     "path",
     {
@@ -41681,7 +41681,20 @@ const __iconNode$r = [
   ["circle", { cx: "20", cy: "21", r: ".5", key: "yhc1fs" }],
   ["circle", { cx: "20", cy: "8", r: ".5", key: "1e43v0" }]
 ];
-const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$r);
+const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$s);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$r = [
+  ["path", { d: "M8 2v4", key: "1cmpym" }],
+  ["path", { d: "M16 2v4", key: "4m81vk" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
+  ["path", { d: "M3 10h18", key: "8toen8" }]
+];
+const Calendar = createLucideIcon("calendar", __iconNode$r);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41689,33 +41702,32 @@ const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$r);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$q = [
-  ["path", { d: "M8 2v4", key: "1cmpym" }],
-  ["path", { d: "M16 2v4", key: "4m81vk" }],
-  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
-  ["path", { d: "M3 10h18", key: "8toen8" }]
-];
-const Calendar = createLucideIcon("calendar", __iconNode$q);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$p = [
   ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
   ["path", { d: "M18 17V9", key: "2bz60n" }],
   ["path", { d: "M13 17V5", key: "1frdt8" }],
   ["path", { d: "M8 17v-3", key: "17ska0" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$p);
+const ChartColumn = createLucideIcon("chart-column", __iconNode$q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$o = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$o);
+const __iconNode$p = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$p);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$o = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M8 12h8", key: "1wcyev" }],
+  ["path", { d: "M12 8v8", key: "napkw2" }]
+];
+const CirclePlus = createLucideIcon("circle-plus", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41723,11 +41735,13 @@ const ChevronDown = createLucideIcon("chevron-down", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M8 12h8", key: "1wcyev" }],
-  ["path", { d: "M12 8v8", key: "napkw2" }]
+  ["path", { d: "M11 14h10", key: "1w8e9d" }],
+  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
+  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
+  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
+  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
 ];
-const CirclePlus = createLucideIcon("circle-plus", __iconNode$n);
+const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41735,13 +41749,12 @@ const CirclePlus = createLucideIcon("circle-plus", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["path", { d: "M11 14h10", key: "1w8e9d" }],
-  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
-  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
-  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
-  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
+  ["circle", { cx: "8", cy: "8", r: "6", key: "3yglwk" }],
+  ["path", { d: "M18.09 10.37A6 6 0 1 1 10.34 18", key: "t5s6rm" }],
+  ["path", { d: "M7 6h1v4", key: "1obek4" }],
+  ["path", { d: "m16.71 13.88.7.71-2.82 2.82", key: "1rbuyh" }]
 ];
-const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$m);
+const Coins = createLucideIcon("coins", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41749,12 +41762,10 @@ const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$m);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$l = [
-  ["circle", { cx: "8", cy: "8", r: "6", key: "3yglwk" }],
-  ["path", { d: "M18.09 10.37A6 6 0 1 1 10.34 18", key: "t5s6rm" }],
-  ["path", { d: "M7 6h1v4", key: "1obek4" }],
-  ["path", { d: "m16.71 13.88.7.71-2.82 2.82", key: "1rbuyh" }]
+  ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
+  ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
 ];
-const Coins = createLucideIcon("coins", __iconNode$l);
+const DollarSign = createLucideIcon("dollar-sign", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41762,10 +41773,11 @@ const Coins = createLucideIcon("coins", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
-  ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const DollarSign = createLucideIcon("dollar-sign", __iconNode$k);
+const Download = createLucideIcon("download", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41773,18 +41785,6 @@ const DollarSign = createLucideIcon("dollar-sign", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
-];
-const Download = createLucideIcon("download", __iconNode$j);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$i = [
   [
     "path",
     {
@@ -41800,7 +41800,19 @@ const __iconNode$i = [
     }
   ]
 ];
-const Droplets = createLucideIcon("droplets", __iconNode$i);
+const Droplets = createLucideIcon("droplets", __iconNode$j);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$i = [
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 16v-4", key: "1dtifu" }],
+  ["path", { d: "M12 8h.01", key: "e9boi3" }]
+];
+const Info = createLucideIcon("info", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -42445,6 +42457,7 @@ const SyncStatus = Variant({
   "synced": Null
 });
 const WtnEventType$1 = Variant({
+  "firstReading": Null,
   "capitalAdded": Null,
   "withdrawal": Null,
   "organicGrowth": Null
@@ -42699,6 +42712,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "synced": IDL2.Null
   });
   const WtnEventType2 = IDL2.Variant({
+    "firstReading": IDL2.Null,
     "capitalAdded": IDL2.Null,
     "withdrawal": IDL2.Null,
     "organicGrowth": IDL2.Null
@@ -42872,6 +42886,7 @@ var EventType = /* @__PURE__ */ ((EventType2) => {
   return EventType2;
 })(EventType || {});
 var WtnEventType = /* @__PURE__ */ ((WtnEventType2) => {
+  WtnEventType2["firstReading"] = "firstReading";
   WtnEventType2["capitalAdded"] = "capitalAdded";
   WtnEventType2["withdrawal"] = "withdrawal";
   WtnEventType2["organicGrowth"] = "organicGrowth";
@@ -43676,7 +43691,7 @@ function from_candid_variant_n26(_uploadFile, _downloadFile, value) {
   return "hotkeyRequired" in value ? "hotkeyRequired" : "neverSynced" in value ? "neverSynced" : "failed" in value ? "failed" : "synced" in value ? "synced" : value;
 }
 function from_candid_variant_n32(_uploadFile, _downloadFile, value) {
-  return "capitalAdded" in value ? "capitalAdded" : "withdrawal" in value ? "withdrawal" : "organicGrowth" in value ? "organicGrowth" : value;
+  return "firstReading" in value ? "firstReading" : "capitalAdded" in value ? "capitalAdded" : "withdrawal" in value ? "withdrawal" : "organicGrowth" in value ? "organicGrowth" : value;
 }
 function from_candid_variant_n4(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
@@ -52405,6 +52420,39 @@ function useCreateWtnPosition() {
     },
     onSuccess: () => {
       void queryClient2.invalidateQueries({ queryKey: KEYS.positions });
+    }
+  });
+}
+function useUpdateWtnPosition() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (position) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.updateWtnPosition(position);
+    },
+    onSuccess: (_data, position) => {
+      const id2 = position.id.toString();
+      void queryClient2.invalidateQueries({ queryKey: KEYS.positions });
+      void queryClient2.invalidateQueries({ queryKey: positionKey(id2) });
+    }
+  });
+}
+function useDeleteWtnPosition() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (positionId) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.removeWtnPosition(positionId);
+    },
+    onSuccess: (_data, positionId) => {
+      const id2 = positionId.toString();
+      void queryClient2.invalidateQueries({ queryKey: KEYS.positions });
+      void queryClient2.invalidateQueries({ queryKey: positionKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: snapshotsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.portfolio });
     }
   });
 }
@@ -82901,6 +82949,8 @@ function WtnDetailPage() {
   const editSnapshot = useEditWtnSnapshot();
   const deleteSnapshot = useDeleteWtnSnapshot();
   const importHistorical = useImportWtnHistoricalData();
+  const updatePosition = useUpdateWtnPosition();
+  const deletePosition = useDeleteWtnPosition();
   const navigate = useNavigate();
   const sortedSnapshots = reactExports.useMemo(
     () => [...snapshots ?? []].sort((a2, b2) => Number(a2.date - b2.date)),
@@ -82915,6 +82965,27 @@ function WtnDetailPage() {
     const safeId = idParam.replace(/[^a-zA-Z0-9_-]/g, "_");
     downloadCsv(`wtn-${safeId}-snapshots.csv`, csv);
     ue.success("CSV downloaded");
+  };
+  const handleEditPosition = () => {
+    if (!position) return;
+    const name = window.prompt("WTN position name", position.name);
+    if (name == null) return;
+    updatePosition.mutate(
+      { ...position, name },
+      {
+        onSuccess: () => ue.success("Position updated"),
+        onError: (err) => ue.error(err.message)
+      }
+    );
+  };
+  const handleDeletePosition = () => {
+    deletePosition.mutate(BigInt(idParam), {
+      onSuccess: () => {
+        ue.success("WTN position removed from tracking");
+        navigate({ to: "/" });
+      },
+      onError: (err) => ue.error(err.message)
+    });
   };
   if (!validId) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-background", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8", children: [
@@ -82984,7 +83055,11 @@ function WtnDetailPage() {
         {
           position,
           onExportCsv: handleExportCsv,
-          exportDisabled: !sortedSnapshots || sortedSnapshots.length === 0
+          exportDisabled: !sortedSnapshots || sortedSnapshots.length === 0,
+          onEditPosition: handleEditPosition,
+          editingPosition: updatePosition.isPending,
+          onDeletePosition: handleDeletePosition,
+          deletingPosition: deletePosition.isPending
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(WtnStatsCard, { stats }) }),
@@ -83053,7 +83128,11 @@ function WtnDetailPage() {
 function WtnHeader({
   position,
   onExportCsv,
-  exportDisabled
+  exportDisabled,
+  onEditPosition,
+  editingPosition,
+  onDeletePosition,
+  deletingPosition
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     motion.section,
@@ -83088,19 +83167,74 @@ function WtnHeader({
               ] })
             ] })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              variant: "outline",
-              onClick: onExportCsv,
-              disabled: exportDisabled,
-              "data-ocid": "wtn_detail.export_csv",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownToLine, { className: "size-4" }),
-                "Export CSV"
-              ]
-            }
-          ) })
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Button,
+              {
+                variant: "outline",
+                onClick: onExportCsv,
+                disabled: exportDisabled,
+                "data-ocid": "wtn_detail.export_csv",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownToLine, { className: "size-4" }),
+                  "Export CSV"
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                variant: "ghost",
+                size: "icon",
+                "aria-label": "Edit WTN position",
+                "data-ocid": "wtn_detail.edit_button",
+                onClick: onEditPosition,
+                disabled: editingPosition,
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Pencil,
+                  {
+                    className: editingPosition ? "size-4 animate-pulse" : "size-4"
+                  }
+                )
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialog, { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  variant: "ghost",
+                  size: "icon",
+                  "aria-label": "Delete WTN position",
+                  className: "text-muted-foreground hover:text-destructive",
+                  "data-ocid": "wtn_detail.delete_button",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "size-4" })
+                }
+              ) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogContent, { "data-ocid": "wtn_detail.delete_dialog", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogHeader, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogTitle, { children: "Remove WTN position from tracking?" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogDescription, { children: [
+                    "This stops tracking “",
+                    position.name || "WTN position",
+                    "”. Its recorded snapshots and stats will be permanently deleted. This cannot be undone."
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogFooter, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogCancel, { "data-ocid": "wtn_detail.delete.cancel_button", children: "Cancel" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    AlertDialogAction,
+                    {
+                      onClick: onDeletePosition,
+                      disabled: deletingPosition,
+                      className: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                      "data-ocid": "wtn_detail.delete.confirm_button",
+                      children: deletingPosition ? "Removing…" : "Remove position"
+                    }
+                  )
+                ] })
+              ] })
+            ] })
+          ] })
         ] }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -83239,6 +83373,7 @@ function WtnStatRow({
   );
 }
 const WTN_EVENT_LABEL = {
+  firstReading: "Initial reading",
   capitalAdded: "Capital added",
   withdrawal: "Withdrawal",
   organicGrowth: "Organic growth"
@@ -83396,14 +83531,17 @@ function WtnActivityItem({
   const isCapital = event.eventType === WtnEventType.capitalAdded;
   const isWithdrawal = event.eventType === WtnEventType.withdrawal;
   const isOrganic = event.eventType === WtnEventType.organicGrowth;
-  const Icon2 = isCapital ? CirclePlus : isWithdrawal ? TrendingDown : isOrganic ? TrendingUp : Sparkles;
-  const accent = isCapital ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15" : isWithdrawal ? "text-primary bg-primary/10" : isOrganic ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
+  const isFirstReading = event.eventType === WtnEventType.firstReading;
+  const Icon2 = isCapital ? CirclePlus : isWithdrawal ? TrendingDown : isOrganic ? TrendingUp : isFirstReading ? Sparkles : Activity;
+  const accent = isCapital ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15" : isWithdrawal ? "text-primary bg-primary/10" : isOrganic ? "text-accent bg-accent/10" : isFirstReading ? "text-muted-foreground bg-muted" : "text-muted-foreground bg-muted";
   const label = WTN_EVENT_LABEL[event.eventType];
   const nicpDelta = prev ? event.nicpHeld - prev.nicpHeld : 0;
   const paidDelta = prev ? event.totalIcpPaid - prev.totalIcpPaid : 0;
   const prevRedeemable = prev ? prev.redeemableIcpValue : 0;
   let description;
-  if (isCapital) {
+  if (isFirstReading) {
+    description = `Baseline reading — nICP ${formatWtnIcp(event.nicpHeld, 4, false)}, paid ${formatWtnIcp(event.totalIcpPaid, 4, false)}, redeemable ${formatWtnIcp(event.redeemableIcpValue, 4, false)} ICP`;
+  } else if (isCapital) {
     description = `Bought ${formatWtnIcp(nicpDelta, 4, false)} nICP for ${formatWtnIcp(paidDelta, 4, false)} ICP`;
   } else if (isWithdrawal) {
     const proportionalRedeemable = event.nicpHeld > 0 && prev && prev.nicpHeld > 0 ? Math.abs(nicpDelta) / prev.nicpHeld * prev.redeemableIcpValue : Math.abs(nicpDelta);
@@ -83441,7 +83579,7 @@ function WtnActivityItem({
                 variant: "outline",
                 className: cn(
                   "gap-1 text-[10px]",
-                  isCapital ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : isWithdrawal ? "border-primary/40 bg-primary/10 text-primary" : "border-accent/40 bg-accent/10 text-accent"
+                  isCapital ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : isWithdrawal ? "border-primary/40 bg-primary/10 text-primary" : isOrganic ? "border-accent/40 bg-accent/10 text-accent" : "border-border bg-muted text-muted-foreground"
                 ),
                 "data-ocid": `wtn_detail.activity.badge.${index2 + 1}`,
                 children: event.eventType
@@ -83555,6 +83693,36 @@ function WtnSnapshotEntryForm({
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Record snapshot" }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-4", noValidate: true, children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "Enter the current nICP held, total ICP paid, and redeemable ICP value to record a point in time. The backend classifies the snapshot automatically based on the deltas vs the previous reading." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "bg-muted/40 border-border/60 rounded-lg border p-3",
+              "data-ocid": "wtn_detail.snapshot.guidance",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Info, { className: "text-muted-foreground mt-0.5 size-4 shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground space-y-1 text-xs", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium", children: "How to fill in the three values for common scenarios:" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("ol", { className: "list-decimal space-y-1 pl-4", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-medium", children: "Normal day (no transaction):" }),
+                      " ",
+                      "keep nICP held and Total ICP paid unchanged, only update Redeemable ICP value."
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-medium", children: "Buying more nICP:" }),
+                      " ",
+                      "nICP held = old + new amount bought; Total ICP paid = old + new ICP spent (cumulative, not just the new payment)."
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("li", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-medium", children: "Unstaking/withdrawing nICP:" }),
+                      " ",
+                      "nICP held = old minus amount withdrawn; Total ICP paid = reduced proportionally (average cost basis)."
+                    ] })
+                  ] })
+                ] })
+              ] })
+            }
+          ),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-3", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(

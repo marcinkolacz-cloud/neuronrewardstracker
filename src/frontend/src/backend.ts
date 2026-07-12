@@ -266,6 +266,7 @@ export enum UserRole {
     guest = "guest"
 }
 export enum WtnEventType {
+    firstReading = "firstReading",
     capitalAdded = "capitalAdded",
     withdrawal = "withdrawal",
     organicGrowth = "organicGrowth"
@@ -1253,13 +1254,15 @@ function from_candid_variant_n26(_uploadFile: (file: ExternalBlob) => Promise<Ui
     return "hotkeyRequired" in value ? SyncStatus.hotkeyRequired : "neverSynced" in value ? SyncStatus.neverSynced : "failed" in value ? SyncStatus.failed : "synced" in value ? SyncStatus.synced : value;
 }
 function from_candid_variant_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    firstReading: null;
+} | {
     capitalAdded: null;
 } | {
     withdrawal: null;
 } | {
     organicGrowth: null;
 }): WtnEventType {
-    return "capitalAdded" in value ? WtnEventType.capitalAdded : "withdrawal" in value ? WtnEventType.withdrawal : "organicGrowth" in value ? WtnEventType.organicGrowth : value;
+    return "firstReading" in value ? WtnEventType.firstReading : "capitalAdded" in value ? WtnEventType.capitalAdded : "withdrawal" in value ? WtnEventType.withdrawal : "organicGrowth" in value ? WtnEventType.organicGrowth : value;
 }
 function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: null;

@@ -34,6 +34,7 @@ type WtnHistoricalEntry =
 type WtnEventType = 
  variant {
    capitalAdded;
+   firstReading;
    organicGrowth;
    withdrawal;
  };

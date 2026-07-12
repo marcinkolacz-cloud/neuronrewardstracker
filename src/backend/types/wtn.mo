@@ -18,6 +18,10 @@ module {
 
   /// Classification of a WTN snapshot delta, comparing the current snapshot
   /// to the previous one for the same position:
+  ///   - #firstReading  — the very first snapshot on a fresh position (no
+  ///     prior entry to compare against). Carries zero deltas and is NOT a
+  ///     buy event; it is just the initial reading. Mirrors the #firstReading
+  ///     classification already used for NNS neurons (see types/rewards.mo).
   ///   - #capitalAdded  — nicpHeld increased (a "buy" event); the increase in
   ///     totalIcpPaid is capital contributed, not reward.
   ///   - #withdrawal    — nicpHeld decreased (an "unstake" event); reduce
@@ -26,6 +30,7 @@ module {
   ///   - #organicGrowth — nicpHeld unchanged; the delta in redeemableIcpValue
   ///     (holding nICP constant) is the actual reward for that day.
   public type WtnEventType = {
+    #firstReading;
     #capitalAdded;
     #withdrawal;
     #organicGrowth;

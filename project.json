@@ -1,22 +1,19 @@
 {
-  "overview": "Track NNS neuron and WaterNeuron nICP liquid staking rewards in one portfolio with daily snapshots, stats, and CSV export.",
+  "overview": "Track NNS neuron rewards and WaterNeuron nICP liquid staking positions with manual snapshot entry, activity feeds, and portfolio stats.",
   "features": [
-    "Add and track NNS neurons with governance sync",
-    "Add WTN positions with manual 3-value daily snapshots",
-    "Capital, withdrawal, and organic growth classification",
-    "Portfolio-wide aggregation across both asset types",
-    "Activity feed with natural-language entries",
-    "CSV export with WTN/NNS type identification",
-    "Historical bulk import with preview"
+    "Track NNS neurons with daily reward snapshots and activity feed",
+    "Track WTN nICP positions with manual snapshot entry",
+    "Edit and delete positions and individual snapshots",
+    "Portfolio dashboard with combined stats",
+    "CSV export for position history"
   ],
-  "category": "productivity",
+  "category": "finance-tracker",
   "tags": [
     "icp",
-    "staking",
-    "rewards",
-    "portfolio",
+    "nns",
     "waterneuron",
-    "nns"
+    "rewards",
+    "portfolio"
   ],
-  "last_updated": "2026-07-12T14:08:01.596Z"
+  "last_updated": "2026-07-12T15:32:51.996Z"
 }

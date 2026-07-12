@@ -131,7 +131,8 @@ export type Value = { 'int' : bigint } |
   { 'bool' : boolean } |
   { 'null' : null } |
   { 'text' : string };
-export type WtnEventType = { 'capitalAdded' : null } |
+export type WtnEventType = { 'firstReading' : null } |
+  { 'capitalAdded' : null } |
   { 'withdrawal' : null } |
   { 'organicGrowth' : null };
 export interface WtnHistoricalEntry {

@@ -116,6 +116,7 @@ export const SyncStatus = IDL.Variant({
   'synced' : IDL.Null,
 });
 export const WtnEventType = IDL.Variant({
+  'firstReading' : IDL.Null,
   'capitalAdded' : IDL.Null,
   'withdrawal' : IDL.Null,
   'organicGrowth' : IDL.Null,
@@ -374,6 +375,7 @@ export const idlFactory = ({ IDL }) => {
     'synced' : IDL.Null,
   });
   const WtnEventType = IDL.Variant({
+    'firstReading' : IDL.Null,
     'capitalAdded' : IDL.Null,
     'withdrawal' : IDL.Null,
     'organicGrowth' : IDL.Null,
