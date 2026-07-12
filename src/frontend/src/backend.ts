@@ -147,10 +147,12 @@ export interface NeuronStats {
     averageDailyRewardE8s: bigint;
     totalRewardsE8s: bigint;
     totalCapitalContributedE8s: E8s;
+    currentMaturityE8s: bigint;
     apy30d: number;
     percentageReturn: number;
     neuronId: NeuronId;
     monthly: Array<MonthlyBreakdown>;
+    totalDisbursedE8s: bigint;
     overallReturnPct: number;
 }
 export type DeltaE8s = bigint;
@@ -254,6 +256,7 @@ export interface PortfolioStats {
     nnsCapitalContributedE8s: E8s;
     nnsRewardsE8s: bigint;
     wtnStakedE8s: E8s;
+    totalDisbursedE8s: bigint;
     neuronCount: bigint;
 }
 export type NeuronId = bigint;

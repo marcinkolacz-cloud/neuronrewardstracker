@@ -110,6 +110,7 @@ type PortfolioStats =
    nnsStakedE8s: E8s;
    percentageReturn: float64;
    totalCapitalContributedE8s: E8s;
+   totalDisbursedE8s: int;
    totalMaturityE8s: nat64;
    totalPortfolioValueE8s: int;
    totalRewardsE8s: int;
@@ -134,11 +135,13 @@ type NeuronStats =
  record {
    apy30d: float64;
    averageDailyRewardE8s: int;
+   currentMaturityE8s: int;
    monthly: vec MonthlyBreakdown;
    neuronId: NeuronId;
    overallReturnPct: float64;
    percentageReturn: float64;
    totalCapitalContributedE8s: E8s;
+   totalDisbursedE8s: int;
    totalRewardsE8s: int;
  };
 type NeuronId = nat64;

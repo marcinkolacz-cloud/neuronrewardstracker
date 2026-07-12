@@ -51,6 +51,12 @@ module {
     var positiveReadingCount : Nat = 0;
     var positiveDeltaSum : Int = 0;
     var totalCapitalContributed : Nat64 = neuron.initialStakeE8s;
+    // Lifetime total disbursed: sum of abs(deltaE8s) for #disburseOrSpawn.
+    var totalDisbursed : Int = 0;
+    // Latest snapshot's combined maturity (unstaked + staked). Tracked during
+    // the same pass by remembering the most-recent entry's combined value;
+    // history is iterated in chronological order (callers sort ascending).
+    var latestCombinedMaturity : Int = 0;
 
     // Monthly aggregation keyed by (year, month) encoded as year * 12 + month.
     // We accumulate into a small Map then convert to a sorted array.
@@ -70,6 +76,15 @@ module {
         positiveReadingCount += 1;
         positiveDeltaSum += r.deltaE8s;
       };
+
+      // Disbursements: sum abs(deltaE8s) for #disburseOrSpawn events.
+      if (r.eventType == #disburseOrSpawn) {
+        totalDisbursed += Int.abs(r.deltaE8s);
+      };
+
+      // Track the latest snapshot's combined maturity. The history array
+      // is iterated in chronological order, so the last iteration wins.
+      latestCombinedMaturity := r.unstakedMaturityE8s.toNat() + r.stakedMaturityE8s.toNat();
 
       // ns timestamp -> seconds -> days since epoch; derive year/month.
       let seconds = r.timestamp / 1_000_000_000;
@@ -154,6 +169,13 @@ module {
       monthly = monthlyOut;
       apy30d;
       overallReturnPct;
+      // CURRENT live Maturity = unstakedMaturityE8s + stakedMaturityE8s from
+      // the latest DailyReward snapshot (the same value the neuron detail page
+      // shows as 'Maturity'). 0 if no reward history.
+      currentMaturityE8s = latestCombinedMaturity;
+      // Lifetime total disbursed = sum of abs(deltaE8s) for all
+      // #disburseOrSpawn entries. 0 if none.
+      totalDisbursedE8s = totalDisbursed;
     };
   };
 
@@ -230,6 +252,9 @@ module {
     // For totalRewardsThisMonthE8s: sum of #normalGrowth positive deltas
     // from the current calendar month across all neurons (NNS-only).
     var totalRewardsThisMonth : Nat64 = 0;
+    // For totalDisbursedE8s (NNS portion): sum of each neuron's
+    // totalDisbursedE8s (sum of abs(deltaE8s) for #disburseOrSpawn).
+    var nnsTotalDisbursed : Int = 0;
     let nowNs : Int = Time.now();
     let nowSeconds = nowNs / 1_000_000_000;
     let nowDays = nowSeconds / 86_400;
@@ -255,6 +280,9 @@ module {
             totalRewards += perNeuron.totalRewardsE8s;
             nnsCapitalContributed := nnsCapitalContributed + perNeuron.totalCapitalContributedE8s;
             nnsRewards += perNeuron.totalRewardsE8s;
+            // Accumulate per-neuron lifetime disbursed (sum of abs(deltaE8s)
+            // for #disburseOrSpawn) into the portfolio-wide NNS disbursed total.
+            nnsTotalDisbursed += perNeuron.totalDisbursedE8s;
 
             // Per-neuron APY for the blended calculation. Only neurons with
             // 30+ days of history contribute, weighted by their capital
@@ -304,6 +332,9 @@ module {
     var wtnTotalStakedFloat : Float = 0.0;
     var wtnTotalCapitalFloat : Float = 0.0;
     var wtnTotalEarnedFloat : Float = 0.0;
+    // WTN lifetime withdrawals (Float ICP), summed across all WTN positions
+    // for the portfolio-wide totalDisbursedE8s (converted to e8s below).
+    var wtnTotalWithdrawnFloat : Float = 0.0;
     // WTN #organicGrowth redeemableIcpValue deltas within the current
     // calendar month (Float ICP). Computed the same way the NNS monthly
     // logic works: iterate WTN snapshots, filter by current year/month and
@@ -318,6 +349,7 @@ module {
         wtnTotalStakedFloat += contribution.redeemableIcpValue;
         wtnTotalCapitalFloat += contribution.totalCapitalContributed;
         wtnTotalEarnedFloat += contribution.totalEarned;
+        wtnTotalWithdrawnFloat += contribution.totalWithdrawn;
 
         // Sum #organicGrowth redeemableIcpValue deltas in the current
         // calendar month. The delta is the day-over-day change in
@@ -395,6 +427,10 @@ module {
       nnsRewardsThisMonthE8s = totalRewardsThisMonth;
       wtnRewardsThisMonthFloat = wtnRewardsThisMonthFloat;
       combinedRewardsThisMonthE8s = combinedRewardsThisMonthE8s;
+      // Portfolio-wide lifetime total withdrawn = sum of per-neuron
+      // totalDisbursedE8s (NNS #disburseOrSpawn) PLUS sum of WTN
+      // totalWithdrawn (converted to E8s via floatIcpToE8s).
+      totalDisbursedE8s = nnsTotalDisbursed + floatIcpToE8s(wtnTotalWithdrawnFloat).toNat();
     };
   };
 

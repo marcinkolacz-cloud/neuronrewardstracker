@@ -357,8 +357,6 @@ export function DashboardPage() {
         <section className="mt-8" data-ocid="dashboard.portfolio_summary">
           <PortfolioSummary
             totalPortfolioValue={portfolio?.totalPortfolioValueE8s ?? null}
-            totalStaked={portfolio?.totalStakedE8s ?? null}
-            nnsStaked={portfolio?.nnsStakedE8s ?? null}
             wtnStaked={portfolio?.wtnStakedE8s ?? null}
             totalCapitalContributed={
               portfolio?.totalCapitalContributedE8s ?? null
@@ -375,7 +373,7 @@ export function DashboardPage() {
             totalRewards={portfolio?.totalRewardsE8s ?? null}
             nnsRewards={portfolio?.nnsRewardsE8s ?? null}
             wtnRewards={portfolio?.wtnRewardsE8s ?? null}
-            neuronCount={portfolio?.neuronCount ?? null}
+            totalDisbursed={portfolio?.totalDisbursedE8s ?? null}
             loading={portfolioLoading}
           />
         </section>
@@ -464,8 +462,6 @@ type PriceQueryLike = ReturnType<typeof useIcpPrice>;
 
 function PortfolioSummary({
   totalPortfolioValue,
-  totalStaked,
-  nnsStaked,
   wtnStaked,
   totalCapitalContributed,
   nnsCapitalContributed,
@@ -478,12 +474,10 @@ function PortfolioSummary({
   totalRewards,
   nnsRewards,
   wtnRewards,
-  neuronCount,
+  totalDisbursed,
   loading,
 }: {
   totalPortfolioValue: bigint | null;
-  totalStaked: bigint | null;
-  nnsStaked: bigint | null;
   wtnStaked: bigint | null;
   totalCapitalContributed: bigint | null;
   nnsCapitalContributed: bigint | null;
@@ -496,7 +490,7 @@ function PortfolioSummary({
   totalRewards: bigint | null;
   nnsRewards: bigint | null;
   wtnRewards: bigint | null;
-  neuronCount: bigint | null;
+  totalDisbursed: bigint | null;
   loading: boolean;
 }) {
   // WTN rewards-this-month comes from the backend as a float (ICP units,
@@ -518,15 +512,12 @@ function PortfolioSummary({
       subline: "Includes accrued rewards from NNS neurons and nICP positions",
     },
     {
-      label: "Total Staked",
-      value: formatIcp(totalStaked, 2),
-      icon: Landmark,
-      accent: "text-muted-foreground",
-      hint:
-        !loading && neuronCount != null
-          ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}`
-          : null,
-      subline: `${formatIcpCompact(nnsStaked ?? 0n)} (NNS) + ${formatIcpCompact(wtnStaked ?? 0n)} (nICP)`,
+      label: "Total nICP Maturity",
+      value: formatIcp((wtnStaked ?? 0n) - (wtnCapitalContributed ?? 0n), 2),
+      icon: Droplets,
+      accent: "text-accent",
+      hint: "WTN accrued growth",
+      subline: "nICP redeemable value minus capital contributed",
     },
     {
       label: "Total Capital Contributed",
@@ -570,6 +561,14 @@ function PortfolioSummary({
       accent: "text-primary",
       hint: "Lifetime rewards",
       subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`,
+    },
+    {
+      label: "Total Withdrawn",
+      value: formatIcp(totalDisbursed, 2),
+      icon: Wallet,
+      accent: "text-muted-foreground",
+      hint: "Lifetime disbursed across NNS + nICP",
+      subline: null,
     },
   ];
 
@@ -746,11 +745,15 @@ function NeuronCard({
   );
 
   // Total value = current stake + accrued maturity (apples-to-apples with
-  // WTN redeemable). Principal = staked amount. Rewards = maturity.
+  // WTN redeemable). Principal = staked amount. Rewards = current live
+  // maturity (unstakedMaturityE8s + stakedMaturityE8s from the latest
+  // sync snapshot), matching the neuron detail page's "Maturity" field.
   // % return comes from getNeuronStats (percentageReturn, pre-scaled).
+  // Withdrawn = lifetime total disbursed from this neuron.
   const stakedE8s = neuron.stakedE8s ?? 0n;
-  const maturityE8s = stats?.totalRewardsE8s ?? 0n;
+  const maturityE8s = stats?.currentMaturityE8s ?? 0n;
   const totalValueE8s = stakedE8s + maturityE8s;
+  const withdrawnE8s = stats?.totalDisbursedE8s ?? 0n;
   const percentReturn = stats?.percentageReturn ?? 0;
 
   return (
@@ -843,6 +846,14 @@ function NeuronCard({
               </p>
               <p className="text-foreground font-mono text-xs">
                 {formatTimestamp(neuron.startDate)}
+              </p>
+            </div>
+            <div className="border-border/40 border-t pt-2.5">
+              <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                Withdrawn
+              </p>
+              <p className="text-muted-foreground font-mono text-xs">
+                {formatIcpCompact(withdrawnE8s)} ICP
               </p>
             </div>
           </CardContent>

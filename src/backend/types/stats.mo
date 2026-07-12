@@ -30,6 +30,13 @@ module {
     monthly : [MonthlyBreakdown];
     apy30d : Float;              // annualized return from trailing 30-day avg daily growth rate
     overallReturnPct : Float;    // overall % return since the neuron's start date
+    currentMaturityE8s : Int;    // CURRENT live Maturity = unstakedMaturityE8s +
+                                  // stakedMaturityE8s from the latest DailyReward
+                                  // snapshot (the same value the neuron detail page
+                                  // shows as 'Maturity'). 0 if no reward history.
+    totalDisbursedE8s : Int;     // lifetime total disbursed from the neuron = sum of
+                                  // abs(deltaE8s) for all DailyReward entries with
+                                  // eventType === #disburseOrSpawn. 0 if none.
   };
 
   /// Aggregated stats across all of a caller's neurons AND WTN positions.
@@ -66,6 +73,10 @@ module {
     nnsRewardsThisMonthE8s : Nat64; // NNS-only monthly rewards (== totalRewardsThisMonthE8s)
     wtnRewardsThisMonthFloat : Float; // sum of WTN #organicGrowth redeemableIcpValue deltas this month (ICP)
     combinedRewardsThisMonthE8s : Nat64; // nnsRewardsThisMonthE8s + floatIcpToE8s(wtnRewardsThisMonthFloat)
+    totalDisbursedE8s : Int;      // portfolio-wide lifetime total withdrawn = sum of
+                                  // totalDisbursedE8s across all NNS neurons PLUS sum of
+                                  // totalWithdrawn (converted to E8s via floatIcpToE8s)
+                                  // across all WTN positions. 0 if none.
   };
 
   /// Portfolio-wide reward statistics aggregating across ALL neurons AND WTN

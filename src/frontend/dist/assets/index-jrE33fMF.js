@@ -42417,10 +42417,12 @@ const NeuronStats = Record({
   "averageDailyRewardE8s": Int,
   "totalRewardsE8s": Int,
   "totalCapitalContributedE8s": E8s,
+  "currentMaturityE8s": Int,
   "apy30d": Float64,
   "percentageReturn": Float64,
   "neuronId": NeuronId,
   "monthly": Vec(MonthlyBreakdown),
+  "totalDisbursedE8s": Int,
   "overallReturnPct": Float64
 });
 const PortfolioRewardStats = Record({
@@ -42450,6 +42452,7 @@ const PortfolioStats = Record({
   "nnsCapitalContributedE8s": E8s,
   "nnsRewardsE8s": Int,
   "wtnStakedE8s": E8s,
+  "totalDisbursedE8s": Int,
   "neuronCount": Nat
 });
 const DeltaE8s = Int;
@@ -42694,10 +42697,12 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "averageDailyRewardE8s": IDL2.Int,
     "totalRewardsE8s": IDL2.Int,
     "totalCapitalContributedE8s": E8s2,
+    "currentMaturityE8s": IDL2.Int,
     "apy30d": IDL2.Float64,
     "percentageReturn": IDL2.Float64,
     "neuronId": NeuronId2,
     "monthly": IDL2.Vec(MonthlyBreakdown2),
+    "totalDisbursedE8s": IDL2.Int,
     "overallReturnPct": IDL2.Float64
   });
   const PortfolioRewardStats2 = IDL2.Record({
@@ -42727,6 +42732,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "nnsCapitalContributedE8s": E8s2,
     "nnsRewardsE8s": IDL2.Int,
     "wtnStakedE8s": E8s2,
+    "totalDisbursedE8s": IDL2.Int,
     "neuronCount": IDL2.Nat
   });
   const DeltaE8s2 = IDL2.Int;
@@ -78773,8 +78779,6 @@ function DashboardPage() {
         PortfolioSummary,
         {
           totalPortfolioValue: (portfolio == null ? void 0 : portfolio.totalPortfolioValueE8s) ?? null,
-          totalStaked: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
-          nnsStaked: (portfolio == null ? void 0 : portfolio.nnsStakedE8s) ?? null,
           wtnStaked: (portfolio == null ? void 0 : portfolio.wtnStakedE8s) ?? null,
           totalCapitalContributed: (portfolio == null ? void 0 : portfolio.totalCapitalContributedE8s) ?? null,
           nnsCapitalContributed: (portfolio == null ? void 0 : portfolio.nnsCapitalContributedE8s) ?? null,
@@ -78787,7 +78791,7 @@ function DashboardPage() {
           totalRewards: (portfolio == null ? void 0 : portfolio.totalRewardsE8s) ?? null,
           nnsRewards: (portfolio == null ? void 0 : portfolio.nnsRewardsE8s) ?? null,
           wtnRewards: (portfolio == null ? void 0 : portfolio.wtnRewardsE8s) ?? null,
-          neuronCount: (portfolio == null ? void 0 : portfolio.neuronCount) ?? null,
+          totalDisbursed: (portfolio == null ? void 0 : portfolio.totalDisbursedE8s) ?? null,
           loading: portfolioLoading
         }
       ) }),
@@ -78861,8 +78865,6 @@ function DashboardPage() {
 }
 function PortfolioSummary({
   totalPortfolioValue,
-  totalStaked,
-  nnsStaked,
   wtnStaked,
   totalCapitalContributed,
   nnsCapitalContributed,
@@ -78875,7 +78877,7 @@ function PortfolioSummary({
   totalRewards,
   nnsRewards,
   wtnRewards,
-  neuronCount,
+  totalDisbursed,
   loading
 }) {
   const wtnRewardsThisMonthE8s = wtnRewardsThisMonthFloat != null ? BigInt(Math.trunc(wtnRewardsThisMonthFloat * Number(E8S_PER_ICP))) : 0n;
@@ -78889,12 +78891,12 @@ function PortfolioSummary({
       subline: "Includes accrued rewards from NNS neurons and nICP positions"
     },
     {
-      label: "Total Staked",
-      value: formatIcp(totalStaked, 2),
-      icon: Landmark,
-      accent: "text-muted-foreground",
-      hint: !loading && neuronCount != null ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}` : null,
-      subline: `${formatIcpCompact(nnsStaked ?? 0n)} (NNS) + ${formatIcpCompact(wtnStaked ?? 0n)} (nICP)`
+      label: "Total nICP Maturity",
+      value: formatIcp((wtnStaked ?? 0n) - (wtnCapitalContributed ?? 0n), 2),
+      icon: Droplets,
+      accent: "text-accent",
+      hint: "WTN accrued growth",
+      subline: "nICP redeemable value minus capital contributed"
     },
     {
       label: "Total Capital Contributed",
@@ -78935,6 +78937,14 @@ function PortfolioSummary({
       accent: "text-primary",
       hint: "Lifetime rewards",
       subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`
+    },
+    {
+      label: "Total Withdrawn",
+      value: formatIcp(totalDisbursed, 2),
+      icon: Wallet,
+      accent: "text-muted-foreground",
+      hint: "Lifetime disbursed across NNS + nICP",
+      subline: null
     }
   ];
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
@@ -79046,8 +79056,9 @@ function NeuronCard({
     syncStatus === "failed" ? idStr : null
   );
   const stakedE8s = neuron.stakedE8s ?? 0n;
-  const maturityE8s = (stats == null ? void 0 : stats.totalRewardsE8s) ?? 0n;
+  const maturityE8s = (stats == null ? void 0 : stats.currentMaturityE8s) ?? 0n;
   const totalValueE8s = stakedE8s + maturityE8s;
+  const withdrawnE8s = (stats == null ? void 0 : stats.totalDisbursedE8s) ?? 0n;
   const percentReturn = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     motion.div,
@@ -79120,6 +79131,13 @@ function NeuronCard({
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(neuron.startDate) })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Withdrawn" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-xs", children: [
+                  formatIcpCompact(withdrawnE8s),
+                  " ICP"
+                ] })
               ] })
             ] })
           ] })
