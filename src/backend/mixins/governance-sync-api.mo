@@ -33,8 +33,10 @@ mixin (
     await GovernanceSyncLib.doSync(
       governance,
       rewards,
+      neurons,
       syncStatuses,
       syncErrors,
+      caller,
       neuronId,
     );
   };
@@ -52,8 +54,10 @@ mixin (
       let res = await GovernanceSyncLib.doSync(
         governance,
         rewards,
+        neurons,
         syncStatuses,
         syncErrors,
+        caller,
         neuron.id,
       );
       results.add(res);

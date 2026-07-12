@@ -8,6 +8,7 @@ import Types "../types/governance-sync";
 import Common "../types/common";
 import RewardTypes "../types/rewards";
 import RewardsLib "rewards";
+import NeuronsLib "neurons";
 
 module {
   public type SyncStatus = Types.SyncStatus;
@@ -79,62 +80,99 @@ module {
   /// are recorded on the snapshot; the returned `SyncResult.maturityE8s`
   /// carries the COMBINED total (unstaked + staked) for backward
   /// compatibility with callers that want a single maturity figure.
+  ///
+  /// On success, `cached_neuron_stake_e8s` (the actual ICP locked in the
+  /// neuron) is read and, when present, stored on the neuron's `stakedE8s`
+  /// field via NeuronsLib.updateStakedE8s — so the staked amount updates
+  /// automatically on every sync instead of relying on the manually-entered
+  /// `initialStakeE8s` fallback. When absent, `stakedE8s` is left unchanged.
+  /// The sync-sourced staked amount is returned in `SyncResult.stakedE8s`.
   public func doSync(
     governance : Types.Governance,
     rewards : Map.Map<NeuronId, List.List<RewardTypes.DailyReward>>,
+    neurons : Map.Map<NeuronId, NeuronsLib.Neuron>,
     syncStatuses : Map.Map<NeuronId, SyncStatus>,
     syncErrors : Map.Map<NeuronId, Text>,
+    caller : Principal,
     neuronId : NeuronId,
   ) : async SyncResult {
     try {
       let result = await governance.get_full_neuron(neuronId);
       switch (result) {
         case (#Ok neuron) {
-          let unstakedMaturityE8s = neuron.maturity_e8s_equivalent;
-          let stakedMaturityE8s : Nat64 = switch (neuron.staked_maturity_e8s_equivalent) {
+          let unstaked : Nat64 = neuron.maturity_e8s_equivalent;
+          let stakedMaturity : Nat64 = switch (neuron.staked_maturity_e8s_equivalent) {
             case (?v) v;
             case null 0;
           };
-          let autoStakeMaturity : Bool = switch (neuron.auto_stake_maturity) {
+          let autoStake : Bool = switch (neuron.auto_stake_maturity) {
             case (?v) v;
             case null false;
           };
+
+          // Record the maturity snapshot (delta computed from combined total).
           ignore RewardsLib.recordSnapshot(
             rewards,
             neuronId,
-            unstakedMaturityE8s,
-            stakedMaturityE8s,
-            autoStakeMaturity,
+            unstaked,
+            stakedMaturity,
+            autoStake,
             Time.now(),
           );
-          setSyncStatus(syncStatuses, neuronId, #synced);
-          clearSyncError(syncErrors, neuronId);
-          // Combined total for backward-compatible single-figure return.
-          let combined : Nat64 = unstakedMaturityE8s + stakedMaturityE8s;
-          { neuronId; status = #synced; maturityE8s = ?combined; lastSyncError = null };
-        };
-        case (#Err govErr) {
-          let reason = govErr.error_message;
-          // Governance refuses to return full neuron details when the
-          // caller's hotkey is not configured. The error message in that
-          // case references "hotkey"; map it to #hotkeyRequired per the
-          // existing convention so the UI can prompt for hotkey setup
-          // rather than showing a generic failure.
-          let status = if (reason.contains(#text "hotkey")) {
-            #hotkeyRequired;
-          } else {
-            #failed;
+
+          // Update the neuron's sync-sourced staked amount from
+          // cached_neuron_stake_e8s when governance reports it. When absent,
+          // leave stakedE8s unchanged (initialStakeE8s remains the fallback).
+          let stakedE8s : ?Nat64 = switch (neuron.cached_neuron_stake_e8s) {
+            case (?v) {
+              NeuronsLib.updateStakedE8s(neurons, caller, neuronId, v);
+              ?v;
+            };
+            case null {
+              // Read the existing stakedE8s (if any) to report in the result.
+              switch (neurons.get(neuronId)) {
+                case (?n) ?n.stakedE8s;
+                case null null;
+              };
+            };
           };
-          setSyncStatus(syncStatuses, neuronId, status);
+
+          clearSyncError(syncErrors, neuronId);
+          setSyncStatus(syncStatuses, neuronId, #synced);
+
+          let combined : Nat64 = unstaked + stakedMaturity;
+          {
+            neuronId;
+            status = #synced;
+            maturityE8s = ?combined;
+            stakedE8s;
+            lastSyncError = null;
+          };
+        };
+        case (#Err err) {
+          let reason = err.error_message;
           setSyncError(syncErrors, neuronId, reason);
-          { neuronId; status; maturityE8s = null; lastSyncError = ?reason };
+          setSyncStatus(syncStatuses, neuronId, #failed);
+          {
+            neuronId;
+            status = #failed;
+            maturityE8s = null;
+            stakedE8s = null;
+            lastSyncError = ?reason;
+          };
         };
       };
-    } catch (err) {
-      let reason = err.message();
-      setSyncStatus(syncStatuses, neuronId, #failed);
+    } catch e {
+      let reason = e.message();
       setSyncError(syncErrors, neuronId, reason);
-      { neuronId; status = #failed; maturityE8s = null; lastSyncError = ?reason };
+      setSyncStatus(syncStatuses, neuronId, #failed);
+      {
+        neuronId;
+        status = #failed;
+        maturityE8s = null;
+        stakedE8s = null;
+        lastSyncError = ?reason;
+      };
     };
   };
 };

@@ -84,4 +84,29 @@ module {
       case null null;
     };
   };
+
+  /// Update only the sync-sourced `stakedE8s` field of a neuron record,
+  /// leaving `initialStakeE8s` (the manual fallback) untouched. Called by
+  /// doSync on every successful governance sync so the neuron's staked
+  /// amount reflects the actual ICP locked in the neuron
+  /// (`cached_neuron_stake_e8s`) instead of the manually-entered value.
+  /// Traps if the neuron does not exist or is not owned by the caller.
+  public func updateStakedE8s(
+    neurons : Map.Map<NeuronId, Neuron>,
+    caller : Principal,
+    neuronId : NeuronId,
+    stakedE8s : Common.E8s,
+  ) : () {
+    switch (neurons.get(neuronId)) {
+      case (?existing) {
+        if (not Principal.equal(existing.ownerId, caller)) {
+          Runtime.trap("Not authorized to update this neuron");
+        };
+        neurons.add(neuronId, { existing with stakedE8s });
+      };
+      case null {
+        Runtime.trap("Neuron not found");
+      };
+    };
+  };
 };

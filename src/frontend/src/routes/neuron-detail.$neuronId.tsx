@@ -31,16 +31,31 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { useRemoveNeuron, useUpdateNeuron } from "@/hooks/use-neurons";
 import { useNeurons } from "@/hooks/use-neurons";
 import { useRewardHistory, useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats } from "@/hooks/use-stats";
 import {
+  useImportHistoricalData,
   useRecordSnapshot,
   useSyncError,
   useSyncNeuron,
@@ -48,6 +63,7 @@ import {
 import type {
   DailyReward,
   EventType,
+  HistoricalEntry,
   Neuron,
   SyncStatus,
 } from "@/lib/backend-actor";
@@ -68,12 +84,16 @@ import {
   ArrowLeft,
   BrainCircuit,
   Calendar,
+  ChevronDown,
+  ClipboardPaste,
   Loader2,
   Pencil,
   RefreshCw,
   Sparkles,
   Trash2,
+  TrendingDown,
   TrendingUp,
+  Upload,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -103,6 +123,7 @@ export function NeuronDetailPage() {
   const removeNeuron = useRemoveNeuron();
   const updateNeuron = useUpdateNeuron();
   const recordSnapshot = useRecordSnapshot();
+  const importHistorical = useImportHistoricalData();
   const navigate = useNavigate();
 
   const neuron = useMemo(() => {
@@ -288,6 +309,12 @@ export function NeuronDetailPage() {
             submitting={recordSnapshot.isPending}
           />
         </div>
+
+        {/* Import historical maturity readings */}
+        <ImportHistoricalPanel
+          neuronId={BigInt(neuronId)}
+          onImport={importHistorical}
+        />
       </div>
     </div>
   );
@@ -414,7 +441,9 @@ function NeuronHeader({
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Stat
             label="Staked"
-            value={formatIcpCompact(neuron.initialStakeE8s)}
+            value={formatIcpCompact(
+              neuron.stakedE8s > 0n ? neuron.stakedE8s : neuron.initialStakeE8s,
+            )}
             icon={Wallet}
           />
           <div className="space-y-1">
@@ -997,6 +1026,334 @@ function SnapshotEntryForm({
       </CardContent>
     </Card>
   );
+}
+
+type ParsedRow = {
+  rowIndex: number;
+  date: string;
+  dateMs: number;
+  amountE8s: bigint;
+  deltaE8s: bigint | null;
+  isDisburse: boolean;
+};
+
+type ParseError = { rowIndex: number; message: string };
+
+function ImportHistoricalPanel({
+  neuronId,
+  onImport,
+}: {
+  neuronId: bigint;
+  onImport: ReturnType<typeof useImportHistoricalData>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [raw, setRaw] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+
+  const { rows, errors } = useMemo(() => parsePaste(raw), [raw]);
+  const hasErrors = errors.length > 0;
+  const canConfirm = rows.length > 0 && !hasErrors && !onImport.isPending;
+
+  const handleConfirm = () => {
+    if (!canConfirm) return;
+    const entries: HistoricalEntry[] = rows.map((r) => ({
+      timestamp: BigInt(Math.floor(r.dateMs / 1000)),
+      unstakedMaturityE8s: r.amountE8s,
+      stakedMaturityE8s: 0n,
+    }));
+    onImport.mutate(
+      { neuronId, entries },
+      {
+        onSuccess: () => {
+          toast.success(`Imported ${entries.length} historical readings`);
+          setRaw("");
+          setConfirmed(true);
+          setOpen(false);
+        },
+        onError: (err) => toast.error(err.message),
+      },
+    );
+  };
+
+  return (
+    <Card className="bg-card/60 border-border/60 mt-6">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="group flex w-full items-center justify-between px-6 py-4 text-left transition-smooth"
+            data-ocid="neuron_detail.import.toggle"
+            aria-expanded={open}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg">
+                <ClipboardPaste className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-foreground text-sm font-semibold">
+                  Import historical maturity
+                </h2>
+                <p className="text-muted-foreground text-xs">
+                  Paste tab-separated rows (DD/MM/YYYY, maturity in ICP) to
+                  backfill past readings.
+                </p>
+              </div>
+            </div>
+            <ChevronDown
+              className={cn(
+                "text-muted-foreground size-4 shrink-0 transition-transform duration-200",
+                open && "rotate-180",
+              )}
+            />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="border-border/60 border-t" />
+          <div className="space-y-4 p-6">
+            <div className="space-y-2">
+              <Label
+                htmlFor="historical-paste"
+                className="text-sm"
+                data-ocid="neuron_detail.import.paste.label"
+              >
+                Paste rows (date <span className="font-mono">⇥</span> maturity)
+              </Label>
+              <Textarea
+                id="historical-paste"
+                value={raw}
+                onChange={(e) => {
+                  setRaw(e.target.value);
+                  setConfirmed(false);
+                }}
+                placeholder={
+                  "01/01/2024\t0.0123\n15/01/2024\t0.0245\n01/02/2024\t0.0367"
+                }
+                rows={8}
+                className="font-mono text-xs"
+                data-ocid="neuron_detail.import.paste.input"
+              />
+              <p className="text-muted-foreground text-[11px]">
+                One row per line, two columns separated by a tab. Date as
+                DD/MM/YYYY, maturity as a decimal ICP amount.
+              </p>
+            </div>
+
+            {hasErrors && (
+              <div
+                role="alert"
+                className="border-destructive/40 bg-destructive/10 rounded-lg border p-3"
+                data-ocid="neuron_detail.import.error_state"
+              >
+                <div className="text-destructive flex items-center gap-1.5 text-xs font-semibold">
+                  <AlertTriangle className="size-3.5" />
+                  {errors.length} unparseable{" "}
+                  {errors.length === 1 ? "row" : "rows"} — fix before importing
+                </div>
+                <ul className="text-destructive/90 mt-1.5 space-y-0.5 font-mono text-[11px]">
+                  {errors.map((e) => (
+                    <li
+                      key={`err-${e.rowIndex}`}
+                      data-ocid={`neuron_detail.import.row_error.${e.rowIndex}`}
+                    >
+                      Row {e.rowIndex}: {e.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {rows.length > 0 && (
+              <div className="overflow-x-auto rounded-lg border border-border/60">
+                <Table data-ocid="neuron_detail.import.preview_table">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-[11px]">#</TableHead>
+                      <TableHead className="text-[11px]">Date</TableHead>
+                      <TableHead className="text-[11px] text-right">
+                        Maturity (ICP)
+                      </TableHead>
+                      <TableHead className="text-[11px] text-right">
+                        Delta
+                      </TableHead>
+                      <TableHead className="text-[11px]">Flag</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rows.map((r, i) => (
+                      <TableRow
+                        key={`row-${r.rowIndex}`}
+                        data-ocid={`neuron_detail.import.preview.row.${i + 1}`}
+                      >
+                        <TableCell className="text-muted-foreground font-mono text-[11px]">
+                          {r.rowIndex}
+                        </TableCell>
+                        <TableCell className="text-foreground font-mono text-xs">
+                          {r.date}
+                        </TableCell>
+                        <TableCell className="text-foreground font-mono text-right text-xs">
+                          {formatIcp(r.amountE8s, 4, false)}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "font-mono text-right text-xs",
+                            r.deltaE8s == null
+                              ? "text-muted-foreground"
+                              : r.deltaE8s < 0n
+                                ? "text-destructive"
+                                : "text-primary",
+                          )}
+                        >
+                          {r.deltaE8s == null
+                            ? "—"
+                            : `${r.deltaE8s < 0n ? "" : "+"}${formatIcp(r.deltaE8s, 4, false)}`}
+                        </TableCell>
+                        <TableCell>
+                          {r.isDisburse ? (
+                            <Badge
+                              variant="outline"
+                              className="border-primary/40 bg-primary/10 text-primary gap-1 text-[10px]"
+                              data-ocid={`neuron_detail.import.flag.${i + 1}`}
+                            >
+                              <TrendingDown className="size-2.5" />
+                              disburseOrSpawn
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-[11px]">
+                              —
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+
+            {confirmed && rows.length === 0 && (
+              <p
+                className="text-primary flex items-center gap-1.5 text-xs"
+                data-ocid="neuron_detail.import.success_state"
+              >
+                <Sparkles className="size-3.5" />
+                Import complete — chart and activity feed refreshed.
+              </p>
+            )}
+
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-muted-foreground text-[11px]">
+                {rows.length > 0
+                  ? `${rows.length} ${rows.length === 1 ? "row" : "rows"} parsed`
+                  : "No rows parsed yet"}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setRaw("");
+                    setConfirmed(false);
+                  }}
+                  disabled={!raw || onImport.isPending}
+                  data-ocid="neuron_detail.import.clear_button"
+                >
+                  Clear
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleConfirm}
+                  disabled={!canConfirm}
+                  data-ocid="neuron_detail.import.confirm_button"
+                >
+                  {onImport.isPending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Importing…
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="size-4" />
+                      Confirm import
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+}
+
+function parsePaste(input: string): {
+  rows: ParsedRow[];
+  errors: ParseError[];
+} {
+  const rows: ParsedRow[] = [];
+  const errors: ParseError[] = [];
+  const lines = input.split("\n");
+  let dataRowIndex = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    dataRowIndex += 1;
+    const parts = trimmed.split("\t");
+    if (parts.length < 2) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: "expected two tab-separated columns",
+      });
+      continue;
+    }
+    const dateStr = parts[0].trim();
+    const amountStr = parts[1].trim();
+    const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateStr);
+    if (!dateMatch) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `bad date "${dateStr}" (use DD/MM/YYYY)`,
+      });
+      continue;
+    }
+    const day = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const year = Number(dateMatch[3]);
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
+    if (
+      dateObj.getUTCFullYear() !== year ||
+      dateObj.getUTCMonth() !== month - 1 ||
+      dateObj.getUTCDate() !== day
+    ) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid date "${dateStr}"`,
+      });
+      continue;
+    }
+    const amountNum = Number(amountStr);
+    if (!Number.isFinite(amountNum) || amountNum < 0) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `non-numeric amount "${amountStr}"`,
+      });
+      continue;
+    }
+    const amountE8s = BigInt(Math.round(amountNum * 1e8));
+    const prev = rows[rows.length - 1];
+    const deltaE8s = prev == null ? null : amountE8s - prev.amountE8s;
+    const isDisburse = deltaE8s != null && deltaE8s < 0n;
+    rows.push({
+      rowIndex: dataRowIndex,
+      date: dateStr,
+      dateMs: dateObj.getTime(),
+      amountE8s,
+      deltaE8s,
+      isDisburse,
+    });
+  }
+  return { rows, errors };
 }
 
 function DetailSkeleton() {

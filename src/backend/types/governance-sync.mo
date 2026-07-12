@@ -33,6 +33,7 @@ module {
     maturity_e8s_equivalent : Nat64;
     staked_maturity_e8s_equivalent : ?Nat64;
     auto_stake_maturity : ?Bool;
+    cached_neuron_stake_e8s : ?Nat64;  // actual ICP locked in the neuron
   };
 
   /// NNS governance error variant returned inside the #Err branch of
@@ -60,6 +61,7 @@ module {
     neuronId : NeuronId;
     status : SyncStatus;
     maturityE8s : ?Nat64;     // combined (unstaked + staked) maturity, if successful
+    stakedE8s : ?Nat64;       // sync-sourced ICP locked in the neuron, if successful
     lastSyncError : ?Text;    // error reason when status is #failed, else null
   };
 };

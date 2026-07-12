@@ -26,6 +26,7 @@ type SyncResult =
    lastSyncError: opt text;
    maturityE8s: opt nat64;
    neuronId: NeuronId;
+   stakedE8s: opt nat64;
    status: SyncStatus;
  };
 type Result__1 = 
@@ -61,6 +62,7 @@ type Neuron =
    initialStakeE8s: E8s;
    name: text;
    ownerId: principal;
+   stakedE8s: E8s;
    startDate: Timestamp;
  };
 type MonthlyBreakdown = 

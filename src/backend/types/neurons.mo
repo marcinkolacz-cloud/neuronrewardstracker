@@ -11,7 +11,8 @@ module {
     name : Text;                   // user-supplied label
     startDate : Timestamp;         // when the user began tracking (ns)
     dissolveDelaySeconds : Nat64;  // dissolve delay at time of tracking
-    initialStakeE8s : E8s;         // initial stake recorded by the user
+    initialStakeE8s : E8s;         // manual fallback stake recorded by the user
+    stakedE8s : E8s;                // sync-sourced ICP locked in the neuron
     ownerId : Principal;           // authenticated caller who owns this record
   };
 };

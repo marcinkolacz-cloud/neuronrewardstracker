@@ -1,9 +1,10 @@
 /**
  * React Query hooks for NNS governance sync + manual snapshot fallback.
- *   useSyncNeuron      — sync a single neuron with governance (syncNeuron)
- *   useSyncAllNeurons  — sync every tracked neuron (syncAllMyNeurons)
- *   useRecordSnapshot  — manual snapshot entry (recordSnapshot)
- *   useSyncError       — stored sync error reason for a neuron (getSyncError)
+ *   useSyncNeuron            — sync a single neuron with governance (syncNeuron)
+ *   useSyncAllNeurons        — sync every tracked neuron (syncAllMyNeurons)
+ *   useRecordSnapshot        — manual snapshot entry (recordSnapshot)
+ *   useSyncError             — stored sync error reason for a neuron (getSyncError)
+ *   useImportHistoricalData  — bulk-import past maturity readings (importHistoricalData)
  *
  * Return types match the generated backend bindings:
  *   syncNeuron      → SyncResult { status, maturityE8s?, lastSyncError?, neuronId }
@@ -11,12 +12,14 @@
  *   recordSnapshot  → DailyReward  (args: neuronId, unstakedMaturityE8s,
  *                                    stakedMaturityE8s, autoStakeMaturity)
  *   getSyncError    → string | null
+ *   importHistoricalData → void  (args: neuronId, entries: HistoricalEntry[])
  * None of these return a Candid Result variant, so there are no
  * `__kind__ === "ok"` checks here.
  */
 
 import {
   type DailyReward,
+  type HistoricalEntry,
   type SyncResult,
   useBackendActor,
 } from "@/lib/backend-actor";
@@ -120,5 +123,35 @@ export function useSyncError(neuronId: string | null) {
       return actor.getSyncError(BigInt(neuronId));
     },
     enabled: !!actor && !isFetching && !!neuronId,
+  });
+}
+
+/**
+ * Bulk-import past maturity readings for a neuron (importHistoricalData).
+ * Each HistoricalEntry carries a combined maturity figure split into
+ * unstakedMaturityE8s (the parsed amount) and stakedMaturityE8s (0 for
+ * paste-in history). On success the reward history query is invalidated so
+ * the chart / activity feed refresh.
+ */
+export function useImportHistoricalData() {
+  const queryClient = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation<
+    void,
+    Error,
+    { neuronId: bigint; entries: HistoricalEntry[] }
+  >({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.importHistoricalData(vars.neuronId, vars.entries);
+    },
+    onSuccess: (_data, vars) => {
+      const id = vars.neuronId.toString();
+      void queryClient.invalidateQueries({ queryKey: rewardsKey(id) });
+      void queryClient.invalidateQueries({ queryKey: statsKey(id) });
+      void queryClient.invalidateQueries({ queryKey: syncStatusKey(id) });
+      void queryClient.invalidateQueries({ queryKey: NEURONS_KEY });
+      void queryClient.invalidateQueries({ queryKey: PORTFOLIO_KEY });
+    },
   });
 }

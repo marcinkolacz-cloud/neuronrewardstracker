@@ -25,6 +25,7 @@ mixin (
       startDate;
       dissolveDelaySeconds;
       initialStakeE8s;
+      stakedE8s = 0;
       ownerId = caller;
     };
     NeuronsLib.addNeuron(neurons, neuron);

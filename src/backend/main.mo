@@ -61,6 +61,7 @@ actor {
           startDate = 0 : Int;
           dissolveDelaySeconds = 0 : Nat64;
           initialStakeE8s = 0 : Nat64;
+          stakedE8s = 0 : Nat64;
           ownerId = Principal.fromText("aaaaa-aa");
         })
         .ownedBy("ownerId")
@@ -158,12 +159,14 @@ actor {
   transient let _dailySyncTimer : Timer.TimerId = Timer.recurringTimer<system>(
     #hours(24),
     func() : async () {
-      for ((neuronId, _neuron) in neurons.entries()) {
+      for ((neuronId, neuron) in neurons.entries()) {
         ignore await GovernanceSyncLib.doSync(
           governance,
           rewards,
+          neurons,
           syncStatuses,
           syncErrors,
+          neuron.ownerId,
           neuronId,
         );
       };

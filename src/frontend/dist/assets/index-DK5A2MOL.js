@@ -33507,7 +33507,7 @@ function useImageLoadingStatus(src, { referrerPolicy, crossOrigin }) {
   }, [image, crossOrigin, referrerPolicy]);
   return loadingStatus;
 }
-var Root$4 = Avatar$1;
+var Root$5 = Avatar$1;
 var Fallback = AvatarFallback$1;
 function r(e3) {
   var t2, f2, n2 = "";
@@ -35989,7 +35989,7 @@ function Avatar({
   ...props
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root$4,
+    Root$5,
     {
       "data-slot": "avatar",
       className: cn(
@@ -36152,7 +36152,7 @@ Separator$1.displayName = NAME$1;
 function isValidOrientation(orientation) {
   return ORIENTATIONS.includes(orientation);
 }
-var Root$3 = Separator$1;
+var Root$4 = Separator$1;
 function Separator({
   className,
   orientation = "horizontal",
@@ -36160,7 +36160,7 @@ function Separator({
   ...props
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root$3,
+    Root$4,
     {
       "data-slot": "separator",
       decorative,
@@ -41520,7 +41520,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$f = [
+const __iconNode$j = [
   [
     "path",
     {
@@ -41529,25 +41529,25 @@ const __iconNode$f = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$f);
+const Activity = createLucideIcon("activity", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [
+const __iconNode$i = [
   ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
   ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$e);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$d = [
+const __iconNode$h = [
   [
     "path",
     {
@@ -41568,7 +41568,50 @@ const __iconNode$d = [
   ["circle", { cx: "20", cy: "21", r: ".5", key: "yhc1fs" }],
   ["circle", { cx: "20", cy: "8", r: ".5", key: "1e43v0" }]
 ];
-const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$d);
+const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$h);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$g = [
+  ["path", { d: "M8 2v4", key: "1cmpym" }],
+  ["path", { d: "M16 2v4", key: "4m81vk" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
+  ["path", { d: "M3 10h18", key: "8toen8" }]
+];
+const Calendar = createLucideIcon("calendar", __iconNode$g);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$f = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$f);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$e = [
+  ["path", { d: "M11 14h10", key: "1w8e9d" }],
+  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
+  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
+  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
+  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
+];
+const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$e);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$d = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$d);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41576,39 +41619,18 @@ const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$d);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$c = [
-  ["path", { d: "M8 2v4", key: "1cmpym" }],
-  ["path", { d: "M16 2v4", key: "4m81vk" }],
-  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
-  ["path", { d: "M3 10h18", key: "8toen8" }]
-];
-const Calendar = createLucideIcon("calendar", __iconNode$c);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$b = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$b);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$a = [
   ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
   ["path", { d: "M21 12H9", key: "dn1m92" }],
   ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
 ];
-const LogOut = createLucideIcon("log-out", __iconNode$a);
+const LogOut = createLucideIcon("log-out", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$9 = [
+const __iconNode$b = [
   [
     "path",
     {
@@ -41618,7 +41640,31 @@ const __iconNode$9 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$9);
+const Pencil = createLucideIcon("pencil", __iconNode$b);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$a = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$a);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$9 = [
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+];
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$9);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41626,30 +41672,6 @@ const Pencil = createLucideIcon("pencil", __iconNode$9);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$8 = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
-];
-const Plus = createLucideIcon("plus", __iconNode$8);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$7 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$7);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$6 = [
   [
     "path",
     {
@@ -41659,14 +41681,14 @@ const __iconNode$6 = [
   ],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ShieldCheck = createLucideIcon("shield-check", __iconNode$6);
+const ShieldCheck = createLucideIcon("shield-check", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$5 = [
+const __iconNode$7 = [
   [
     "path",
     {
@@ -41679,7 +41701,32 @@ const __iconNode$5 = [
   ["path", { d: "M4 17v2", key: "vumght" }],
   ["path", { d: "M5 18H3", key: "zchphs" }]
 ];
-const Sparkles = createLucideIcon("sparkles", __iconNode$5);
+const Sparkles = createLucideIcon("sparkles", __iconNode$7);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$6 = [
+  ["path", { d: "M3 6h18", key: "d0wm0j" }],
+  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
+  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
+  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
+  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+];
+const Trash2 = createLucideIcon("trash-2", __iconNode$6);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$5 = [
+  ["path", { d: "M16 17h6v-6", key: "t6n2it" }],
+  ["path", { d: "m22 17-8.5-8.5-5 5L2 7", key: "x473p" }]
+];
+const TrendingDown = createLucideIcon("trending-down", __iconNode$5);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41687,13 +41734,10 @@ const Sparkles = createLucideIcon("sparkles", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
-  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
-  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
-  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
+  ["path", { d: "M16 7h6v6", key: "box55l" }],
+  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
 ];
-const Trash2 = createLucideIcon("trash-2", __iconNode$4);
+const TrendingUp = createLucideIcon("trending-up", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41701,17 +41745,6 @@ const Trash2 = createLucideIcon("trash-2", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  ["path", { d: "M16 7h6v6", key: "box55l" }],
-  ["path", { d: "m22 7-8.5 8.5-5-5L2 17", key: "1t1m79" }]
-];
-const TrendingUp = createLucideIcon("trending-up", __iconNode$3);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$2 = [
   [
     "path",
     {
@@ -41722,7 +41755,19 @@ const __iconNode$2 = [
   ["path", { d: "M12 9v4", key: "juzpu7" }],
   ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
-const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$2);
+const TriangleAlert = createLucideIcon("triangle-alert", __iconNode$3);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$2 = [
+  ["path", { d: "M12 3v12", key: "1x0j5s" }],
+  ["path", { d: "m17 8-5-5-5 5", key: "7q97r8" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }]
+];
+const Upload = createLucideIcon("upload", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -42002,13 +42047,13 @@ var Label$2 = reactExports.forwardRef((props, forwardedRef) => {
   );
 });
 Label$2.displayName = NAME;
-var Root$2 = Label$2;
+var Root$3 = Label$2;
 function Label$1({
   className,
   ...props
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root$2,
+    Root$3,
     {
       "data-slot": "label",
       className: cn(
@@ -42112,6 +42157,7 @@ const Neuron = Record({
   "dissolveDelaySeconds": Nat64,
   "ownerId": Principal2,
   "name": Text$1,
+  "stakedE8s": E8s,
   "initialStakeE8s": E8s,
   "startDate": Timestamp
 });
@@ -42119,6 +42165,7 @@ const SyncResult = Record({
   "status": SyncStatus,
   "maturityE8s": Opt(Nat64),
   "lastSyncError": Opt(Text$1),
+  "stakedE8s": Opt(Nat64),
   "neuronId": NeuronId
 });
 Service({
@@ -42255,6 +42302,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "dissolveDelaySeconds": IDL2.Nat64,
     "ownerId": IDL2.Principal,
     "name": IDL2.Text,
+    "stakedE8s": E8s2,
     "initialStakeE8s": E8s2,
     "startDate": Timestamp2
   });
@@ -42262,6 +42310,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "status": SyncStatus2,
     "maturityE8s": IDL2.Opt(IDL2.Nat64),
     "lastSyncError": IDL2.Opt(IDL2.Text),
+    "stakedE8s": IDL2.Opt(IDL2.Nat64),
     "neuronId": NeuronId2
   });
   return IDL2.Service({
@@ -42738,6 +42787,7 @@ function from_candid_record_n27(_uploadFile, _downloadFile, value) {
     status: from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value.status),
     maturityE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.maturityE8s)),
     lastSyncError: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.lastSyncError)),
+    stakedE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.stakedE8s)),
     neuronId: value.neuronId
   };
 }
@@ -42993,6 +43043,24 @@ function useSyncError(neuronId) {
       return actor.getSyncError(BigInt(neuronId));
     },
     enabled: !!actor && !isFetching && !!neuronId
+  });
+}
+function useImportHistoricalData() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.importHistoricalData(vars.neuronId, vars.entries);
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.neuronId.toString();
+      void queryClient2.invalidateQueries({ queryKey: rewardsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: syncStatusKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
+      void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
+    }
   });
 }
 const LayoutGroupContext = reactExports.createContext({});
@@ -53460,11 +53528,11 @@ var Dialog = (props) => {
   );
 };
 Dialog.displayName = DIALOG_NAME;
-var TRIGGER_NAME$1 = "DialogTrigger";
+var TRIGGER_NAME$2 = "DialogTrigger";
 var DialogTrigger = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, ...triggerProps } = props;
-    const context = useDialogContext(TRIGGER_NAME$1, __scopeDialog);
+    const context = useDialogContext(TRIGGER_NAME$2, __scopeDialog);
     const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Primitive.button,
@@ -53473,7 +53541,7 @@ var DialogTrigger = reactExports.forwardRef(
         "aria-haspopup": "dialog",
         "aria-expanded": context.open,
         "aria-controls": context.contentId,
-        "data-state": getState$1(context.open),
+        "data-state": getState$2(context.open),
         ...triggerProps,
         ref: composedTriggerRef,
         onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
@@ -53481,7 +53549,7 @@ var DialogTrigger = reactExports.forwardRef(
     );
   }
 );
-DialogTrigger.displayName = TRIGGER_NAME$1;
+DialogTrigger.displayName = TRIGGER_NAME$2;
 var PORTAL_NAME$1 = "DialogPortal";
 var [PortalProvider, usePortalContext] = createDialogContext(PORTAL_NAME$1, {
   forceMount: void 0
@@ -53513,7 +53581,7 @@ var DialogOverlayImpl = reactExports.forwardRef(
       /* @__PURE__ */ jsxRuntimeExports.jsx(ReactRemoveScroll, { as: Slot, allowPinchZoom: true, shards: [context.contentRef], children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Primitive.div,
         {
-          "data-state": getState$1(context.open),
+          "data-state": getState$2(context.open),
           ...overlayProps,
           ref: forwardedRef,
           style: { pointerEvents: "auto", ...overlayProps.style }
@@ -53522,19 +53590,19 @@ var DialogOverlayImpl = reactExports.forwardRef(
     );
   }
 );
-var CONTENT_NAME$1 = "DialogContent";
+var CONTENT_NAME$2 = "DialogContent";
 var DialogContent = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const portalContext = usePortalContext(CONTENT_NAME$1, props.__scopeDialog);
+    const portalContext = usePortalContext(CONTENT_NAME$2, props.__scopeDialog);
     const { forceMount = portalContext.forceMount, ...contentProps } = props;
-    const context = useDialogContext(CONTENT_NAME$1, props.__scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentNonModal, { ...contentProps, ref: forwardedRef }) });
   }
 );
-DialogContent.displayName = CONTENT_NAME$1;
+DialogContent.displayName = CONTENT_NAME$2;
 var DialogContentModal = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const context = useDialogContext(CONTENT_NAME$1, props.__scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
     const contentRef = reactExports.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, context.contentRef, contentRef);
     reactExports.useEffect(() => {
@@ -53569,7 +53637,7 @@ var DialogContentModal = reactExports.forwardRef(
 );
 var DialogContentNonModal = reactExports.forwardRef(
   (props, forwardedRef) => {
-    const context = useDialogContext(CONTENT_NAME$1, props.__scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
     const hasInteractedOutsideRef = reactExports.useRef(false);
     const hasPointerDownOutsideRef = reactExports.useRef(false);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -53612,7 +53680,7 @@ var DialogContentNonModal = reactExports.forwardRef(
 var DialogContentImpl = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
-    const context = useDialogContext(CONTENT_NAME$1, __scopeDialog);
+    const context = useDialogContext(CONTENT_NAME$2, __scopeDialog);
     const contentRef = reactExports.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, contentRef);
     useFocusGuards();
@@ -53632,7 +53700,7 @@ var DialogContentImpl = reactExports.forwardRef(
               id: context.contentId,
               "aria-describedby": context.descriptionId,
               "aria-labelledby": context.titleId,
-              "data-state": getState$1(context.open),
+              "data-state": getState$2(context.open),
               ...contentProps,
               ref: composedRefs,
               onDismiss: () => context.onOpenChange(false)
@@ -53682,12 +53750,12 @@ var DialogClose = reactExports.forwardRef(
   }
 );
 DialogClose.displayName = CLOSE_NAME;
-function getState$1(open) {
+function getState$2(open) {
   return open ? "open" : "closed";
 }
 var TITLE_WARNING_NAME = "DialogTitleWarning";
 var [WarningProvider, useWarningContext] = createContext2(TITLE_WARNING_NAME, {
-  contentName: CONTENT_NAME$1,
+  contentName: CONTENT_NAME$2,
   titleName: TITLE_NAME$1,
   docsSlug: "dialog"
 });
@@ -53720,7 +53788,7 @@ var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
   }, [MESSAGE, contentRef, descriptionId]);
   return null;
 };
-var Root$1 = Dialog;
+var Root$2 = Dialog;
 var Trigger = DialogTrigger;
 var Portal = DialogPortal;
 var Overlay = DialogOverlay;
@@ -53736,10 +53804,10 @@ var useDialogScope = createDialogScope();
 var AlertDialog$1 = (props) => {
   const { __scopeAlertDialog, ...alertDialogProps } = props;
   const dialogScope = useDialogScope(__scopeAlertDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$1, { ...dialogScope, ...alertDialogProps, modal: true });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$2, { ...dialogScope, ...alertDialogProps, modal: true });
 };
 AlertDialog$1.displayName = ROOT_NAME;
-var TRIGGER_NAME = "AlertDialogTrigger";
+var TRIGGER_NAME$1 = "AlertDialogTrigger";
 var AlertDialogTrigger$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
     const { __scopeAlertDialog, ...triggerProps } = props;
@@ -53747,7 +53815,7 @@ var AlertDialogTrigger$1 = reactExports.forwardRef(
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger, { ...dialogScope, ...triggerProps, ref: forwardedRef });
   }
 );
-AlertDialogTrigger$1.displayName = TRIGGER_NAME;
+AlertDialogTrigger$1.displayName = TRIGGER_NAME$1;
 var PORTAL_NAME = "AlertDialogPortal";
 var AlertDialogPortal$1 = (props) => {
   const { __scopeAlertDialog, ...portalProps } = props;
@@ -53764,8 +53832,8 @@ var AlertDialogOverlay$1 = reactExports.forwardRef(
   }
 );
 AlertDialogOverlay$1.displayName = OVERLAY_NAME;
-var CONTENT_NAME = "AlertDialogContent";
-var [AlertDialogContentProvider, useAlertDialogContentContext] = createAlertDialogContext(CONTENT_NAME);
+var CONTENT_NAME$1 = "AlertDialogContent";
+var [AlertDialogContentProvider, useAlertDialogContentContext] = createAlertDialogContext(CONTENT_NAME$1);
 var Slottable = /* @__PURE__ */ createSlottable("AlertDialogContent");
 var AlertDialogContent$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -53777,7 +53845,7 @@ var AlertDialogContent$1 = reactExports.forwardRef(
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       WarningProvider,
       {
-        contentName: CONTENT_NAME,
+        contentName: CONTENT_NAME$1,
         titleName: TITLE_NAME,
         docsSlug: "alert-dialog",
         children: /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogContentProvider, { scope: __scopeAlertDialog, cancelRef, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -53804,7 +53872,7 @@ var AlertDialogContent$1 = reactExports.forwardRef(
     );
   }
 );
-AlertDialogContent$1.displayName = CONTENT_NAME;
+AlertDialogContent$1.displayName = CONTENT_NAME$1;
 var TITLE_NAME = "AlertDialogTitle";
 var AlertDialogTitle$1 = reactExports.forwardRef(
   (props, forwardedRef) => {
@@ -53842,11 +53910,11 @@ var AlertDialogCancel$1 = reactExports.forwardRef(
 );
 AlertDialogCancel$1.displayName = CANCEL_NAME;
 var DescriptionWarning = ({ contentRef }) => {
-  const MESSAGE = `\`${CONTENT_NAME}\` requires a description for the component to be accessible for screen reader users.
+  const MESSAGE = `\`${CONTENT_NAME$1}\` requires a description for the component to be accessible for screen reader users.
 
-You can add a description to the \`${CONTENT_NAME}\` by passing a \`${DESCRIPTION_NAME}\` component as a child, which also benefits sighted users by adding visible context to the dialog.
+You can add a description to the \`${CONTENT_NAME$1}\` by passing a \`${DESCRIPTION_NAME}\` component as a child, which also benefits sighted users by adding visible context to the dialog.
 
-Alternatively, you can use your own component as a description by assigning it an \`id\` and passing the same value to the \`aria-describedby\` prop in \`${CONTENT_NAME}\`. If the description is confusing or duplicative for sighted users, you can use the \`@radix-ui/react-visually-hidden\` primitive as a wrapper around your description component.
+Alternatively, you can use your own component as a description by assigning it an \`id\` and passing the same value to the \`aria-describedby\` prop in \`${CONTENT_NAME$1}\`. If the description is confusing or duplicative for sighted users, you can use the \`@radix-ui/react-visually-hidden\` primitive as a wrapper around your description component.
 
 For more information, see https://radix-ui.com/primitives/docs/components/alert-dialog`;
   reactExports.useEffect(() => {
@@ -53992,6 +54060,163 @@ function AlertDialogCancel({
     Cancel,
     {
       className: cn(buttonVariants({ variant: "outline" }), className),
+      ...props
+    }
+  );
+}
+var COLLAPSIBLE_NAME = "Collapsible";
+var [createCollapsibleContext] = createContextScope(COLLAPSIBLE_NAME);
+var [CollapsibleProvider, useCollapsibleContext] = createCollapsibleContext(COLLAPSIBLE_NAME);
+var Collapsible$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeCollapsible,
+      open: openProp,
+      defaultOpen,
+      disabled,
+      onOpenChange,
+      ...collapsibleProps
+    } = props;
+    const [open, setOpen] = useControllableState({
+      prop: openProp,
+      defaultProp: defaultOpen ?? false,
+      onChange: onOpenChange,
+      caller: COLLAPSIBLE_NAME
+    });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CollapsibleProvider,
+      {
+        scope: __scopeCollapsible,
+        disabled,
+        contentId: useId(),
+        open,
+        onOpenToggle: reactExports.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Primitive.div,
+          {
+            "data-state": getState$1(open),
+            "data-disabled": disabled ? "" : void 0,
+            ...collapsibleProps,
+            ref: forwardedRef
+          }
+        )
+      }
+    );
+  }
+);
+Collapsible$1.displayName = COLLAPSIBLE_NAME;
+var TRIGGER_NAME = "CollapsibleTrigger";
+var CollapsibleTrigger$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeCollapsible, ...triggerProps } = props;
+    const context = useCollapsibleContext(TRIGGER_NAME, __scopeCollapsible);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.button,
+      {
+        type: "button",
+        "aria-controls": context.contentId,
+        "aria-expanded": context.open || false,
+        "data-state": getState$1(context.open),
+        "data-disabled": context.disabled ? "" : void 0,
+        disabled: context.disabled,
+        ...triggerProps,
+        ref: forwardedRef,
+        onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
+      }
+    );
+  }
+);
+CollapsibleTrigger$1.displayName = TRIGGER_NAME;
+var CONTENT_NAME = "CollapsibleContent";
+var CollapsibleContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { forceMount, ...contentProps } = props;
+    const context = useCollapsibleContext(CONTENT_NAME, props.__scopeCollapsible);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: ({ present }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContentImpl, { ...contentProps, ref: forwardedRef, present }) });
+  }
+);
+CollapsibleContent$1.displayName = CONTENT_NAME;
+var CollapsibleContentImpl = reactExports.forwardRef((props, forwardedRef) => {
+  const { __scopeCollapsible, present, children, ...contentProps } = props;
+  const context = useCollapsibleContext(CONTENT_NAME, __scopeCollapsible);
+  const [isPresent, setIsPresent] = reactExports.useState(present);
+  const ref = reactExports.useRef(null);
+  const composedRefs = useComposedRefs(forwardedRef, ref);
+  const heightRef = reactExports.useRef(0);
+  const height = heightRef.current;
+  const widthRef = reactExports.useRef(0);
+  const width = widthRef.current;
+  const isOpen = context.open || isPresent;
+  const isMountAnimationPreventedRef = reactExports.useRef(isOpen);
+  const originalStylesRef = reactExports.useRef(void 0);
+  reactExports.useEffect(() => {
+    const rAF = requestAnimationFrame(() => isMountAnimationPreventedRef.current = false);
+    return () => cancelAnimationFrame(rAF);
+  }, []);
+  useLayoutEffect2(() => {
+    const node = ref.current;
+    if (node) {
+      originalStylesRef.current = originalStylesRef.current || {
+        transitionDuration: node.style.transitionDuration,
+        animationName: node.style.animationName
+      };
+      node.style.transitionDuration = "0s";
+      node.style.animationName = "none";
+      const rect = node.getBoundingClientRect();
+      heightRef.current = rect.height;
+      widthRef.current = rect.width;
+      if (!isMountAnimationPreventedRef.current) {
+        node.style.transitionDuration = originalStylesRef.current.transitionDuration;
+        node.style.animationName = originalStylesRef.current.animationName;
+      }
+      setIsPresent(present);
+    }
+  }, [context.open, present]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Primitive.div,
+    {
+      "data-state": getState$1(context.open),
+      "data-disabled": context.disabled ? "" : void 0,
+      id: context.contentId,
+      hidden: !isOpen,
+      ...contentProps,
+      ref: composedRefs,
+      style: {
+        [`--radix-collapsible-content-height`]: height ? `${height}px` : void 0,
+        [`--radix-collapsible-content-width`]: width ? `${width}px` : void 0,
+        ...props.style
+      },
+      children: isOpen && children
+    }
+  );
+});
+function getState$1(open) {
+  return open ? "open" : "closed";
+}
+var Root$1 = Collapsible$1;
+function Collapsible({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$1, { "data-slot": "collapsible", ...props });
+}
+function CollapsibleTrigger({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    CollapsibleTrigger$1,
+    {
+      "data-slot": "collapsible-trigger",
+      ...props
+    }
+  );
+}
+function CollapsibleContent({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    CollapsibleContent$1,
+    {
+      "data-slot": "collapsible-content",
       ...props
     }
   );
@@ -54202,6 +54427,95 @@ function Switch({
           )
         }
       )
+    }
+  );
+}
+function Table({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      "data-slot": "table-container",
+      className: "relative w-full overflow-x-auto",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "table",
+        {
+          "data-slot": "table",
+          className: cn("w-full caption-bottom text-sm", className),
+          ...props
+        }
+      )
+    }
+  );
+}
+function TableHeader({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "thead",
+    {
+      "data-slot": "table-header",
+      className: cn("[&_tr]:border-b", className),
+      ...props
+    }
+  );
+}
+function TableBody({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "tbody",
+    {
+      "data-slot": "table-body",
+      className: cn("[&_tr:last-child]:border-0", className),
+      ...props
+    }
+  );
+}
+function TableRow({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "tr",
+    {
+      "data-slot": "table-row",
+      className: cn(
+        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function TableHead({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "th",
+    {
+      "data-slot": "table-head",
+      className: cn(
+        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function TableCell({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "td",
+    {
+      "data-slot": "table-cell",
+      className: cn(
+        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function Textarea({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "textarea",
+    {
+      "data-slot": "textarea",
+      className: cn(
+        "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      ),
+      ...props
     }
   );
 }
@@ -75867,6 +76181,7 @@ function NeuronDetailPage() {
   const removeNeuron = useRemoveNeuron();
   const updateNeuron = useUpdateNeuron();
   const recordSnapshot = useRecordSnapshot();
+  const importHistorical = useImportHistoricalData();
   const navigate = useNavigate();
   const neuron = reactExports.useMemo(() => {
     if (!neurons) return void 0;
@@ -76032,7 +76347,14 @@ function NeuronDetailPage() {
             submitting: recordSnapshot.isPending
           }
         )
-      ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ImportHistoricalPanel,
+        {
+          neuronId: BigInt(neuronId),
+          onImport: importHistorical
+        }
+      )
     ] })
   ] });
 }
@@ -76147,7 +76469,9 @@ function NeuronHeader({
         Stat,
         {
           label: "Staked",
-          value: formatIcpCompact(neuron.initialStakeE8s),
+          value: formatIcpCompact(
+            neuron.stakedE8s > 0n ? neuron.stakedE8s : neuron.initialStakeE8s
+          ),
           icon: Wallet
         }
       ),
@@ -76709,6 +77033,284 @@ function SnapshotEntryForm({
       ) })
     ] }) })
   ] });
+}
+function ImportHistoricalPanel({
+  neuronId,
+  onImport
+}) {
+  const [open, setOpen] = reactExports.useState(false);
+  const [raw, setRaw] = reactExports.useState("");
+  const [confirmed, setConfirmed] = reactExports.useState(false);
+  const { rows, errors } = reactExports.useMemo(() => parsePaste(raw), [raw]);
+  const hasErrors = errors.length > 0;
+  const canConfirm = rows.length > 0 && !hasErrors && !onImport.isPending;
+  const handleConfirm = () => {
+    if (!canConfirm) return;
+    const entries = rows.map((r2) => ({
+      timestamp: BigInt(Math.floor(r2.dateMs / 1e3)),
+      unstakedMaturityE8s: r2.amountE8s,
+      stakedMaturityE8s: 0n
+    }));
+    onImport.mutate(
+      { neuronId, entries },
+      {
+        onSuccess: () => {
+          ue.success(`Imported ${entries.length} historical readings`);
+          setRaw("");
+          setConfirmed(true);
+          setOpen(false);
+        },
+        onError: (err) => ue.error(err.message)
+      }
+    );
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "bg-card/60 border-border/60 mt-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Collapsible, { open, onOpenChange: setOpen, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "button",
+      {
+        type: "button",
+        className: "group flex w-full items-center justify-between px-6 py-4 text-left transition-smooth",
+        "data-ocid": "neuron_detail.import.toggle",
+        "aria-expanded": open,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 min-w-0", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardPaste, { className: "size-4" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground text-sm font-semibold", children: "Import historical maturity" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "Paste tab-separated rows (DD/MM/YYYY, maturity in ICP) to backfill past readings." })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ChevronDown,
+            {
+              className: cn(
+                "text-muted-foreground size-4 shrink-0 transition-transform duration-200",
+                open && "rotate-180"
+              )
+            }
+          )
+        ]
+      }
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(CollapsibleContent, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border/60 border-t" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 p-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Label$1,
+            {
+              htmlFor: "historical-paste",
+              className: "text-sm",
+              "data-ocid": "neuron_detail.import.paste.label",
+              children: [
+                "Paste rows (date ",
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: "⇥" }),
+                " maturity)"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Textarea,
+            {
+              id: "historical-paste",
+              value: raw,
+              onChange: (e3) => {
+                setRaw(e3.target.value);
+                setConfirmed(false);
+              },
+              placeholder: "01/01/2024	0.0123\n15/01/2024	0.0245\n01/02/2024	0.0367",
+              rows: 8,
+              className: "font-mono text-xs",
+              "data-ocid": "neuron_detail.import.paste.input"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px]", children: "One row per line, two columns separated by a tab. Date as DD/MM/YYYY, maturity as a decimal ICP amount." })
+        ] }),
+        hasErrors && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            role: "alert",
+            className: "border-destructive/40 bg-destructive/10 rounded-lg border p-3",
+            "data-ocid": "neuron_detail.import.error_state",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-destructive flex items-center gap-1.5 text-xs font-semibold", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "size-3.5" }),
+                errors.length,
+                " unparseable",
+                " ",
+                errors.length === 1 ? "row" : "rows",
+                " — fix before importing"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "text-destructive/90 mt-1.5 space-y-0.5 font-mono text-[11px]", children: errors.map((e3) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "li",
+                {
+                  "data-ocid": `neuron_detail.import.row_error.${e3.rowIndex}`,
+                  children: [
+                    "Row ",
+                    e3.rowIndex,
+                    ": ",
+                    e3.message
+                  ]
+                },
+                `err-${e3.rowIndex}`
+              )) })
+            ]
+          }
+        ),
+        rows.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto rounded-lg border border-border/60", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { "data-ocid": "neuron_detail.import.preview_table", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "#" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Date" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Maturity (ICP)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Delta" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Flag" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: rows.map((r2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            TableRow,
+            {
+              "data-ocid": `neuron_detail.import.preview.row.${i + 1}`,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-muted-foreground font-mono text-[11px]", children: r2.rowIndex }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-xs", children: r2.date }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-right text-xs", children: formatIcp(r2.amountE8s, 4, false) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  TableCell,
+                  {
+                    className: cn(
+                      "font-mono text-right text-xs",
+                      r2.deltaE8s == null ? "text-muted-foreground" : r2.deltaE8s < 0n ? "text-destructive" : "text-primary"
+                    ),
+                    children: r2.deltaE8s == null ? "—" : `${r2.deltaE8s < 0n ? "" : "+"}${formatIcp(r2.deltaE8s, 4, false)}`
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { children: r2.isDisburse ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Badge,
+                  {
+                    variant: "outline",
+                    className: "border-primary/40 bg-primary/10 text-primary gap-1 text-[10px]",
+                    "data-ocid": `neuron_detail.import.flag.${i + 1}`,
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingDown, { className: "size-2.5" }),
+                      "disburseOrSpawn"
+                    ]
+                  }
+                ) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-[11px]", children: "—" }) })
+              ]
+            },
+            `row-${r2.rowIndex}`
+          )) })
+        ] }) }),
+        confirmed && rows.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "p",
+          {
+            className: "text-primary flex items-center gap-1.5 text-xs",
+            "data-ocid": "neuron_detail.import.success_state",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "size-3.5" }),
+              "Import complete — chart and activity feed refreshed."
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px]", children: rows.length > 0 ? `${rows.length} ${rows.length === 1 ? "row" : "rows"} parsed` : "No rows parsed yet" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                variant: "ghost",
+                size: "sm",
+                onClick: () => {
+                  setRaw("");
+                  setConfirmed(false);
+                },
+                disabled: !raw || onImport.isPending,
+                "data-ocid": "neuron_detail.import.clear_button",
+                children: "Clear"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                size: "sm",
+                onClick: handleConfirm,
+                disabled: !canConfirm,
+                "data-ocid": "neuron_detail.import.confirm_button",
+                children: onImport.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "size-4 animate-spin" }),
+                  "Importing…"
+                ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "size-4" }),
+                  "Confirm import"
+                ] })
+              }
+            )
+          ] })
+        ] })
+      ] })
+    ] })
+  ] }) });
+}
+function parsePaste(input) {
+  const rows = [];
+  const errors = [];
+  const lines = input.split("\n");
+  let dataRowIndex = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    dataRowIndex += 1;
+    const parts = trimmed.split("	");
+    if (parts.length < 2) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: "expected two tab-separated columns"
+      });
+      continue;
+    }
+    const dateStr = parts[0].trim();
+    const amountStr = parts[1].trim();
+    const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateStr);
+    if (!dateMatch) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `bad date "${dateStr}" (use DD/MM/YYYY)`
+      });
+      continue;
+    }
+    const day = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const year = Number(dateMatch[3]);
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
+    if (dateObj.getUTCFullYear() !== year || dateObj.getUTCMonth() !== month - 1 || dateObj.getUTCDate() !== day) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid date "${dateStr}"`
+      });
+      continue;
+    }
+    const amountNum = Number(amountStr);
+    if (!Number.isFinite(amountNum) || amountNum < 0) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `non-numeric amount "${amountStr}"`
+      });
+      continue;
+    }
+    const amountE8s = BigInt(Math.round(amountNum * 1e8));
+    const prev = rows[rows.length - 1];
+    const deltaE8s = prev == null ? null : amountE8s - prev.amountE8s;
+    const isDisburse = deltaE8s != null && deltaE8s < 0n;
+    rows.push({
+      rowIndex: dataRowIndex,
+      date: dateStr,
+      dateMs: dateObj.getTime(),
+      amountE8s,
+      deltaE8s,
+      isDisburse
+    });
+  }
+  return { rows, errors };
 }
 function DetailSkeleton() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8", children: [

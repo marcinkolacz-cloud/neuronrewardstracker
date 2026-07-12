@@ -95,6 +95,7 @@ export interface Neuron {
     dissolveDelaySeconds: bigint;
     ownerId: Principal;
     name: string;
+    stakedE8s: E8s;
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
@@ -107,6 +108,7 @@ export interface SyncResult {
     status: SyncStatus;
     maturityE8s?: bigint;
     lastSyncError?: string;
+    stakedE8s?: bigint;
     neuronId: NeuronId;
 }
 export type NeuronId = bigint;

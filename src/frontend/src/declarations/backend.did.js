@@ -101,6 +101,7 @@ export const Neuron = IDL.Record({
   'dissolveDelaySeconds' : IDL.Nat64,
   'ownerId' : IDL.Principal,
   'name' : IDL.Text,
+  'stakedE8s' : E8s,
   'initialStakeE8s' : E8s,
   'startDate' : Timestamp,
 });
@@ -108,6 +109,7 @@ export const SyncResult = IDL.Record({
   'status' : SyncStatus,
   'maturityE8s' : IDL.Opt(IDL.Nat64),
   'lastSyncError' : IDL.Opt(IDL.Text),
+  'stakedE8s' : IDL.Opt(IDL.Nat64),
   'neuronId' : NeuronId,
 });
 
@@ -248,6 +250,7 @@ export const idlFactory = ({ IDL }) => {
     'dissolveDelaySeconds' : IDL.Nat64,
     'ownerId' : IDL.Principal,
     'name' : IDL.Text,
+    'stakedE8s' : E8s,
     'initialStakeE8s' : E8s,
     'startDate' : Timestamp,
   });
@@ -255,6 +258,7 @@ export const idlFactory = ({ IDL }) => {
     'status' : SyncStatus,
     'maturityE8s' : IDL.Opt(IDL.Nat64),
     'lastSyncError' : IDL.Opt(IDL.Text),
+    'stakedE8s' : IDL.Opt(IDL.Nat64),
     'neuronId' : NeuronId,
   });
   

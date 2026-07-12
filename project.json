@@ -1,22 +1,19 @@
 {
-  "overview": "Track ICP neuron staking rewards and maturity growth over time with daily snapshots, governance sync, and portfolio stats.",
+  "overview": "Tracks Internet Computer neuron maturity rewards over time with sync, manual snapshots, and historical bulk import.",
   "features": [
-    "Track multiple ICP neurons with names, dissolve delay, and initial stake",
-    "Daily reward snapshots with automatic delta computation",
-    "Sync maturity from the NNS governance canister",
-    "Portfolio summary with total staked, rewards, and percentage return",
-    "Maturity growth line chart per neuron",
-    "Activity feed timeline distinguishing growth from disburse/spawn events",
-    "Manual snapshot entry as fallback when hotkey is not configured"
+    "Sync neuron maturity from governance",
+    "Manual snapshot entry",
+    "Historical bulk import via paste-in with preview",
+    "Staked amount auto-updates from governance on every sync",
+    "Maturity charts and activity feed",
+    "Per-neuron stats and percentage return"
   ],
   "category": "productivity",
   "tags": [
-    "icp",
+    "internet-computer",
     "neuron",
-    "staking",
     "rewards",
-    "tracker",
-    "governance"
+    "tracking"
   ],
-  "last_updated": "2026-07-12T09:08:31.159Z"
+  "last_updated": "2026-07-12T10:52:01.409Z"
 }

@@ -141,6 +141,7 @@ export interface Neuron {
     dissolveDelaySeconds: bigint;
     ownerId: Principal;
     name: string;
+    stakedE8s: E8s;
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
@@ -153,6 +154,7 @@ export interface SyncResult {
     status: SyncStatus;
     maturityE8s?: bigint;
     lastSyncError?: string;
+    stakedE8s?: bigint;
     neuronId: NeuronId;
 }
 export type NeuronId = bigint;
@@ -673,17 +675,20 @@ function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uin
     status: _SyncStatus;
     maturityE8s: [] | [bigint];
     lastSyncError: [] | [string];
+    stakedE8s: [] | [bigint];
     neuronId: _NeuronId;
 }): {
     status: SyncStatus;
     maturityE8s?: bigint;
     lastSyncError?: string;
+    stakedE8s?: bigint;
     neuronId: NeuronId;
 } {
     return {
         status: from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value.status),
         maturityE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.maturityE8s)),
         lastSyncError: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.lastSyncError)),
+        stakedE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.stakedE8s)),
         neuronId: value.neuronId
     };
 }
