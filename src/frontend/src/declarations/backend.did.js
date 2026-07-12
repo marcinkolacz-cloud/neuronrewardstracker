@@ -93,6 +93,7 @@ export const PortfolioRewardStats = IDL.Record({
 });
 export const PortfolioStats = IDL.Record({
   'wtnRewardsThisMonthFloat' : IDL.Float64,
+  'totalPortfolioValueE8s' : IDL.Int,
   'totalMaturityE8s' : IDL.Nat64,
   'wtnRewardsE8s' : IDL.Int,
   'nnsStakedE8s' : E8s,
@@ -373,6 +374,7 @@ export const idlFactory = ({ IDL }) => {
   });
   const PortfolioStats = IDL.Record({
     'wtnRewardsThisMonthFloat' : IDL.Float64,
+    'totalPortfolioValueE8s' : IDL.Int,
     'totalMaturityE8s' : IDL.Nat64,
     'wtnRewardsE8s' : IDL.Int,
     'nnsStakedE8s' : E8s,

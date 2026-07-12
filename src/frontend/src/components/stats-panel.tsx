@@ -195,9 +195,9 @@ export function MonthlyBreakdownSection({
   const sorted = useMemo(
     () =>
       [...monthly].sort((a, b) => {
-        const y = Number(a.year - b.year);
+        const y = Number(b.year - a.year);
         if (y !== 0) return y;
-        return Number(a.month - b.month);
+        return Number(b.month - a.month);
       }),
     [monthly],
   );

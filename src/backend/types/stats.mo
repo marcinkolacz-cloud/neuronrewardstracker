@@ -48,6 +48,7 @@ module {
   /// `totalRewardsThisMonthE8s` field is NNS-only.
   public type PortfolioStats = {
     totalStakedE8s : E8s;        // combined: NNS stakedE8s + WTN redeemable (e8s)
+    totalPortfolioValueE8s : Int; // consistent apples-to-apples total: totalStakedE8s + totalMaturityE8s
     totalCapitalContributedE8s : E8s; // combined: NNS + WTN capital contributed
     totalRewardsE8s : Int;       // combined: NNS + WTN total rewards (organic growth only)
     percentageReturn : Float;     // totalRewards / totalCapitalContributed * 100

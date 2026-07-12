@@ -42434,6 +42434,7 @@ const PortfolioRewardStats = Record({
 });
 const PortfolioStats = Record({
   "wtnRewardsThisMonthFloat": Float64,
+  "totalPortfolioValueE8s": Int,
   "totalMaturityE8s": Nat64,
   "wtnRewardsE8s": Int,
   "nnsStakedE8s": E8s,
@@ -42710,6 +42711,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
   });
   const PortfolioStats2 = IDL2.Record({
     "wtnRewardsThisMonthFloat": IDL2.Float64,
+    "totalPortfolioValueE8s": IDL2.Int,
     "totalMaturityE8s": IDL2.Nat64,
     "wtnRewardsE8s": IDL2.Int,
     "nnsStakedE8s": E8s2,
@@ -74654,9 +74656,9 @@ function MonthlyBreakdownSection$1({
 }) {
   const sorted = reactExports.useMemo(
     () => [...monthly].sort((a2, b2) => {
-      const y2 = Number(a2.year - b2.year);
+      const y2 = Number(b2.year - a2.year);
       if (y2 !== 0) return y2;
-      return Number(a2.month - b2.month);
+      return Number(b2.month - a2.month);
     }),
     [monthly]
   );
@@ -78770,6 +78772,7 @@ function DashboardPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-8", "data-ocid": "dashboard.portfolio_summary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         PortfolioSummary,
         {
+          totalPortfolioValue: (portfolio == null ? void 0 : portfolio.totalPortfolioValueE8s) ?? null,
           totalStaked: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
           nnsStaked: (portfolio == null ? void 0 : portfolio.nnsStakedE8s) ?? null,
           wtnStaked: (portfolio == null ? void 0 : portfolio.wtnStakedE8s) ?? null,
@@ -78791,30 +78794,12 @@ function DashboardPage() {
       /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-6", "data-ocid": "dashboard.portfolio_value", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         PortfolioValuation,
         {
-          totalStakedE8s: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
-          totalMaturityE8s: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
+          totalPortfolioValueE8s: (portfolio == null ? void 0 : portfolio.totalPortfolioValueE8s) ?? null,
           priceQuery,
           onRefreshPrice: handleRefreshPrice,
           loading: portfolioLoading
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-6", "data-ocid": "dashboard.reward_stats_section", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          RewardStatsCard,
-          {
-            stats: rewardStats,
-            loading: rewardStatsLoading,
-            dataOcidPrefix: "dashboard.reward_stats"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          MonthlyBreakdownSection$1,
-          {
-            monthly: (rewardStats == null ? void 0 : rewardStats.monthly) ?? [],
-            dataOcidPrefix: "dashboard.monthly"
-          }
-        )
-      ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 flex items-center gap-2", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground font-display text-lg font-semibold tracking-tight", children: "Positions" }),
@@ -78853,11 +78838,29 @@ function DashboardPage() {
             `wtn-${position.id.toString()}`
           ))
         ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-6", "data-ocid": "dashboard.reward_stats_section", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          RewardStatsCard,
+          {
+            stats: rewardStats,
+            loading: rewardStatsLoading,
+            dataOcidPrefix: "dashboard.reward_stats"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          MonthlyBreakdownSection$1,
+          {
+            monthly: (rewardStats == null ? void 0 : rewardStats.monthly) ?? [],
+            dataOcidPrefix: "dashboard.monthly"
+          }
+        )
       ] })
     ] })
   ] });
 }
 function PortfolioSummary({
+  totalPortfolioValue,
   totalStaked,
   nnsStaked,
   wtnStaked,
@@ -78878,10 +78881,18 @@ function PortfolioSummary({
   const wtnRewardsThisMonthE8s = wtnRewardsThisMonthFloat != null ? BigInt(Math.trunc(wtnRewardsThisMonthFloat * Number(E8S_PER_ICP))) : 0n;
   const stats = [
     {
-      label: "Total Staked",
-      value: formatIcp(totalStaked, 2),
+      label: "Total Portfolio Value",
+      value: formatIcp(totalPortfolioValue, 2),
       icon: Wallet,
       accent: "text-primary",
+      hint: "NNS stake + maturity + nICP redeemable",
+      subline: "Includes accrued rewards from NNS neurons and nICP positions"
+    },
+    {
+      label: "Total Staked",
+      value: formatIcp(totalStaked, 2),
+      icon: Landmark,
+      accent: "text-muted-foreground",
       hint: !loading && neuronCount != null ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}` : null,
       subline: `${formatIcpCompact(nnsStaked ?? 0n)} (NNS) + ${formatIcpCompact(wtnStaked ?? 0n)} (nICP)`
     },
@@ -78926,7 +78937,7 @@ function PortfolioSummary({
       subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`
     }
   ];
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: stat.label }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(stat.icon, { className: cn("size-4", stat.accent) })
@@ -78946,8 +78957,7 @@ function PortfolioSummary({
   ] }, stat.label)) });
 }
 function PortfolioValuation({
-  totalStakedE8s,
-  totalMaturityE8s,
+  totalPortfolioValueE8s,
   priceQuery,
   onRefreshPrice,
   loading
@@ -78955,7 +78965,7 @@ function PortfolioValuation({
   const price = priceQuery.data ?? null;
   const priceLoading = priceQuery.isLoading;
   const priceStale = (price == null ? void 0 : price.cached) === true;
-  const totalE8s = totalStakedE8s != null && totalMaturityE8s != null ? totalStakedE8s + totalMaturityE8s : null;
+  const totalE8s = totalPortfolioValueE8s;
   const icpAmount = totalE8s != null ? Number(totalE8s / E8S_PER_ICP) + Number(totalE8s % E8S_PER_ICP) / Number(E8S_PER_ICP) : null;
   const usdValue = icpAmount != null && (price == null ? void 0 : price.usd) != null ? icpAmount * price.usd : null;
   const plnValue = icpAmount != null && (price == null ? void 0 : price.pln) != null ? icpAmount * price.pln : null;
@@ -82803,9 +82813,9 @@ function MonthlyBreakdownSection({
 }) {
   const sorted = reactExports.useMemo(
     () => [...monthly].sort((a2, b2) => {
-      const y2 = Number(a2.year - b2.year);
+      const y2 = Number(b2.year - a2.year);
       if (y2 !== 0) return y2;
-      return Number(a2.month - b2.month);
+      return Number(b2.month - a2.month);
     }),
     [monthly]
   );

@@ -92,6 +92,7 @@ export interface PortfolioRewardStats {
 }
 export interface PortfolioStats {
   'wtnRewardsThisMonthFloat' : number,
+  'totalPortfolioValueE8s' : bigint,
   'totalMaturityE8s' : bigint,
   'wtnRewardsE8s' : bigint,
   'nnsStakedE8s' : E8s,

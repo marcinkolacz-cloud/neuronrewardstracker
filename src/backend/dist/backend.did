@@ -111,6 +111,7 @@ type PortfolioStats =
    percentageReturn: float64;
    totalCapitalContributedE8s: E8s;
    totalMaturityE8s: nat64;
+   totalPortfolioValueE8s: int;
    totalRewardsE8s: int;
    totalRewardsThisMonthE8s: nat64;
    totalStakedE8s: E8s;

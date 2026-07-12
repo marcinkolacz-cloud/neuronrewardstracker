@@ -368,8 +368,16 @@ module {
       apyWeightSum / apyCapitalSum;
     };
 
+    // totalPortfolioValueE8s: consistent apples-to-apples total portfolio
+    // value. totalStakedE8s already = NNS stakedE8s + WTN redeemableIcpValue
+    // (WTN side already includes growth). totalMaturityE8s = NNS-only combined
+    // maturity (the missing NNS growth). So totalStakedE8s + totalMaturityE8s
+    // = NNS(stake + maturity) + WTN(redeemable) = a fair, complete total.
+    let totalPortfolioValue : Int = totalStaked.toNat() + totalMaturity.toNat();
+
     {
       totalStakedE8s = totalStaked;
+      totalPortfolioValueE8s = totalPortfolioValue;
       totalCapitalContributedE8s = totalCapitalContributed;
       totalRewardsE8s = totalRewards;
       percentageReturn;

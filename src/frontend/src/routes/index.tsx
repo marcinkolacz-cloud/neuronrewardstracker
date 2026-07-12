@@ -1,19 +1,23 @@
 /**
- * Dashboard page — portfolio summary + neuron cards grid.
+ * Dashboard page — portfolio summary + positions grid + reward stats.
  *
- * Shows:
- *   - Portfolio summary panel (5 stat cards: Total Staked, Total Capital
- *     Contributed, Total Maturity, Blended APY, ICP Earned This Month) using
- *     .stat-card utility. Capital contributed is the corrected denominator
- *     used by the backend for blendedApy and percentageReturn.
- *   - Current portfolio value in USD + PLN (computed from
- *     (totalStakedE8s + totalMaturityE8s) * currentPrice / E8S_PER_ICP)
- *     with .value-pill utility
- *   - Current ICP price badge (.price-badge / .price-stale when cached)
- *     with last-updated timestamp + a refresh-price button
- *   - Neuron cards grid (name, current maturity, % return, sync status)
- *   - Refresh All button + Export CSV button + Add Neuron button
- *   - Empty state when no neurons are tracked
+ * Section order:
+ *   1. Portfolio summary panel (7 stat cards: Total Portfolio Value,
+ *      Total Staked, Total Capital Contributed, Total Maturity, Blended
+ *      APY, Earned This Month, Total Rewards Earned) using .stat-card
+ *      utility. Total Portfolio Value is the primary portfolio-size
+ *      metric (NNS stake + NNS maturity + WTN redeemable, the consistent
+ *      apples-to-apples total from totalPortfolioValueE8s).
+ *   2. Current portfolio value in USD + PLN (computed from
+ *      totalPortfolioValueE8s * currentPrice / E8S_PER_ICP) with
+ *      .value-pill utility
+ *   3. Positions grid (individual Neuron + WTN cards)
+ *   4. Portfolio-wide reward statistics + monthly breakdown
+ *
+ * Also shows the current ICP price badge (.price-badge / .price-stale
+ * when cached) with last-updated timestamp + a refresh-price button,
+ * a Refresh All button + Export CSV button + Add Neuron button, and an
+ * empty state when no neurons are tracked.
  *
  * The Export CSV button fetches every tracked neuron's DailyReward history
  * in parallel and downloads a single combined CSV (with a neuronId column)
@@ -23,14 +27,14 @@
  * Portfolio stats come from getPortfolioStats (real PortfolioStats:
  * totalStakedE8s, totalCapitalContributedE8s, totalRewardsE8s,
  * percentageReturn, neuronCount, blendedApy, totalMaturityE8s,
- * totalRewardsThisMonthE8s). The backend now computes blendedApy
- * capital-weighted by totalCapitalContributedE8s, and
- * totalRewardsThisMonthE8s excludes #externalTopUp and #mergedToStake —
- * the frontend consumes these corrected values directly. Per-neuron
- * maturity / % return come from getNeuronStats (totalRewardsE8s excludes
- * top-ups, percentageReturn uses capital contributed as denominator), and
- * sync status from getSyncStatus. Current ICP price comes from
- * getCurrentIcpPrice via useIcpPrice().
+ * totalRewardsThisMonthE8s, totalPortfolioValueE8s). The backend now
+ * computes blendedApy capital-weighted by totalCapitalContributedE8s,
+ * and totalRewardsThisMonthE8s excludes #externalTopUp and
+ * #mergedToStake — the frontend consumes these corrected values
+ * directly. Per-neuron maturity / % return come from getNeuronStats
+ * (totalRewardsE8s excludes top-ups, percentageReturn uses capital
+ * contributed as denominator), and sync status from getSyncStatus.
+ * Current ICP price comes from getCurrentIcpPrice via useIcpPrice().
  */
 
 import {
@@ -352,6 +356,7 @@ export function DashboardPage() {
         {/* Portfolio summary panel */}
         <section className="mt-8" data-ocid="dashboard.portfolio_summary">
           <PortfolioSummary
+            totalPortfolioValue={portfolio?.totalPortfolioValueE8s ?? null}
             totalStaked={portfolio?.totalStakedE8s ?? null}
             nnsStaked={portfolio?.nnsStakedE8s ?? null}
             wtnStaked={portfolio?.wtnStakedE8s ?? null}
@@ -378,24 +383,10 @@ export function DashboardPage() {
         {/* Portfolio valuation (USD + PLN) with current price badge */}
         <section className="mt-6" data-ocid="dashboard.portfolio_value">
           <PortfolioValuation
-            totalStakedE8s={portfolio?.totalStakedE8s ?? null}
-            totalMaturityE8s={portfolio?.totalMaturityE8s ?? null}
+            totalPortfolioValueE8s={portfolio?.totalPortfolioValueE8s ?? null}
             priceQuery={priceQuery}
             onRefreshPrice={handleRefreshPrice}
             loading={portfolioLoading}
-          />
-        </section>
-
-        {/* Portfolio-wide reward statistics + monthly breakdown */}
-        <section className="mt-6" data-ocid="dashboard.reward_stats_section">
-          <RewardStatsCard
-            stats={rewardStats}
-            loading={rewardStatsLoading}
-            dataOcidPrefix="dashboard.reward_stats"
-          />
-          <MonthlyBreakdownSection
-            monthly={rewardStats?.monthly ?? []}
-            dataOcidPrefix="dashboard.monthly"
           />
         </section>
 
@@ -451,6 +442,19 @@ export function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* Portfolio-wide reward statistics + monthly breakdown */}
+        <section className="mt-6" data-ocid="dashboard.reward_stats_section">
+          <RewardStatsCard
+            stats={rewardStats}
+            loading={rewardStatsLoading}
+            dataOcidPrefix="dashboard.reward_stats"
+          />
+          <MonthlyBreakdownSection
+            monthly={rewardStats?.monthly ?? []}
+            dataOcidPrefix="dashboard.monthly"
+          />
+        </section>
       </div>
     </div>
   );
@@ -459,6 +463,7 @@ export function DashboardPage() {
 type PriceQueryLike = ReturnType<typeof useIcpPrice>;
 
 function PortfolioSummary({
+  totalPortfolioValue,
   totalStaked,
   nnsStaked,
   wtnStaked,
@@ -476,6 +481,7 @@ function PortfolioSummary({
   neuronCount,
   loading,
 }: {
+  totalPortfolioValue: bigint | null;
   totalStaked: bigint | null;
   nnsStaked: bigint | null;
   wtnStaked: bigint | null;
@@ -504,10 +510,18 @@ function PortfolioSummary({
 
   const stats = [
     {
-      label: "Total Staked",
-      value: formatIcp(totalStaked, 2),
+      label: "Total Portfolio Value",
+      value: formatIcp(totalPortfolioValue, 2),
       icon: Wallet,
       accent: "text-primary",
+      hint: "NNS stake + maturity + nICP redeemable",
+      subline: "Includes accrued rewards from NNS neurons and nICP positions",
+    },
+    {
+      label: "Total Staked",
+      value: formatIcp(totalStaked, 2),
+      icon: Landmark,
+      accent: "text-muted-foreground",
       hint:
         !loading && neuronCount != null
           ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}`
@@ -560,7 +574,7 @@ function PortfolioSummary({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {stats.map((stat) => (
         <div key={stat.label} className="stat-card">
           <div className="flex items-center justify-between">
@@ -598,14 +612,12 @@ function PortfolioSummary({
 }
 
 function PortfolioValuation({
-  totalStakedE8s,
-  totalMaturityE8s,
+  totalPortfolioValueE8s,
   priceQuery,
   onRefreshPrice,
   loading,
 }: {
-  totalStakedE8s: bigint | null;
-  totalMaturityE8s: bigint | null;
+  totalPortfolioValueE8s: bigint | null;
   priceQuery: PriceQueryLike;
   onRefreshPrice: () => void;
   loading: boolean;
@@ -614,11 +626,11 @@ function PortfolioValuation({
   const priceLoading = priceQuery.isLoading;
   const priceStale = price?.cached === true;
 
-  // Portfolio value in ICP = (staked + maturity) / E8S_PER_ICP
-  const totalE8s =
-    totalStakedE8s != null && totalMaturityE8s != null
-      ? totalStakedE8s + totalMaturityE8s
-      : null;
+  // Portfolio value in ICP = totalPortfolioValueE8s / E8S_PER_ICP.
+  // totalPortfolioValueE8s is the backend's consistent apples-to-apples
+  // total (NNS stake + NNS maturity + WTN redeemable value), so the
+  // USD/PLN valuation reflects the complete portfolio value directly.
+  const totalE8s = totalPortfolioValueE8s;
   const icpAmount =
     totalE8s != null
       ? Number(totalE8s / E8S_PER_ICP) +
