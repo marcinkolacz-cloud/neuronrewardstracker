@@ -351,6 +351,23 @@ module {
         wtnTotalEarnedFloat += contribution.totalEarned;
         wtnTotalWithdrawnFloat += contribution.totalWithdrawn;
 
+        // WTN APY contribution to the blended APY: compute a per-position
+        // apy30d from the snapshot history (normalized by ACTUAL elapsed
+        // days between snapshots, not entry count — WTN snapshots are
+        // manually entered at irregular intervals). If the position has
+        // 30+ actual calendar days of history and qualifying #organicGrowth
+        // pairs in the trailing 30 days, add (capital * apy30d) to
+        // apyWeightSum and capital to apyCapitalSum — exactly mirroring how
+        // NNS neurons contribute via has30DaysHistory-gated apy30d. A 0.0
+        // return means the position does not participate in the blended
+        // APY (same "Insufficient history" semantics as NNS neurons).
+        let wtnApy30d = WtnLib.computeWtnApy30d(history);
+        if (wtnApy30d > 0.0) {
+          let wtnCapitalFloat = contribution.totalCapitalContributed;
+          apyWeightSum += wtnCapitalFloat * wtnApy30d;
+          apyCapitalSum += wtnCapitalFloat;
+        };
+
         // Sum #organicGrowth redeemableIcpValue deltas in the current
         // calendar month. The delta is the day-over-day change in
         // redeemableIcpValue (current - previous), mirroring the NNS
@@ -568,6 +585,22 @@ module {
         let contribution = WtnLib.getWtnPortfolioContribution(position, history);
         wtnTotalCapitalFloat += contribution.totalCapitalContributed;
         wtnTotalEarnedFloat += contribution.totalEarned;
+
+        // WTN APY contribution to the blended APY (mirrors
+        // getPortfolioStats): compute a per-position apy30d from the
+        // snapshot history (normalized by ACTUAL elapsed days between
+        // snapshots). If the position has 30+ actual calendar days of
+        // history and qualifying #organicGrowth pairs in the trailing 30
+        // days, add (capital * apy30d) to apyWeightSum and capital to
+        // apyCapitalSum — exactly mirroring how NNS neurons contribute via
+        // has30DaysHistory-gated apy30d. A 0.0 return means the position
+        // does not participate in the blended APY.
+        let wtnApy30d = WtnLib.computeWtnApy30d(history);
+        if (wtnApy30d > 0.0) {
+          let wtnCapitalFloat = contribution.totalCapitalContributed;
+          apyWeightSum += wtnCapitalFloat * wtnApy30d;
+          apyCapitalSum += wtnCapitalFloat;
+        };
 
         // Track earliest WTN snapshot timestamp for the daily-average window.
         if (history.size() > 0) {

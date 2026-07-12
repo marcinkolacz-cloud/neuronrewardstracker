@@ -486,6 +486,79 @@ module {
     };
   };
 
+  /// Compute a trailing ~30-day APY for a single WTN position from its
+  /// snapshot history. Unlike NNS neurons (which sync exactly once daily, so
+  /// "30 entries" reliably means "30 days"), WTN snapshots are manually
+  /// entered at irregular intervals — sometimes daily, sometimes every few
+  /// days, sometimes multiple times in one day to correct a mistake. This
+  /// function therefore normalizes each growth-rate data point by the ACTUAL
+  /// elapsed time (in days) since the previous snapshot for that position, so
+  /// the daily growth rate and subsequent annualization (^365) remain
+  /// mathematically correct regardless of how often the user updates.
+  ///
+  /// Algorithm:
+  ///   1. Return 0.0 if fewer than 2 snapshots.
+  ///   2. Sort ascending by date (defensive — getWtnSnapshots already sorts).
+  ///   3. Gate on 30+ ACTUAL calendar days of span between first and last
+  ///      snapshot (spanDays = (last.date - first.date) / 1e9 / 86400.0);
+  ///      return 0.0 if spanDays < 30.0.
+  ///   4. For each consecutive pair where the current snapshot's eventType
+  ///      is #organicGrowth and current.redeemableIcpValue > prev.redeemableIcpValue,
+  ///      compute elapsedDays = max(1.0, (current.date - prev.date) / 1e9 / 86400.0)
+  ///      and dailyRate = (current.redeemableIcpValue - prev.redeemableIcpValue)
+  ///      / prev.redeemableIcpValue / elapsedDays. #capitalAdded and #withdrawal
+  ///      events change the cost basis / position size and must NOT be treated
+  ///      as growth-rate data points.
+  ///   5. Filter to pairs whose current.date falls within the trailing 30
+  ///      actual calendar days (current.date >= last.date - 30*86400*1e9 ns).
+  ///   6. If no qualifying pairs remain, return 0.0.
+  ///   7. Average the dailyRates, then APY = (Float.pow(1.0 +
+  ///      avgDailyGrowthRate, 365.0) - 1.0) * 100.0 — pre-scaled by 100 to
+  ///      match the NNS computeApy30d convention in stats.mo.
+  public func computeWtnApy30d(history : [WtnSnapshot]) : Float {
+    if (history.size() < 2) {
+      return 0.0;
+    };
+
+    let sorted = history.sort(func(a, b) = Int.compare(a.date, b.date));
+    let first = sorted[0];
+    let last = sorted[sorted.size() - 1];
+
+    let spanDays = (last.date - first.date).toFloat() / 1e9 / 86400.0;
+    if (spanDays < 30.0) {
+      return 0.0;
+    };
+
+    let windowStartNs = last.date - (30 * 86400 * 1_000_000_000);
+
+    var rateSum : Float = 0.0;
+    var rateCount : Nat = 0;
+
+    for (i in sorted.keys()) {
+      if (i > 0) {
+        let prev = sorted[i - 1];
+        let current = sorted[i];
+
+        if (current.eventType == #organicGrowth and current.redeemableIcpValue > prev.redeemableIcpValue) {
+          if (current.date >= windowStartNs) {
+            let rawElapsedDays = (current.date - prev.date).toFloat() / 1e9 / 86400.0;
+            let elapsedDays = if (rawElapsedDays > 1.0) { rawElapsedDays } else { 1.0 };
+            let dailyRate = (current.redeemableIcpValue - prev.redeemableIcpValue) / prev.redeemableIcpValue / elapsedDays;
+            rateSum += dailyRate;
+            rateCount += 1;
+          };
+        };
+      };
+    };
+
+    if (rateCount == 0) {
+      return 0.0;
+    };
+
+    let avgDailyGrowthRate = rateSum / rateCount.toFloat();
+    (Float.pow(1.0 + avgDailyGrowthRate, 365.0) - 1.0) * 100.0;
+  };
+
   /// Classify a snapshot given the previous snapshot's nicpHeld:
   ///   - nicpHeld increased → #capitalAdded
   ///   - nicpHeld decreased → #withdrawal
