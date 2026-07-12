@@ -3,6 +3,7 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Int "mo:core/Int";
 import Nat64 "mo:core/Nat64";
+import Runtime "mo:core/Runtime";
 import Types "../types/rewards";
 import Common "../types/common";
 
@@ -12,6 +13,7 @@ module {
   public type HistoricalEntry = Types.HistoricalEntry;
   public type NeuronId = Common.NeuronId;
   public type E8s = Common.E8s;
+  public type DeltaE8s = Common.DeltaE8s;
   public type Timestamp = Common.Timestamp;
 
   /// Record a single maturity snapshot, computing the delta vs the previous
@@ -181,6 +183,160 @@ module {
       prevCombined := ?combinedTotal;
     };
 
+    rewards.add(neuronId, newHistory);
+  };
+
+  /// Combined maturity total (unstaked + staked) as a signed Int for delta math.
+  func combinedTotal(r : DailyReward) : Int {
+    Int.fromNat(r.unstakedMaturityE8s.toNat()) + Int.fromNat(r.stakedMaturityE8s.toNat());
+  };
+
+  /// Compute (delta, eventType) for an entry given the previous entry's
+  /// combined total (if any). First entry → delta 0, #firstReading;
+  /// balance drop vs previous → #disburseOrSpawn; otherwise #normalGrowth.
+  func classifyDelta(currentTotal : Int, prevTotal : ?Int) : (DeltaE8s, EventType) {
+    switch (prevTotal) {
+      case (?prev) {
+        let d : Int = currentTotal - prev;
+        if (d < 0) { (d, #disburseOrSpawn) } else { (d, #normalGrowth) };
+      };
+      case null { (0, #firstReading) };
+    };
+  };
+
+  /// Recompute the delta and eventType for the entry at `idx` in a mutable
+  /// array, based on the combined total of the entry at `idx - 1` (or
+  /// #firstReading when `idx` is 0). Returns the updated entry so the caller
+  /// can chain further recomputes using its new combined total.
+  func recomputeAt(arr : [var DailyReward], idx : Nat) : DailyReward {
+    let prevTotal : ?Int = if (idx == 0) { null } else {
+      ?combinedTotal(arr[idx - 1]);
+    };
+    let r = arr[idx];
+    let total = combinedTotal(r);
+    let (delta, eventType) = classifyDelta(total, prevTotal);
+    let updated = { r with deltaE8s = delta; eventType };
+    arr[idx] := updated;
+    updated;
+  };
+
+  /// Edit a single snapshot identified by (neuronId, timestamp): replace its
+  /// timestamp with `newTimestamp` and its combined maturity total with
+  /// `newMaturityE8s`. The new total is applied to the unstaked component and
+  /// the staked component is left unchanged (the edit shifts the combined
+  /// total via the unstaked field, which is the manually-withdrawable
+  /// maturity). After the edit, the history is re-sorted chronologically and
+  /// deltas/eventTypes are recomputed for the edited entry and its new
+  /// previous and next chronological neighbors. Traps if the neuron has no
+  /// history or no snapshot exists at the given timestamp.
+  public func editSnapshot(
+    rewards : Map.Map<NeuronId, List.List<DailyReward>>,
+    neuronId : NeuronId,
+    timestamp : Timestamp,
+    newTimestamp : Timestamp,
+    newMaturityE8s : E8s,
+  ) : () {
+    let history = switch (rewards.get(neuronId)) {
+      case (?h) h;
+      case null { Runtime.trap("No reward history for neuron") };
+    };
+
+    // Work on a sorted mutable array for index-stable mutation.
+    let sorted = history.toArray().sort(func(a, b) = Int.compare(a.timestamp, b.timestamp)).toVarArray<DailyReward>();
+
+    // Locate the entry to edit by original timestamp.
+    let targetIdx = switch (sorted.findIndex(func(r) = r.timestamp == timestamp)) {
+      case (?i) i;
+      case null { Runtime.trap("No snapshot at given timestamp") };
+    };
+
+    // Apply the edit: new timestamp + new unstaked maturity (staked unchanged).
+    let target = sorted[targetIdx];
+    sorted[targetIdx] := {
+      target with
+      timestamp = newTimestamp;
+      unstakedMaturityE8s = newMaturityE8s;
+    };
+
+    // Re-sort chronologically by the (possibly changed) timestamp. `sort` on a
+    // [var T] is not available, so round-trip through an immutable array.
+    let reSortedImm = Array.fromVarArray(sorted).sort(func(a, b) = Int.compare(a.timestamp, b.timestamp));
+    let reSorted = reSortedImm.toVarArray<DailyReward>();
+
+    // Recompute deltas for the edited entry and its new prev/next neighbors.
+    // The edited entry's new index may differ after re-sorting.
+    let editedNewIdx = switch (reSorted.findIndex(func(r) = r.timestamp == newTimestamp)) {
+      case (?i) i;
+      case null {
+        // Should be unreachable: we just inserted newTimestamp. Trap defensively.
+        Runtime.trap("Edited entry not found after re-sort");
+      };
+    };
+
+    // Recompute the previous neighbor (if any), the edited entry, and the
+    // next neighbor (if any). Order matters: each recompute reads the
+    // predecessor's combined total, so recompute prev → edited → next.
+    if (editedNewIdx > 0) {
+      ignore recomputeAt(reSorted, editedNewIdx - 1);
+    };
+    ignore recomputeAt(reSorted, editedNewIdx);
+    if (editedNewIdx + 1 < reSorted.size()) {
+      ignore recomputeAt(reSorted, editedNewIdx + 1);
+    };
+
+    // Rebuild the List from the recomputed array and persist.
+    let newHistory = List.fromArray<DailyReward>(Array.fromVarArray(reSorted));
+    rewards.add(neuronId, newHistory);
+  };
+
+  /// Delete a single snapshot identified by (neuronId, timestamp). After the
+  /// delete, deltas/eventTypes are recomputed for the next chronological
+  /// entry (since delta depends on the previous entry's balance), and
+  /// eventType is re-evaluated for the affected entry (first entry becomes
+  /// #firstReading, balance drops become #disburseOrSpawn). Traps if the
+  /// neuron has no history or no snapshot exists at the given timestamp.
+  public func deleteSnapshot(
+    rewards : Map.Map<NeuronId, List.List<DailyReward>>,
+    neuronId : NeuronId,
+    timestamp : Timestamp,
+  ) : () {
+    let history = switch (rewards.get(neuronId)) {
+      case (?h) h;
+      case null { Runtime.trap("No reward history for neuron") };
+    };
+
+    // Work on a sorted array copy.
+    let sorted = history.toArray().sort(func(a, b) = Int.compare(a.timestamp, b.timestamp));
+
+    // Locate the entry to delete by timestamp.
+    let targetIdx = switch (sorted.findIndex(func(r) = r.timestamp == timestamp)) {
+      case (?i) i;
+      case null { Runtime.trap("No snapshot at given timestamp") };
+    };
+
+    // Build the array with the target removed.
+    let remainingImm = sorted.filter(
+      func(r) = not (r.timestamp == timestamp),
+    );
+
+    // If the neuron now has no snapshots, remove the neuronId from the
+    // rewards Map entirely so it does not leave a stale empty-list entry.
+    if (remainingImm.size() == 0) {
+      rewards.remove(neuronId);
+      return;
+    };
+
+    // Recompute the delta for the entry that now follows the deleted entry's
+    // predecessor. The deleted entry was at `targetIdx`; after removal, the
+    // entry that now occupies that index (if any) needs its delta recomputed
+    // against the entry at `targetIdx - 1` (or #firstReading if targetIdx was 0).
+    let remaining = remainingImm.toVarArray<DailyReward>();
+    if (targetIdx < remaining.size()) {
+      ignore recomputeAt(remaining, targetIdx);
+    };
+
+    // Rebuild the List and persist.
+    let newHistory = List.fromArray<DailyReward>(Array.fromVarArray(remaining));
     rewards.add(neuronId, newHistory);
   };
 };

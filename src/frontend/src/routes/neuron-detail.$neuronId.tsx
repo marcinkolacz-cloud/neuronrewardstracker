@@ -11,12 +11,15 @@
  * Layout:
  *   - Neuron metadata header (id, owner, staked, maturity, sync status)
  *   - recharts AreaChart of maturity growth over time (from DailyReward)
- *   - Activity feed timeline (DailyReward events)
+ *   - Rewards summary (total earned vs total disbursed)
+ *   - Activity feed timeline (DailyReward events, scrollable + load more)
  *   - Sync now button
  *   - Manual snapshot entry form (recordSnapshot(neuronId, unstakedMaturityE8s, stakedMaturityE8s, autoStakeMaturity))
  *   - Edit (updateNeuron) and delete (removeNeuron) actions
+ *   - Per-snapshot edit (editSnapshot) and delete (deleteSnapshot) actions
  */
 
+import { EventType } from "@/backend";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +39,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -52,7 +63,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useRemoveNeuron, useUpdateNeuron } from "@/hooks/use-neurons";
 import { useNeurons } from "@/hooks/use-neurons";
-import { useRewardHistory, useSyncStatus } from "@/hooks/use-rewards";
+import {
+  useDeleteSnapshot,
+  useEditSnapshot,
+  useRewardHistory,
+  useSyncStatus,
+} from "@/hooks/use-rewards";
 import { useNeuronStats } from "@/hooks/use-stats";
 import {
   useImportHistoricalData,
@@ -62,12 +78,13 @@ import {
 } from "@/hooks/use-sync";
 import type {
   DailyReward,
-  EventType,
   HistoricalEntry,
   Neuron,
   SyncStatus,
 } from "@/lib/backend-actor";
+import { downloadCsv, rewardsToCsv } from "@/lib/csv";
 import {
+  E8S_PER_ICP,
   formatIcp,
   formatIcpCompact,
   formatPercent,
@@ -81,6 +98,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
+  ArrowDownToLine,
   ArrowLeft,
   BrainCircuit,
   Calendar,
@@ -110,6 +128,11 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 
+/** Number of activity entries shown initially and per "Load more" click. */
+const ACTIVITY_PAGE_SIZE = 25;
+/** Max height of the scrollable activity feed container. */
+const ACTIVITY_MAX_HEIGHT = "max-h-[400px]";
+
 export function NeuronDetailPage() {
   const { neuronId } = useParams({ from: "/neuron-detail/$neuronId" });
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
@@ -124,6 +147,8 @@ export function NeuronDetailPage() {
   const updateNeuron = useUpdateNeuron();
   const recordSnapshot = useRecordSnapshot();
   const importHistorical = useImportHistoricalData();
+  const editSnapshot = useEditSnapshot();
+  const deleteSnapshot = useDeleteSnapshot();
   const navigate = useNavigate();
 
   const neuron = useMemo(() => {
@@ -171,6 +196,17 @@ export function NeuronDetailPage() {
         onError: (err) => toast.error(err.message),
       },
     );
+  };
+
+  const handleExportCsv = () => {
+    if (!rewards || rewards.length === 0) {
+      toast.error("No reward history to export");
+      return;
+    }
+    const csv = rewardsToCsv(rewards);
+    const safeId = neuronId.replace(/[^a-zA-Z0-9_-]/g, "_");
+    downloadCsv(`neuron-${safeId}-rewards.csv`, csv);
+    toast.success("CSV downloaded");
   };
 
   if (loading) {
@@ -257,6 +293,8 @@ export function NeuronDetailPage() {
           editing={updateNeuron.isPending}
           onDelete={handleDelete}
           deleting={removeNeuron.isPending}
+          onExportCsv={handleExportCsv}
+          exportDisabled={!rewards || rewards.length === 0}
         />
 
         {/* Sync failure callout */}
@@ -278,13 +316,49 @@ export function NeuronDetailPage() {
           </div>
         )}
 
+        {/* Rewards summary (earned vs disbursed) */}
+        <div className="mt-6">
+          <RewardsSummaryCard
+            rewards={sortedRewards}
+            loading={rewardsLoading}
+          />
+        </div>
+
         {/* Chart + Activity feed */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-3">
             <MaturityChart data={chartData} />
           </div>
           <div className="lg:col-span-2">
-            <ActivityFeed rewards={sortedRewards} loading={rewardsLoading} />
+            <ActivityFeed
+              rewards={sortedRewards}
+              loading={rewardsLoading}
+              onEditSnapshot={(timestamp, newTimestamp, newMaturityE8s) =>
+                editSnapshot.mutate(
+                  {
+                    neuronId: BigInt(neuronId),
+                    timestamp,
+                    newTimestamp,
+                    newMaturityE8s,
+                  },
+                  {
+                    onSuccess: () => toast.success("Snapshot updated"),
+                    onError: (err) => toast.error(err.message),
+                  },
+                )
+              }
+              onDeleteSnapshot={(timestamp) =>
+                deleteSnapshot.mutate(
+                  { neuronId: BigInt(neuronId), timestamp },
+                  {
+                    onSuccess: () => toast.success("Snapshot deleted"),
+                    onError: (err) => toast.error(err.message),
+                  },
+                )
+              }
+              editingSnapshot={editSnapshot.isPending}
+              deletingSnapshot={deleteSnapshot.isPending}
+            />
           </div>
         </div>
 
@@ -335,6 +409,8 @@ function NeuronHeader({
   editing,
   onDelete,
   deleting,
+  onExportCsv,
+  exportDisabled,
 }: {
   neuron: Neuron;
   maturityE8s: bigint;
@@ -350,6 +426,8 @@ function NeuronHeader({
   editing: boolean;
   onDelete: () => void;
   deleting: boolean;
+  onExportCsv: () => void;
+  exportDisabled: boolean;
 }) {
   return (
     <Card className="bg-card/60 border-border/60">
@@ -375,6 +453,15 @@ function NeuronHeader({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={onExportCsv}
+              disabled={exportDisabled}
+              data-ocid="neuron_detail.export_csv"
+            >
+              <ArrowDownToLine className="size-4" />
+              Export CSV
+            </Button>
             <Button
               variant="outline"
               onClick={onSync}
@@ -574,6 +661,76 @@ function SyncStatusBadge({
   );
 }
 
+/**
+ * Rewards summary panel — Total earned (sum of positive deltas) vs Total
+ * disbursed (sum of absolute values of disburseOrSpawn deltas). Computed
+ * from the full DailyReward[] returned by useRewardHistory.
+ */
+function RewardsSummaryCard({
+  rewards,
+  loading,
+}: {
+  rewards: DailyReward[];
+  loading: boolean;
+}) {
+  const { totalEarnedE8s, totalDisbursedE8s } = useMemo(() => {
+    let earned = 0n;
+    let disbursed = 0n;
+    for (const r of rewards) {
+      if (r.deltaE8s > 0n) {
+        earned += r.deltaE8s;
+      }
+      if (r.eventType === EventType.disburseOrSpawn) {
+        disbursed += r.deltaE8s < 0n ? -r.deltaE8s : r.deltaE8s;
+      }
+    }
+    return { totalEarnedE8s: earned, totalDisbursedE8s: disbursed };
+  }, [rewards]);
+
+  return (
+    <Card className="bg-card/60 border-border/60">
+      <CardHeader>
+        <CardTitle className="text-base">Rewards summary</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="border-primary/30 bg-primary/5 rounded-xl border p-4">
+              <div className="text-primary flex items-center gap-1.5 text-[11px] tracking-wider uppercase">
+                <TrendingUp className="size-3.5" />
+                Total earned
+              </div>
+              <p className="text-foreground font-mono text-2xl font-semibold mt-2">
+                {formatIcp(totalEarnedE8s)}
+              </p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Sum of all positive maturity deltas across history.
+              </p>
+            </div>
+            <div className="border-accent/30 bg-accent/5 rounded-xl border p-4">
+              <div className="text-accent flex items-center gap-1.5 text-[11px] tracking-wider uppercase">
+                <TrendingDown className="size-3.5" />
+                Total disbursed
+              </div>
+              <p className="text-foreground font-mono text-2xl font-semibold mt-2">
+                {formatIcp(totalDisbursedE8s)}
+              </p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Sum of disburse / spawn events (absolute deltas).
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function MaturityChart({
   data,
 }: {
@@ -722,10 +879,47 @@ function MaturityChart({
 function ActivityFeed({
   rewards,
   loading,
+  onEditSnapshot,
+  onDeleteSnapshot,
+  editingSnapshot,
+  deletingSnapshot,
 }: {
   rewards: DailyReward[];
   loading: boolean;
+  onEditSnapshot: (
+    timestamp: bigint,
+    newTimestamp: bigint,
+    newMaturityE8s: bigint,
+  ) => void;
+  onDeleteSnapshot: (timestamp: bigint) => void;
+  editingSnapshot: boolean;
+  deletingSnapshot: boolean;
 }) {
+  const [visibleCount, setVisibleCount] = useState(ACTIVITY_PAGE_SIZE);
+  const [editing, setEditing] = useState<DailyReward | null>(null);
+  const [deleting, setDeleting] = useState<DailyReward | null>(null);
+
+  // Most recent entries first.
+  const reversed = useMemo(() => [...rewards].reverse(), [rewards]);
+  const visible = reversed.slice(0, visibleCount);
+  const hasMore = reversed.length > visibleCount;
+
+  const handleLoadMore = () => {
+    setVisibleCount((c) => c + ACTIVITY_PAGE_SIZE);
+  };
+
+  const handleEditSubmit = (newTimestamp: bigint, newMaturityE8s: bigint) => {
+    if (!editing) return;
+    onEditSnapshot(editing.timestamp, newTimestamp, newMaturityE8s);
+    setEditing(null);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!deleting) return;
+    onDeleteSnapshot(deleting.timestamp);
+    setDeleting(null);
+  };
+
   return (
     <Card className="bg-card/60 border-border/60 h-full">
       <CardHeader>
@@ -754,20 +948,84 @@ function ActivityFeed({
             </p>
           </div>
         ) : (
-          <ol className="space-y-1">
-            {rewards
-              .slice(-12)
-              .reverse()
-              .map((r, i) => (
+          <div className="space-y-3">
+            <ol
+              className={cn(
+                "space-y-1 overflow-y-auto pr-1",
+                ACTIVITY_MAX_HEIGHT,
+              )}
+              data-ocid="neuron_detail.activity.list"
+            >
+              {visible.map((r, i) => (
                 <ActivityItem
                   key={`${r.neuronId}-${r.timestamp}-${i}`}
                   event={r}
                   index={i}
+                  onEdit={() => setEditing(r)}
+                  onDelete={() => setDeleting(r)}
                 />
               ))}
-          </ol>
+            </ol>
+            {hasMore && (
+              <div className="flex justify-center pt-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLoadMore}
+                  data-ocid="neuron_detail.activity.load_more"
+                >
+                  <ChevronDown className="size-4" />
+                  Load more
+                  <span className="text-muted-foreground ml-1 font-mono text-[11px]">
+                    ({rewards.length - visibleCount} more)
+                  </span>
+                </Button>
+              </div>
+            )}
+          </div>
         )}
       </CardContent>
+
+      {/* Edit snapshot dialog */}
+      <EditSnapshotDialog
+        open={editing !== null}
+        event={editing}
+        submitting={editingSnapshot}
+        onClose={() => setEditing(null)}
+        onSubmit={handleEditSubmit}
+      />
+
+      {/* Delete snapshot confirmation */}
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleting(null);
+        }}
+      >
+        <AlertDialogContent data-ocid="neuron_detail.snapshot.delete_dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this snapshot?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleting
+                ? `The reading from ${formatTimestampDateTime(deleting.timestamp)} will be permanently removed. Deltas for neighboring entries will be recomputed. This cannot be undone.`
+                : "This snapshot will be permanently removed."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-ocid="neuron_detail.snapshot.delete.cancel_button">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deletingSnapshot}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-ocid="neuron_detail.snapshot.delete.confirm_button"
+            >
+              {deletingSnapshot ? "Deleting…" : "Delete snapshot"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
@@ -778,9 +1036,19 @@ const EVENT_TYPE_LABEL: Record<EventType, string> = {
   disburseOrSpawn: "Disburse / spawn",
 };
 
-function ActivityItem({ event, index }: { event: DailyReward; index: number }) {
-  const isDisburse = event.eventType === ("disburseOrSpawn" as EventType);
-  const isFirst = event.eventType === ("firstReading" as EventType);
+function ActivityItem({
+  event,
+  index,
+  onEdit,
+  onDelete,
+}: {
+  event: DailyReward;
+  index: number;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const isDisburse = event.eventType === EventType.disburseOrSpawn;
+  const isFirst = event.eventType === EventType.firstReading;
 
   const Icon = isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
   const accent = isDisburse
@@ -794,13 +1062,14 @@ function ActivityItem({ event, index }: { event: DailyReward; index: number }) {
   // "increased maturity from X ICP to Y ICP (+delta)"
   const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
+  const deltaNegative = event.deltaE8s < 0n;
 
   return (
     <motion.li
       initial={{ opacity: 0, x: -8 }}
       animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.25, delay: index * 0.04 }}
-      className="flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/40 transition-smooth"
+      transition={{ duration: 0.25, delay: Math.min(index * 0.04, 0.4) }}
+      className="group flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/40 transition-smooth"
       data-ocid={`neuron_detail.activity.item.${index + 1}`}
     >
       <span
@@ -814,8 +1083,14 @@ function ActivityItem({ event, index }: { event: DailyReward; index: number }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className="text-foreground text-sm font-medium">{label}</span>
-          <span className="text-primary font-mono text-sm font-semibold">
-            +{formatIcp(event.deltaE8s, 4, false)}
+          <span
+            className={cn(
+              "font-mono text-sm font-semibold",
+              deltaNegative ? "text-destructive" : "text-primary",
+            )}
+          >
+            {deltaNegative ? "" : "+"}
+            {formatIcp(event.deltaE8s, 4, false)}
           </span>
         </div>
         <p className="text-muted-foreground font-mono text-[11px]">
@@ -840,7 +1115,230 @@ function ActivityItem({ event, index }: { event: DailyReward; index: number }) {
           {formatTimestampDateTime(event.timestamp)}
         </p>
       </div>
+      <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7"
+          aria-label="Edit snapshot"
+          data-ocid={`neuron_detail.snapshot.edit_button.${index + 1}`}
+          onClick={onEdit}
+        >
+          <Pencil className="size-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-destructive size-7"
+          aria-label="Delete snapshot"
+          data-ocid={`neuron_detail.snapshot.delete_button.${index + 1}`}
+          onClick={onDelete}
+        >
+          <Trash2 className="size-3.5" />
+        </Button>
+      </div>
     </motion.li>
+  );
+}
+
+/**
+ * Convert a bigint nanosecond timestamp into a value suitable for a
+ * <input type="datetime-local"> control (YYYY-MM-DDTHH:mm in local time).
+ */
+function nsToDatetimeLocal(ns: bigint): string {
+  const ms = Number(ns / 1_000_000n);
+  if (!Number.isFinite(ms) || ms <= 0) return "";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Convert a datetime-local string (YYYY-MM-DDTHH:mm) into nanoseconds since
+ * the Unix epoch.
+ */
+function datetimeLocalToNs(value: string): bigint {
+  const ms = new Date(value).getTime();
+  if (!Number.isFinite(ms)) return 0n;
+  return BigInt(Math.floor(ms)) * 1_000_000n;
+}
+
+/**
+ * Convert an ICP decimal string into e8s. Returns null if invalid.
+ */
+function icpToE8s(icp: string): bigint | null {
+  const n = Number(icp);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return BigInt(Math.round(n * Number(E8S_PER_ICP)));
+}
+
+/**
+ * Convert e8s into an ICP decimal string suitable for an <input> field.
+ */
+function e8sToIcpInput(e8s: bigint): string {
+  const icp = Number(e8s) / Number(E8S_PER_ICP);
+  return String(icp);
+}
+
+/**
+ * Dialog for editing a single reward snapshot — change both the maturity
+ * balance (in ICP) and the timestamp. On submit calls useEditSnapshot with
+ * (neuronId, originalTimestamp, newTimestamp, newMaturityE8s).
+ */
+function EditSnapshotDialog({
+  open,
+  event,
+  submitting,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  event: DailyReward | null;
+  submitting: boolean;
+  onClose: () => void;
+  onSubmit: (newTimestamp: bigint, newMaturityE8s: bigint) => void;
+}) {
+  const combinedE8s =
+    event == null ? 0n : event.unstakedMaturityE8s + event.stakedMaturityE8s;
+  const [maturity, setMaturity] = useState("");
+  const [datetime, setDatetime] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  // Sync local state when the dialog opens for a different event.
+  const eventKey =
+    event == null ? null : `${event.neuronId}-${event.timestamp}`;
+  const [lastKey, setLastKey] = useState<string | null>(null);
+  if (eventKey !== lastKey) {
+    setLastKey(eventKey);
+    if (event != null) {
+      setMaturity(e8sToIcpInput(combinedE8s));
+      setDatetime(nsToDatetimeLocal(event.timestamp));
+      setError(null);
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!event) return;
+    const newMaturityE8s = icpToE8s(maturity);
+    if (newMaturityE8s == null) {
+      setError("Enter a valid maturity amount in ICP");
+      return;
+    }
+    if (!datetime) {
+      setError("Pick a date and time");
+      return;
+    }
+    const newTimestamp = datetimeLocalToNs(datetime);
+    if (newTimestamp <= 0n) {
+      setError("Pick a valid date and time");
+      return;
+    }
+    onSubmit(newTimestamp, newMaturityE8s);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
+      <DialogContent data-ocid="neuron_detail.snapshot.edit_dialog">
+        <DialogHeader>
+          <DialogTitle>Edit snapshot</DialogTitle>
+          <DialogDescription>
+            Change the maturity balance and/or timestamp for this reading. The
+            backend re-sorts the history and recomputes deltas for the edited
+            entry and its new neighbors.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div className="space-y-2">
+            <Label
+              htmlFor="edit-maturity"
+              data-ocid="neuron_detail.snapshot.edit.maturity.label"
+            >
+              Maturity balance (ICP)
+            </Label>
+            <Input
+              id="edit-maturity"
+              inputMode="decimal"
+              placeholder="0.0000"
+              value={maturity}
+              onChange={(e) => {
+                setMaturity(e.target.value);
+                setError(null);
+              }}
+              data-ocid="neuron_detail.snapshot.edit.maturity.input"
+              className="font-mono"
+              required
+            />
+            <p className="text-muted-foreground text-[11px]">
+              Combined total (withdrawable + staked). Current:{" "}
+              {formatIcp(combinedE8s, 4, false)} ICP
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="edit-datetime"
+              data-ocid="neuron_detail.snapshot.edit.datetime.label"
+            >
+              Timestamp
+            </Label>
+            <Input
+              id="edit-datetime"
+              type="datetime-local"
+              value={datetime}
+              onChange={(e) => {
+                setDatetime(e.target.value);
+                setError(null);
+              }}
+              data-ocid="neuron_detail.snapshot.edit.datetime.input"
+              required
+            />
+            <p className="text-muted-foreground text-[11px]">
+              Original: {event ? formatTimestampDateTime(event.timestamp) : "—"}
+            </p>
+          </div>
+          {error && (
+            <p
+              role="alert"
+              className="text-destructive text-xs"
+              data-ocid="neuron_detail.snapshot.edit.field_error"
+            >
+              {error}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={submitting}
+              data-ocid="neuron_detail.snapshot.edit.cancel_button"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={submitting}
+              data-ocid="neuron_detail.snapshot.edit.save_button"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                "Save changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -914,12 +1412,6 @@ function SnapshotEntryForm({
   const [unstaked, setUnstaked] = useState("");
   const [staked, setStaked] = useState("0");
   const [autoStake, setAutoStake] = useState(false);
-
-  const icpToE8s = (icp: string): bigint | null => {
-    const n = Number(icp);
-    if (!Number.isFinite(n) || n < 0) return null;
-    return BigInt(Math.round(n * 1e8));
-  };
 
   const handleSubmit = (ev: React.FormEvent) => {
     ev.preventDefault();

@@ -4,8 +4,12 @@
  * Shows:
  *   - Portfolio summary panel (total staked, total rewards, % return)
  *   - Neuron cards grid (name, current maturity, % return, sync status)
- *   - Refresh All button + Add Neuron button
+ *   - Refresh All button + Export CSV button + Add Neuron button
  *   - Empty state when no neurons are tracked
+ *
+ * The Export CSV button fetches every tracked neuron's DailyReward history
+ * in parallel and downloads a single combined CSV (with a neuronId column)
+ * via rewardsToCombinedCsv + downloadCsv from lib/csv.ts.
  *
  * Portfolio stats come from getPortfolioStats (real PortfolioStats:
  * totalStakedE8s, totalRewardsE8s, percentageReturn, neuronCount).
@@ -18,11 +22,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useNeurons } from "@/hooks/use-neurons";
 import { useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats, usePortfolioStats } from "@/hooks/use-stats";
 import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
-import type { Neuron, SyncStatus } from "@/lib/backend-actor";
+import { useBackendActor } from "@/lib/backend-actor";
+import type { DailyReward, Neuron, SyncStatus } from "@/lib/backend-actor";
+import { downloadCsv, rewardsToCombinedCsv } from "@/lib/csv";
 import {
   formatIcp,
   formatIcpCompact,
@@ -36,19 +48,23 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   BrainCircuit,
+  Download,
   Plus,
   RefreshCw,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export function DashboardPage() {
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
   const syncAll = useSyncAllNeurons();
+  const { actor } = useBackendActor();
   const navigate = useNavigate();
+  const [isExporting, setIsExporting] = useState(false);
 
   const isEmpty = !neuronsLoading && (neurons?.length ?? 0) === 0;
 
@@ -73,6 +89,35 @@ export function DashboardPage() {
       },
       onError: (err) => toast.error(err.message),
     });
+  };
+
+  const handleExportCsv = async () => {
+    if (!actor || !neurons || neurons.length === 0) return;
+    setIsExporting(true);
+    try {
+      const groups = await Promise.all(
+        neurons.map(async (neuron) => {
+          const rewards: DailyReward[] = await actor.getRewardHistory(
+            neuron.id,
+          );
+          return { neuronId: neuron.id, rewards };
+        }),
+      );
+      const nonEmpty = groups.filter((g) => g.rewards.length > 0);
+      if (nonEmpty.length === 0) {
+        toast.info("No reward snapshots to export yet");
+        return;
+      }
+      const csv = rewardsToCombinedCsv(groups);
+      downloadCsv("neuron-rewards-export.csv", csv);
+      toast.success(
+        `Exported ${nonEmpty.length} neuron${nonEmpty.length === 1 ? "" : "s"} to CSV`,
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to export CSV");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -110,6 +155,28 @@ export function DashboardPage() {
               />
               Refresh All
             </Button>
+            <TooltipProvider delayDuration={300}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={handleExportCsv}
+                    disabled={isExporting || isEmpty || neuronsLoading}
+                    data-ocid="dashboard.export_csv"
+                  >
+                    <Download
+                      className={isExporting ? "size-4 animate-spin" : "size-4"}
+                    />
+                    Export CSV
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isEmpty
+                    ? "Add a neuron before exporting"
+                    : "Download all neurons' reward histories as one CSV"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Button
               onClick={() => navigate({ to: "/add-neuron" })}
               data-ocid="dashboard.add_neuron"

@@ -157,6 +157,8 @@ export enum UserRole {
 export interface backendInterface {
     addNeuron(id: NeuronId, name: string, startDate: bigint, dissolveDelaySeconds: bigint, initialStakeE8s: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    deleteSnapshot(neuronId: NeuronId, timestamp: bigint): Promise<void>;
+    editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
     execute(qJson: string): Promise<Result>;
     getCallerUserRole(): Promise<UserRole>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;

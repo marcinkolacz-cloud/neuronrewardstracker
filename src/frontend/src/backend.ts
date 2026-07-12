@@ -211,6 +211,8 @@ export interface backendInterface {
     _internet_identity_sign_in_start(): Promise<Uint8Array>;
     addNeuron(id: NeuronId, name: string, startDate: bigint, dissolveDelaySeconds: bigint, initialStakeE8s: bigint): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    deleteSnapshot(neuronId: NeuronId, timestamp: bigint): Promise<void>;
+    editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
     execute(qJson: string): Promise<Result>;
     getCallerUserRole(): Promise<UserRole>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
@@ -368,6 +370,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async deleteSnapshot(arg0: NeuronId, arg1: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteSnapshot(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteSnapshot(arg0, arg1);
+            return result;
+        }
+    }
+    async editSnapshot(arg0: NeuronId, arg1: bigint, arg2: bigint, arg3: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.editSnapshot(arg0, arg1, arg2, arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.editSnapshot(arg0, arg1, arg2, arg3);
             return result;
         }
     }

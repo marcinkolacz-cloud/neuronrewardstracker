@@ -112,6 +112,8 @@ export interface _SERVICE {
     undefined
   >,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'deleteSnapshot' : ActorMethod<[NeuronId, bigint], undefined>,
+  'editSnapshot' : ActorMethod<[NeuronId, bigint, bigint, bigint], undefined>,
   'execute' : ActorMethod<[string], Result>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getNeuronStats' : ActorMethod<[NeuronId], NeuronStats>,

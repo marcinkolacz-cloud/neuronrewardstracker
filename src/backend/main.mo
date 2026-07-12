@@ -44,7 +44,7 @@ actor {
   let syncErrors : Map.Map<Common.NeuronId, Text>;
 
   // --- Domain mixins ---
-  include NeuronsApi(neurons);
+  include NeuronsApi(neurons, rewards, syncStatuses, syncErrors);
   include RewardsApi(rewards, neurons);
   include GovernanceSyncApi(neurons, rewards, syncStatuses, syncErrors);
   include StatsApi(neurons, rewards);

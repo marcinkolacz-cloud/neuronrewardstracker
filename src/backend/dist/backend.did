@@ -135,6 +135,9 @@ service : {
   addNeuron: (id: NeuronId, name: text, startDate: int, dissolveDelaySeconds:
    nat64, initialStakeE8s: nat64) -> ();
   assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  deleteSnapshot: (neuronId: NeuronId, timestamp: int) -> ();
+  editSnapshot: (neuronId: NeuronId, timestamp: int, newTimestamp: int,
+   newMaturityE8s: nat64) -> ();
   execute: (qJson: text) -> (Result) query;
   getCallerUserRole: () -> (UserRole) query;
   getNeuronStats: (neuronId: NeuronId) -> (NeuronStats);

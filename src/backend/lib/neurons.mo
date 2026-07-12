@@ -1,9 +1,12 @@
 import Map "mo:core/Map";
 import Iter "mo:core/Iter";
+import List "mo:core/List";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Types "../types/neurons";
 import Common "../types/common";
+import RewardTypes "../types/rewards";
+import GovernanceSyncTypes "../types/governance-sync";
 
 module {
   public type Neuron = Types.Neuron;
@@ -47,24 +50,30 @@ module {
     };
   };
 
-  /// Remove a neuron owned by the caller. Traps if the neuron does not
-  /// exist or is not owned by the caller.
+  /// Remove a neuron owned by the caller AND cascade-delete all associated
+  /// data for that neuronId: the DailyReward history (rewards Map), the
+  /// syncStatus entry, and the syncError entry. Traps if the neuron does
+  /// not exist or is not owned by the caller. After removal, re-adding a
+  /// neuron with the same ID starts with empty history, no stale sync
+  /// status, and no stale error.
   public func removeNeuron(
     neurons : Map.Map<NeuronId, Neuron>,
+    rewards : Map.Map<NeuronId, List.List<RewardTypes.DailyReward>>,
+    syncStatuses : Map.Map<NeuronId, GovernanceSyncTypes.SyncStatus>,
+    syncErrors : Map.Map<NeuronId, Text>,
     caller : Principal,
     neuronId : NeuronId,
   ) : () {
-    switch (neurons.get(neuronId)) {
-      case (?existing) {
-        if (not Principal.equal(existing.ownerId, caller)) {
-          Runtime.trap("Not authorized to remove this neuron");
-        };
-        neurons.remove(neuronId);
-      };
-      case null {
-        Runtime.trap("Neuron not found");
-      };
-    };
+    // Verify ownership via getOwnedNeuron (traps if not owned / not found).
+    ignore getOwnedNeuron(neurons, caller, neuronId);
+    // Remove the neuron record.
+    neurons.remove(neuronId);
+    // Cascade-delete all associated per-neuron data so re-adding the same
+    // neuron ID starts fresh. `remove` is a no-op when the key is absent, so
+    // these are safe even if a given store never had an entry for this neuron.
+    rewards.remove(neuronId);
+    syncStatuses.remove(neuronId);
+    syncErrors.remove(neuronId);
   };
 
   /// Look up a neuron by ID, verifying ownership. Returns null if the

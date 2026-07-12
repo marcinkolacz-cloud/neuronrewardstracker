@@ -65,4 +65,41 @@ mixin (
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
     RewardsLib.importHistoricalData(rewards, neuronId, entries);
   };
+
+  /// Edit a single snapshot identified by (neuronId, timestamp): replace its
+  /// timestamp with `newTimestamp` and its maturity total with
+  /// `newMaturityE8s`. After the edit, the history is re-sorted
+  /// chronologically and deltas/eventTypes are recomputed for the edited
+  /// entry and its new previous and next chronological neighbors. The
+  /// frontend is responsible for confirming the edit with the user before
+  /// calling this endpoint.
+  public shared ({ caller }) func editSnapshot(
+    neuronId : Common.NeuronId,
+    timestamp : Int,
+    newTimestamp : Int,
+    newMaturityE8s : Nat64,
+  ) : async () {
+    if (Principal.isAnonymous(caller)) {
+      Runtime.trap("Anonymous caller not allowed");
+    };
+    // Verify the caller owns the neuron.
+    ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
+    RewardsLib.editSnapshot(rewards, neuronId, timestamp, newTimestamp, newMaturityE8s);
+  };
+
+  /// Delete a single snapshot identified by (neuronId, timestamp). After the
+  /// delete, deltas/eventTypes are recomputed for the next chronological
+  /// entry. The frontend is responsible for confirming the destructive
+  /// delete with the user before calling this endpoint.
+  public shared ({ caller }) func deleteSnapshot(
+    neuronId : Common.NeuronId,
+    timestamp : Int,
+  ) : async () {
+    if (Principal.isAnonymous(caller)) {
+      Runtime.trap("Anonymous caller not allowed");
+    };
+    // Verify the caller owns the neuron.
+    ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
+    RewardsLib.deleteSnapshot(rewards, neuronId, timestamp);
+  };
 };

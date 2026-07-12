@@ -611,6 +611,19 @@ video {
     );
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+.container {
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  padding-right: 2rem;
+  padding-left: 2rem;
+}
+@media (min-width: 1400px) {
+
+  .container {
+    max-width: 1400px;
+  }
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -969,6 +982,9 @@ video {
 .h-2\.5 {
   height: 0.625rem;
 }
+.h-20 {
+  height: 5rem;
+}
 .h-32 {
   height: 8rem;
 }
@@ -1025,6 +1041,9 @@ video {
 }
 .max-h-\[300px\] {
   max-height: 300px;
+}
+.max-h-\[400px\] {
+  max-height: 400px;
 }
 .min-h-0 {
   min-height: 0px;
@@ -1490,6 +1509,9 @@ video {
 .border-dashed {
   border-style: dashed;
 }
+.border-accent\/30 {
+  border-color: oklch(var(--accent) / 0.3);
+}
 .border-accent\/40 {
   border-color: oklch(var(--accent) / 0.4);
 }
@@ -1533,6 +1555,9 @@ video {
 }
 .bg-accent\/15 {
   background-color: oklch(var(--accent) / 0.15);
+}
+.bg-accent\/5 {
+  background-color: oklch(var(--accent) / 0.05);
 }
 .bg-background {
   background-color: oklch(var(--background));
@@ -1737,6 +1762,9 @@ video {
 }
 .pt-0 {
   padding-top: 0px;
+}
+.pt-1 {
+  padding-top: 0.25rem;
 }
 .pt-2 {
   padding-top: 0.5rem;
@@ -2283,6 +2311,10 @@ video {
   border-bottom-width: 0px;
 }
 
+.focus-within\:opacity-100:focus-within {
+  opacity: 1;
+}
+
 .hover\:border-primary\/40:hover {
   border-color: oklch(var(--primary) / 0.4);
 }
@@ -2497,6 +2529,10 @@ video {
 }
 
 .group\/menu-item:hover .group-hover\/menu-item\:opacity-100 {
+  opacity: 1;
+}
+
+.group:hover .group-hover\:opacity-100 {
   opacity: 1;
 }
 

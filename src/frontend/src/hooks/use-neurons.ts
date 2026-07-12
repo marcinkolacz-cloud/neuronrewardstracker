@@ -15,7 +15,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const KEYS = {
   neurons: ["neurons"] as const,
+  portfolio: ["portfolio-stats"] as const,
 };
+
+const statsKey = (id: string) => ["neuron-stats", id] as const;
+const rewardsKey = (id: string) => ["rewards", id] as const;
+const syncStatusKey = (id: string) => ["sync-status", id] as const;
+const syncErrorKey = (id: string) => ["sync-error", id] as const;
 
 /** List all tracked neurons (owned by the caller). */
 export function useNeurons() {
@@ -76,7 +82,11 @@ export function useUpdateNeuron() {
   });
 }
 
-/** Stop tracking a neuron. Invalidates the neurons list on success. */
+/**
+ * Stop tracking a neuron. Invalidates the neurons list AND every per-neuron
+ * query key (rewards, sync-status, sync-error, neuron-stats) plus the
+ * portfolio-wide stats so the cascade delete is reflected across the UI.
+ */
 export function useRemoveNeuron() {
   const queryClient = useQueryClient();
   const { actor } = useBackendActor();
@@ -85,8 +95,14 @@ export function useRemoveNeuron() {
       if (!actor) throw new Error("Backend actor not ready");
       return actor.removeNeuron(neuronId);
     },
-    onSuccess: () => {
+    onSuccess: (_data, neuronId) => {
+      const id = neuronId.toString();
       void queryClient.invalidateQueries({ queryKey: KEYS.neurons });
+      void queryClient.invalidateQueries({ queryKey: rewardsKey(id) });
+      void queryClient.invalidateQueries({ queryKey: syncStatusKey(id) });
+      void queryClient.invalidateQueries({ queryKey: syncErrorKey(id) });
+      void queryClient.invalidateQueries({ queryKey: statsKey(id) });
+      void queryClient.invalidateQueries({ queryKey: KEYS.portfolio });
     },
   });
 }
