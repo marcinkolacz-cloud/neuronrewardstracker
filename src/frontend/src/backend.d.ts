@@ -61,7 +61,8 @@ export type Error_ = {
 };
 export type DeltaE8s = bigint;
 export interface HistoricalEntry {
-    maturityE8s: E8s;
+    stakedMaturityE8s: E8s;
+    unstakedMaturityE8s: E8s;
     timestamp: Timestamp;
 }
 export interface MonthlyBreakdown {
@@ -71,7 +72,9 @@ export interface MonthlyBreakdown {
     readingCount: bigint;
 }
 export interface DailyReward {
-    maturityE8s: E8s;
+    stakedMaturityE8s: E8s;
+    unstakedMaturityE8s: E8s;
+    autoStakeMaturity: boolean;
     timestamp: Timestamp;
     neuronId: NeuronId;
     deltaE8s: DeltaE8s;
@@ -162,7 +165,7 @@ export interface backendInterface {
     importHistoricalData(neuronId: NeuronId, entries: Array<HistoricalEntry>): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     listMyNeurons(): Promise<Array<Neuron>>;
-    recordSnapshot(neuronId: NeuronId, maturityE8s: bigint): Promise<DailyReward>;
+    recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
     schema(): Promise<string>;
     syncAllMyNeurons(): Promise<Array<SyncResult>>;

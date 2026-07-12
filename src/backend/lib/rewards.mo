@@ -14,12 +14,19 @@ module {
   public type Timestamp = Common.Timestamp;
 
   /// Record a single maturity snapshot, computing the delta vs the previous
-  /// snapshot for that neuron. Negative deltas are classified as
+  /// snapshot's COMBINED maturity total (unstaked + staked) for that neuron.
+  ///
+  /// Using the combined total for delta math means a neuron that switches
+  /// auto-stake on/off — which shifts maturity between `unstakedMaturityE8s`
+  /// and `stakedMaturityE8s` — does not produce a spurious negative delta;
+  /// the total stays continuous. Negative deltas are classified as
   /// #disburseOrSpawn; the first reading is #firstReading with delta 0.
   public func recordSnapshot(
     rewards : Map.Map<NeuronId, List.List<DailyReward>>,
     neuronId : NeuronId,
-    maturityE8s : E8s,
+    unstakedMaturityE8s : E8s,
+    stakedMaturityE8s : E8s,
+    autoStakeMaturity : Bool,
     timestamp : Timestamp,
   ) : DailyReward {
     let history = switch (rewards.get(neuronId)) {
@@ -31,9 +38,12 @@ module {
       };
     };
 
+    let combinedTotal : Int = Int.fromNat(unstakedMaturityE8s.toNat()) + Int.fromNat(stakedMaturityE8s.toNat());
+
     let (delta, eventType) = switch (history.last()) {
       case (?prev) {
-        let d : Int = Int.fromNat(maturityE8s.toNat()) - Int.fromNat(prev.maturityE8s.toNat());
+        let prevCombined : Int = Int.fromNat(prev.unstakedMaturityE8s.toNat()) + Int.fromNat(prev.stakedMaturityE8s.toNat());
+        let d : Int = combinedTotal - prevCombined;
         if (d < 0) { (d, #disburseOrSpawn) } else { (d, #normalGrowth) };
       };
       case null { (0, #firstReading) };
@@ -42,7 +52,9 @@ module {
     let snapshot : DailyReward = {
       neuronId;
       timestamp;
-      maturityE8s;
+      unstakedMaturityE8s;
+      stakedMaturityE8s;
+      autoStakeMaturity;
       deltaE8s = delta;
       eventType;
     };
@@ -65,14 +77,23 @@ module {
   };
 
   /// Bulk import historical entries, computing deltas the same way as
-  /// recordSnapshot. Entries are processed in the order given.
+  /// recordSnapshot (from the combined total). Entries are processed in the
+  /// order given. `autoStakeMaturity` defaults to false for backfilled data
+  /// since the historical mode is generally unknown.
   public func importHistoricalData(
     rewards : Map.Map<NeuronId, List.List<DailyReward>>,
     neuronId : NeuronId,
     entries : [HistoricalEntry],
   ) : () {
     for (entry in entries.vals()) {
-      ignore recordSnapshot(rewards, neuronId, entry.maturityE8s, entry.timestamp);
+      ignore recordSnapshot(
+        rewards,
+        neuronId,
+        entry.unstakedMaturityE8s,
+        entry.stakedMaturityE8s,
+        false,
+        entry.timestamp,
+      );
     };
   };
 };

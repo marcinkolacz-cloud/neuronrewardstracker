@@ -8,7 +8,8 @@
  * Return types match the generated backend bindings:
  *   syncNeuron      → SyncResult { status, maturityE8s?, lastSyncError?, neuronId }
  *   syncAllMyNeurons → SyncResult[]
- *   recordSnapshot  → DailyReward
+ *   recordSnapshot  → DailyReward  (args: neuronId, unstakedMaturityE8s,
+ *                                    stakedMaturityE8s, autoStakeMaturity)
  *   getSyncError    → string | null
  * None of these return a Candid Result variant, so there are no
  * `__kind__ === "ok"` checks here.
@@ -79,11 +80,21 @@ export function useRecordSnapshot() {
   return useMutation<
     DailyReward,
     Error,
-    { neuronId: bigint; maturityE8s: bigint }
+    {
+      neuronId: bigint;
+      unstakedMaturityE8s: bigint;
+      stakedMaturityE8s: bigint;
+      autoStakeMaturity: boolean;
+    }
   >({
-    mutationFn: async ({ neuronId, maturityE8s }) => {
+    mutationFn: async (vars) => {
       if (!actor) throw new Error("Backend actor not ready");
-      return actor.recordSnapshot(neuronId, maturityE8s);
+      return actor.recordSnapshot(
+        vars.neuronId,
+        vars.unstakedMaturityE8s,
+        vars.stakedMaturityE8s,
+        vars.autoStakeMaturity,
+      );
     },
     onSuccess: (_data, vars) => {
       const id = vars.neuronId.toString();

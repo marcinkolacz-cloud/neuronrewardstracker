@@ -22,8 +22,17 @@ module {
   /// Subset of the NNS governance Neuron record. Only the fields the sync
   /// logic reads are declared; governance may return additional fields that
   /// candid will silently ignore.
+  ///
+  /// `maturity_e8s_equivalent` is the unstaked (withdrawable) maturity and is
+  /// always present (non-optional). `staked_maturity_e8s_equivalent` and
+  /// `auto_stake_maturity` are optional because NNS governance omits them for
+  /// neurons that never had auto-stake configured. We read all three on every
+  /// sync regardless of mode so a neuron that switches auto-stake on/off over
+  /// time keeps a continuous combined-maturity history.
   public type Neuron = {
     maturity_e8s_equivalent : Nat64;
+    staked_maturity_e8s_equivalent : ?Nat64;
+    auto_stake_maturity : ?Bool;
   };
 
   /// NNS governance error variant returned inside the #Err branch of
@@ -42,10 +51,15 @@ module {
   };
 
   /// Result of a single syncNeuron attempt.
+  ///
+  /// `maturityE8s` carries the COMBINED maturity total (unstaked + staked)
+  /// when the sync succeeded, so callers and the frontend still get a single
+  /// "maturity" figure. The per-field breakdown lives on the recorded
+  /// DailyReward snapshot.
   public type SyncResult = {
     neuronId : NeuronId;
     status : SyncStatus;
-    maturityE8s : ?Nat64;     // maturity read from governance, if successful
+    maturityE8s : ?Nat64;     // combined (unstaked + staked) maturity, if successful
     lastSyncError : ?Text;    // error reason when status is #failed, else null
   };
 };

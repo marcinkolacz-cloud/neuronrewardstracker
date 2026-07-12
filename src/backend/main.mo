@@ -86,7 +86,9 @@ actor {
         .payload("neuronId", func(r) = r.neuronId)
         .edge("neuronId", "neuron")
         .payload("timestamp", func(r) = r.timestamp)
-        .payload("maturityE8s", func(r) = r.maturityE8s)
+        .payload("unstakedMaturityE8s", func(r) = r.unstakedMaturityE8s)
+        .payload("stakedMaturityE8s", func(r) = r.stakedMaturityE8s)
+        .payload("autoStakeMaturity", func(r) = r.autoStakeMaturity)
         .payload("deltaE8s", func(r) = r.deltaE8s)
         .payload(
           "eventType",

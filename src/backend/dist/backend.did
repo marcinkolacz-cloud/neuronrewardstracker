@@ -72,8 +72,9 @@ type MonthlyBreakdown =
  };
 type HistoricalEntry = 
  record {
-   maturityE8s: E8s;
+   stakedMaturityE8s: E8s;
    timestamp: Timestamp;
+   unstakedMaturityE8s: E8s;
  };
 type EventType = 
  variant {
@@ -107,11 +108,13 @@ type E8s = nat64;
 type DeltaE8s = int;
 type DailyReward = 
  record {
+   autoStakeMaturity: bool;
    deltaE8s: DeltaE8s;
    eventType: EventType;
-   maturityE8s: E8s;
    neuronId: NeuronId;
+   stakedMaturityE8s: E8s;
    timestamp: Timestamp;
+   unstakedMaturityE8s: E8s;
  };
 type Cell = 
  record {
@@ -141,7 +144,8 @@ service : {
    ();
   isCallerAdmin: () -> (bool) query;
   listMyNeurons: () -> (vec Neuron);
-  recordSnapshot: (neuronId: NeuronId, maturityE8s: nat64) -> (DailyReward);
+  recordSnapshot: (neuronId: NeuronId, unstakedMaturityE8s: nat64,
+   stakedMaturityE8s: nat64, autoStakeMaturity: bool) -> (DailyReward);
   removeNeuron: (neuronId: NeuronId) -> ();
   schema: () -> (text) query;
   syncAllMyNeurons: () -> (vec SyncResult);

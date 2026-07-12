@@ -107,7 +107,8 @@ export type Error_ = {
 };
 export type DeltaE8s = bigint;
 export interface HistoricalEntry {
-    maturityE8s: E8s;
+    stakedMaturityE8s: E8s;
+    unstakedMaturityE8s: E8s;
     timestamp: Timestamp;
 }
 export interface MonthlyBreakdown {
@@ -117,7 +118,9 @@ export interface MonthlyBreakdown {
     readingCount: bigint;
 }
 export interface DailyReward {
-    maturityE8s: E8s;
+    stakedMaturityE8s: E8s;
+    unstakedMaturityE8s: E8s;
+    autoStakeMaturity: boolean;
     timestamp: Timestamp;
     neuronId: NeuronId;
     deltaE8s: DeltaE8s;
@@ -216,7 +219,7 @@ export interface backendInterface {
     importHistoricalData(neuronId: NeuronId, entries: Array<HistoricalEntry>): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     listMyNeurons(): Promise<Array<Neuron>>;
-    recordSnapshot(neuronId: NeuronId, maturityE8s: bigint): Promise<DailyReward>;
+    recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
     schema(): Promise<string>;
     syncAllMyNeurons(): Promise<Array<SyncResult>>;
@@ -506,17 +509,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async recordSnapshot(arg0: NeuronId, arg1: bigint): Promise<DailyReward> {
+    async recordSnapshot(arg0: NeuronId, arg1: bigint, arg2: bigint, arg3: boolean): Promise<DailyReward> {
         if (this.processError) {
             try {
-                const result = await this.actor.recordSnapshot(arg0, arg1);
+                const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
                 return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.recordSnapshot(arg0, arg1);
+            const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
             return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -640,20 +643,26 @@ function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uin
     };
 }
 function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    maturityE8s: _E8s;
+    stakedMaturityE8s: _E8s;
+    unstakedMaturityE8s: _E8s;
+    autoStakeMaturity: boolean;
     timestamp: _Timestamp;
     neuronId: _NeuronId;
     deltaE8s: _DeltaE8s;
     eventType: _EventType;
 }): {
-    maturityE8s: E8s;
+    stakedMaturityE8s: E8s;
+    unstakedMaturityE8s: E8s;
+    autoStakeMaturity: boolean;
     timestamp: Timestamp;
     neuronId: NeuronId;
     deltaE8s: DeltaE8s;
     eventType: EventType;
 } {
     return {
-        maturityE8s: value.maturityE8s,
+        stakedMaturityE8s: value.stakedMaturityE8s,
+        unstakedMaturityE8s: value.unstakedMaturityE8s,
+        autoStakeMaturity: value.autoStakeMaturity,
         timestamp: value.timestamp,
         neuronId: value.neuronId,
         deltaE8s: value.deltaE8s,

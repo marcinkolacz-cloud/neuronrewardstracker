@@ -33507,7 +33507,7 @@ function useImageLoadingStatus(src, { referrerPolicy, crossOrigin }) {
   }, [image, crossOrigin, referrerPolicy]);
   return loadingStatus;
 }
-var Root$3 = Avatar$1;
+var Root$4 = Avatar$1;
 var Fallback = AvatarFallback$1;
 function r(e3) {
   var t2, f2, n2 = "";
@@ -35989,7 +35989,7 @@ function Avatar({
   ...props
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root$3,
+    Root$4,
     {
       "data-slot": "avatar",
       className: cn(
@@ -36152,7 +36152,7 @@ Separator$1.displayName = NAME$1;
 function isValidOrientation(orientation) {
   return ORIENTATIONS.includes(orientation);
 }
-var Root$2 = Separator$1;
+var Root$3 = Separator$1;
 function Separator({
   className,
   orientation = "horizontal",
@@ -36160,7 +36160,7 @@ function Separator({
   ...props
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root$2,
+    Root$3,
     {
       "data-slot": "separator",
       decorative,
@@ -40426,7 +40426,7 @@ function useNavigate(_defaultOpts) {
   );
 }
 const useLayoutEffect = typeof window !== "undefined" ? reactExports.useLayoutEffect : reactExports.useEffect;
-function usePrevious(value) {
+function usePrevious$1(value) {
   const ref = reactExports.useRef({
     value,
     prev: null
@@ -40950,11 +40950,11 @@ function Transitioner() {
     }),
     structuralSharing: true
   });
-  const previousIsLoading = usePrevious(isLoading);
+  const previousIsLoading = usePrevious$1(isLoading);
   const isAnyPending = isLoading || isTransitioning || hasPendingMatches;
-  const previousIsAnyPending = usePrevious(isAnyPending);
+  const previousIsAnyPending = usePrevious$1(isAnyPending);
   const isPagePending = isLoading || hasPendingMatches;
-  const previousIsPagePending = usePrevious(isPagePending);
+  const previousIsPagePending = usePrevious$1(isPagePending);
   router2.startTransition = (fn) => {
     setIsTransitioning(true);
     reactExports.startTransition(() => {
@@ -42002,13 +42002,13 @@ var Label$2 = reactExports.forwardRef((props, forwardedRef) => {
   );
 });
 Label$2.displayName = NAME;
-var Root$1 = Label$2;
+var Root$2 = Label$2;
 function Label$1({
   className,
   ...props
 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root$1,
+    Root$2,
     {
       "data-slot": "label",
       className: cn(
@@ -42088,7 +42088,9 @@ const EventType = Variant({
   "disburseOrSpawn": Null
 });
 const DailyReward = Record({
-  "maturityE8s": E8s,
+  "stakedMaturityE8s": E8s,
+  "unstakedMaturityE8s": E8s,
+  "autoStakeMaturity": Bool,
   "timestamp": Timestamp,
   "neuronId": NeuronId,
   "deltaE8s": DeltaE8s,
@@ -42101,7 +42103,8 @@ const SyncStatus = Variant({
   "synced": Null
 });
 const HistoricalEntry = Record({
-  "maturityE8s": E8s,
+  "stakedMaturityE8s": E8s,
+  "unstakedMaturityE8s": E8s,
   "timestamp": Timestamp
 });
 const Neuron = Record({
@@ -42147,7 +42150,11 @@ Service({
   ),
   "isCallerAdmin": Func([], [Bool], ["query"]),
   "listMyNeurons": Func([], [Vec(Neuron)], []),
-  "recordSnapshot": Func([NeuronId, Nat64], [DailyReward], []),
+  "recordSnapshot": Func(
+    [NeuronId, Nat64, Nat64, Bool],
+    [DailyReward],
+    []
+  ),
   "removeNeuron": Func([NeuronId], [], []),
   "schema": Func([], [Text$1], ["query"]),
   "syncAllMyNeurons": Func([], [Vec(SyncResult)], []),
@@ -42224,7 +42231,9 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "disburseOrSpawn": IDL2.Null
   });
   const DailyReward2 = IDL2.Record({
-    "maturityE8s": E8s2,
+    "stakedMaturityE8s": E8s2,
+    "unstakedMaturityE8s": E8s2,
+    "autoStakeMaturity": IDL2.Bool,
     "timestamp": Timestamp2,
     "neuronId": NeuronId2,
     "deltaE8s": DeltaE8s2,
@@ -42237,7 +42246,8 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "synced": IDL2.Null
   });
   const HistoricalEntry2 = IDL2.Record({
-    "maturityE8s": E8s2,
+    "stakedMaturityE8s": E8s2,
+    "unstakedMaturityE8s": E8s2,
     "timestamp": Timestamp2
   });
   const Neuron2 = IDL2.Record({
@@ -42283,7 +42293,11 @@ const idlFactory = ({ IDL: IDL2 }) => {
     ),
     "isCallerAdmin": IDL2.Func([], [IDL2.Bool], ["query"]),
     "listMyNeurons": IDL2.Func([], [IDL2.Vec(Neuron2)], []),
-    "recordSnapshot": IDL2.Func([NeuronId2, IDL2.Nat64], [DailyReward2], []),
+    "recordSnapshot": IDL2.Func(
+      [NeuronId2, IDL2.Nat64, IDL2.Nat64, IDL2.Bool],
+      [DailyReward2],
+      []
+    ),
     "removeNeuron": IDL2.Func([NeuronId2], [], []),
     "schema": IDL2.Func([], [IDL2.Text], ["query"]),
     "syncAllMyNeurons": IDL2.Func([], [IDL2.Vec(SyncResult2)], []),
@@ -42581,17 +42595,17 @@ class Backend {
       return result;
     }
   }
-  async recordSnapshot(arg0, arg1) {
+  async recordSnapshot(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
-        const result = await this.actor.recordSnapshot(arg0, arg1);
+        const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
         return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.recordSnapshot(arg0, arg1);
+      const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
       return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
     }
   }
@@ -42710,7 +42724,9 @@ function from_candid_record_n12(_uploadFile, _downloadFile, value) {
 }
 function from_candid_record_n19(_uploadFile, _downloadFile, value) {
   return {
-    maturityE8s: value.maturityE8s,
+    stakedMaturityE8s: value.stakedMaturityE8s,
+    unstakedMaturityE8s: value.unstakedMaturityE8s,
+    autoStakeMaturity: value.autoStakeMaturity,
     timestamp: value.timestamp,
     neuronId: value.neuronId,
     deltaE8s: value.deltaE8s,
@@ -42950,9 +42966,14 @@ function useRecordSnapshot() {
   const queryClient2 = useQueryClient();
   const { actor } = useBackendActor();
   return useMutation({
-    mutationFn: async ({ neuronId, maturityE8s }) => {
+    mutationFn: async (vars) => {
       if (!actor) throw new Error("Backend actor not ready");
-      return actor.recordSnapshot(neuronId, maturityE8s);
+      return actor.recordSnapshot(
+        vars.neuronId,
+        vars.unstakedMaturityE8s,
+        vars.stakedMaturityE8s,
+        vars.autoStakeMaturity
+      );
     },
     onSuccess: (_data, vars) => {
       const id2 = vars.neuronId.toString();
@@ -53452,7 +53473,7 @@ var DialogTrigger = reactExports.forwardRef(
         "aria-haspopup": "dialog",
         "aria-expanded": context.open,
         "aria-controls": context.contentId,
-        "data-state": getState(context.open),
+        "data-state": getState$1(context.open),
         ...triggerProps,
         ref: composedTriggerRef,
         onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
@@ -53492,7 +53513,7 @@ var DialogOverlayImpl = reactExports.forwardRef(
       /* @__PURE__ */ jsxRuntimeExports.jsx(ReactRemoveScroll, { as: Slot, allowPinchZoom: true, shards: [context.contentRef], children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Primitive.div,
         {
-          "data-state": getState(context.open),
+          "data-state": getState$1(context.open),
           ...overlayProps,
           ref: forwardedRef,
           style: { pointerEvents: "auto", ...overlayProps.style }
@@ -53611,7 +53632,7 @@ var DialogContentImpl = reactExports.forwardRef(
               id: context.contentId,
               "aria-describedby": context.descriptionId,
               "aria-labelledby": context.titleId,
-              "data-state": getState(context.open),
+              "data-state": getState$1(context.open),
               ...contentProps,
               ref: composedRefs,
               onDismiss: () => context.onOpenChange(false)
@@ -53661,7 +53682,7 @@ var DialogClose = reactExports.forwardRef(
   }
 );
 DialogClose.displayName = CLOSE_NAME;
-function getState(open) {
+function getState$1(open) {
   return open ? "open" : "closed";
 }
 var TITLE_WARNING_NAME = "DialogTitleWarning";
@@ -53699,7 +53720,7 @@ var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
   }, [MESSAGE, contentRef, descriptionId]);
   return null;
 };
-var Root = Dialog;
+var Root$1 = Dialog;
 var Trigger = DialogTrigger;
 var Portal = DialogPortal;
 var Overlay = DialogOverlay;
@@ -53715,7 +53736,7 @@ var useDialogScope = createDialogScope();
 var AlertDialog$1 = (props) => {
   const { __scopeAlertDialog, ...alertDialogProps } = props;
   const dialogScope = useDialogScope(__scopeAlertDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root, { ...dialogScope, ...alertDialogProps, modal: true });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$1, { ...dialogScope, ...alertDialogProps, modal: true });
 };
 AlertDialog$1.displayName = ROOT_NAME;
 var TRIGGER_NAME = "AlertDialogTrigger";
@@ -53972,6 +53993,215 @@ function AlertDialogCancel({
     {
       className: cn(buttonVariants({ variant: "outline" }), className),
       ...props
+    }
+  );
+}
+function usePrevious(value) {
+  const ref = reactExports.useRef({ value, previous: value });
+  return reactExports.useMemo(() => {
+    if (ref.current.value !== value) {
+      ref.current.previous = ref.current.value;
+      ref.current.value = value;
+    }
+    return ref.current.previous;
+  }, [value]);
+}
+function useSize(element) {
+  const [size, setSize] = reactExports.useState(void 0);
+  useLayoutEffect2(() => {
+    if (element) {
+      setSize({ width: element.offsetWidth, height: element.offsetHeight });
+      const resizeObserver = new ResizeObserver((entries) => {
+        if (!Array.isArray(entries)) {
+          return;
+        }
+        if (!entries.length) {
+          return;
+        }
+        const entry = entries[0];
+        let width;
+        let height;
+        if ("borderBoxSize" in entry) {
+          const borderSizeEntry = entry["borderBoxSize"];
+          const borderSize = Array.isArray(borderSizeEntry) ? borderSizeEntry[0] : borderSizeEntry;
+          width = borderSize["inlineSize"];
+          height = borderSize["blockSize"];
+        } else {
+          width = element.offsetWidth;
+          height = element.offsetHeight;
+        }
+        setSize({ width, height });
+      });
+      resizeObserver.observe(element, { box: "border-box" });
+      return () => resizeObserver.unobserve(element);
+    } else {
+      setSize(void 0);
+    }
+  }, [element]);
+  return size;
+}
+var SWITCH_NAME = "Switch";
+var [createSwitchContext] = createContextScope(SWITCH_NAME);
+var [SwitchProvider, useSwitchContext] = createSwitchContext(SWITCH_NAME);
+var Switch$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeSwitch,
+      name,
+      checked: checkedProp,
+      defaultChecked,
+      required,
+      disabled,
+      value = "on",
+      onCheckedChange,
+      form,
+      ...switchProps
+    } = props;
+    const [button, setButton] = reactExports.useState(null);
+    const composedRefs = useComposedRefs(forwardedRef, (node) => setButton(node));
+    const hasConsumerStoppedPropagationRef = reactExports.useRef(false);
+    const isFormControl = button ? form || !!button.closest("form") : true;
+    const [checked, setChecked] = useControllableState({
+      prop: checkedProp,
+      defaultProp: defaultChecked ?? false,
+      onChange: onCheckedChange,
+      caller: SWITCH_NAME
+    });
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(SwitchProvider, { scope: __scopeSwitch, checked, disabled, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Primitive.button,
+        {
+          type: "button",
+          role: "switch",
+          "aria-checked": checked,
+          "aria-required": required,
+          "data-state": getState(checked),
+          "data-disabled": disabled ? "" : void 0,
+          disabled,
+          value,
+          ...switchProps,
+          ref: composedRefs,
+          onClick: composeEventHandlers(props.onClick, (event) => {
+            setChecked((prevChecked) => !prevChecked);
+            if (isFormControl) {
+              hasConsumerStoppedPropagationRef.current = event.isPropagationStopped();
+              if (!hasConsumerStoppedPropagationRef.current) event.stopPropagation();
+            }
+          })
+        }
+      ),
+      isFormControl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SwitchBubbleInput,
+        {
+          control: button,
+          bubbles: !hasConsumerStoppedPropagationRef.current,
+          name,
+          value,
+          checked,
+          required,
+          disabled,
+          form,
+          style: { transform: "translateX(-100%)" }
+        }
+      )
+    ] });
+  }
+);
+Switch$1.displayName = SWITCH_NAME;
+var THUMB_NAME = "SwitchThumb";
+var SwitchThumb = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeSwitch, ...thumbProps } = props;
+    const context = useSwitchContext(THUMB_NAME, __scopeSwitch);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.span,
+      {
+        "data-state": getState(context.checked),
+        "data-disabled": context.disabled ? "" : void 0,
+        ...thumbProps,
+        ref: forwardedRef
+      }
+    );
+  }
+);
+SwitchThumb.displayName = THUMB_NAME;
+var BUBBLE_INPUT_NAME = "SwitchBubbleInput";
+var SwitchBubbleInput = reactExports.forwardRef(
+  ({
+    __scopeSwitch,
+    control,
+    checked,
+    bubbles = true,
+    ...props
+  }, forwardedRef) => {
+    const ref = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(ref, forwardedRef);
+    const prevChecked = usePrevious(checked);
+    const controlSize = useSize(control);
+    reactExports.useEffect(() => {
+      const input = ref.current;
+      if (!input) return;
+      const inputProto = window.HTMLInputElement.prototype;
+      const descriptor = Object.getOwnPropertyDescriptor(
+        inputProto,
+        "checked"
+      );
+      const setChecked = descriptor.set;
+      if (prevChecked !== checked && setChecked) {
+        const event = new Event("click", { bubbles });
+        setChecked.call(input, checked);
+        input.dispatchEvent(event);
+      }
+    }, [prevChecked, checked, bubbles]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "input",
+      {
+        type: "checkbox",
+        "aria-hidden": true,
+        defaultChecked: checked,
+        ...props,
+        tabIndex: -1,
+        ref: composedRefs,
+        style: {
+          ...props.style,
+          ...controlSize,
+          position: "absolute",
+          pointerEvents: "none",
+          opacity: 0,
+          margin: 0
+        }
+      }
+    );
+  }
+);
+SwitchBubbleInput.displayName = BUBBLE_INPUT_NAME;
+function getState(checked) {
+  return checked ? "checked" : "unchecked";
+}
+var Root = Switch$1;
+var Thumb = SwitchThumb;
+function Switch({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Root,
+    {
+      "data-slot": "switch",
+      className: cn(
+        "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      ),
+      ...props,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Thumb,
+        {
+          "data-slot": "switch-thumb",
+          className: cn(
+            "bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
+          )
+        }
+      )
     }
   );
 }
@@ -75702,13 +75932,20 @@ function NeuronDetailPage() {
     (a2, b2) => Number(a2.timestamp - b2.timestamp)
   );
   const lastReward = sortedRewards[sortedRewards.length - 1];
-  const maturityE8s = (lastReward == null ? void 0 : lastReward.maturityE8s) ?? 0n;
+  const unstakedE8s = (lastReward == null ? void 0 : lastReward.unstakedMaturityE8s) ?? 0n;
+  const stakedE8s = (lastReward == null ? void 0 : lastReward.stakedMaturityE8s) ?? 0n;
+  const maturityE8s = unstakedE8s + stakedE8s;
+  const autoStakeMaturity = (lastReward == null ? void 0 : lastReward.autoStakeMaturity) ?? false;
   const maturityPercent = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
-  const chartData = sortedRewards.map((p2) => ({
-    date: formatTimestamp(p2.timestamp),
-    maturity: Number(p2.maturityE8s) / 1e8,
-    raw: p2.maturityE8s
-  }));
+  const chartData = sortedRewards.map((p2) => {
+    const combined = p2.unstakedMaturityE8s + p2.stakedMaturityE8s;
+    return {
+      date: formatTimestamp(p2.timestamp),
+      maturity: Number(combined) / 1e8,
+      staked: Number(p2.stakedMaturityE8s) / 1e8,
+      raw: combined
+    };
+  });
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
@@ -75740,6 +75977,9 @@ function NeuronDetailPage() {
         {
           neuron,
           maturityE8s,
+          unstakedE8s,
+          stakedE8s,
+          autoStakeMaturity,
           maturityPercent,
           syncStatus: syncStatus ?? null,
           errorReason: syncError ?? null,
@@ -75775,9 +76015,14 @@ function NeuronDetailPage() {
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           SnapshotEntryForm,
           {
-            onSubmit: (maturity) => {
+            onSubmit: (unstaked, staked, autoStake) => {
               recordSnapshot.mutate(
-                { neuronId: BigInt(neuronId), maturityE8s: maturity },
+                {
+                  neuronId: BigInt(neuronId),
+                  unstakedMaturityE8s: unstaked,
+                  stakedMaturityE8s: staked,
+                  autoStakeMaturity: autoStake
+                },
                 {
                   onSuccess: () => ue.success("Snapshot recorded"),
                   onError: (err) => ue.error(err.message)
@@ -75794,6 +76039,9 @@ function NeuronDetailPage() {
 function NeuronHeader({
   neuron,
   maturityE8s,
+  unstakedE8s,
+  stakedE8s,
+  autoStakeMaturity,
   maturityPercent,
   syncStatus,
   errorReason,
@@ -75903,14 +76151,32 @@ function NeuronHeader({
           icon: Wallet
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Stat,
-        {
-          label: "Maturity",
-          value: formatIcpCompact(maturityE8s),
-          icon: TrendingUp
-        }
-      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground flex items-center gap-1.5 text-[11px] tracking-wider uppercase", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TrendingUp, { className: "size-3.5" }),
+          "Maturity"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-sm font-semibold", children: formatIcpCompact(maturityE8s) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[10px]", children: [
+          "Withdrawable ",
+          formatIcp(unstakedE8s, 4, false),
+          " · Staked",
+          " ",
+          formatIcp(stakedE8s, 4, false)
+        ] }),
+        autoStakeMaturity && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Badge,
+          {
+            variant: "outline",
+            className: "border-accent/40 bg-accent/10 text-accent mt-1 gap-1 text-[10px]",
+            "data-ocid": "neuron_detail.header.auto_stake_badge",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "size-2.5" }),
+              "Auto-stake"
+            ]
+          }
+        )
+      ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         Stat,
         {
@@ -76022,7 +76288,29 @@ function MaturityChart({
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 h-full", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Maturity growth" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono text-[10px]", children: "ICP" })
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground flex items-center gap-1.5 text-[10px]", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "inline-block size-2 rounded-full",
+              style: { background: "oklch(0.78 0.16 195)" },
+              "aria-hidden": true
+            }
+          ),
+          "Total",
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "ml-2 inline-block size-2 rounded-full",
+              style: { background: "oklch(0.72 0.14 145)" },
+              "aria-hidden": true
+            }
+          ),
+          "Staked"
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono text-[10px]", children: "ICP" })
+      ] })
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: hasData ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-72 w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
       AreaChart,
@@ -76030,24 +76318,44 @@ function MaturityChart({
         data,
         margin: { top: 8, right: 8, bottom: 0, left: -16 },
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("defs", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("linearGradient", { id: "maturityFill", x1: "0", y1: "0", x2: "0", y2: "1", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "stop",
-              {
-                offset: "0%",
-                stopColor: "oklch(0.78 0.16 195)",
-                stopOpacity: 0.35
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "stop",
-              {
-                offset: "100%",
-                stopColor: "oklch(0.78 0.16 195)",
-                stopOpacity: 0
-              }
-            )
-          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("defs", { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("linearGradient", { id: "maturityFill", x1: "0", y1: "0", x2: "0", y2: "1", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "stop",
+                {
+                  offset: "0%",
+                  stopColor: "oklch(0.78 0.16 195)",
+                  stopOpacity: 0.35
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "stop",
+                {
+                  offset: "100%",
+                  stopColor: "oklch(0.78 0.16 195)",
+                  stopOpacity: 0
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("linearGradient", { id: "stakedFill", x1: "0", y1: "0", x2: "0", y2: "1", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "stop",
+                {
+                  offset: "0%",
+                  stopColor: "oklch(0.72 0.14 145)",
+                  stopOpacity: 0.3
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "stop",
+                {
+                  offset: "100%",
+                  stopColor: "oklch(0.72 0.14 145)",
+                  stopOpacity: 0
+                }
+              )
+            ] })
+          ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             CartesianGrid,
             {
@@ -76095,7 +76403,12 @@ function MaturityChart({
               },
               labelStyle: { color: "oklch(0.62 0.012 260)" },
               itemStyle: { color: "oklch(0.95 0.005 260)" },
-              formatter: (v2) => [`${v2.toFixed(4)} ICP`, "Maturity"]
+              formatter: (v2, name) => {
+                if (name === "staked") {
+                  return [`${v2.toFixed(4)} ICP`, "Staked"];
+                }
+                return [`${v2.toFixed(4)} ICP`, "Total"];
+              }
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -76108,6 +76421,18 @@ function MaturityChart({
               fill: "url(#maturityFill)",
               dot: false,
               activeDot: { r: 4, fill: "oklch(0.78 0.16 195)" }
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Area,
+            {
+              type: "monotone",
+              dataKey: "staked",
+              stroke: "oklch(0.72 0.14 145)",
+              strokeWidth: 1.5,
+              fill: "url(#stakedFill)",
+              dot: false,
+              activeDot: { r: 3, fill: "oklch(0.72 0.14 145)" }
             }
           )
         ]
@@ -76156,7 +76481,8 @@ function ActivityItem({ event, index: index2 }) {
   const isFirst = event.eventType === "firstReading";
   const Icon2 = isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
   const accent = isDisburse ? "text-primary bg-primary/10" : isFirst ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
-  const fromE8s = event.maturityE8s - event.deltaE8s;
+  const combinedE8s = event.unstakedMaturityE8s + event.stakedMaturityE8s;
+  const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     motion.li,
@@ -76187,10 +76513,29 @@ function ActivityItem({ event, index: index2 }) {
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px]", children: [
             formatIcp(fromE8s, 4, false),
-            " →",
+            " → ",
+            formatIcp(combinedE8s, 4, false),
             " ",
-            formatIcp(event.maturityE8s, 4, false),
-            " ICP"
+            "ICP"
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px]", children: [
+            "Withdrawable ",
+            formatIcp(event.unstakedMaturityE8s, 4, false),
+            " · Staked",
+            " ",
+            formatIcp(event.stakedMaturityE8s, 4, false),
+            event.autoStakeMaturity && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Badge,
+              {
+                variant: "outline",
+                className: "border-accent/40 bg-accent/10 text-accent ml-1.5 gap-0.5 text-[9px]",
+                "data-ocid": `neuron_detail.activity.auto_stake_badge.${index2 + 1}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "size-2" }),
+                  "Auto-stake"
+                ]
+              }
+            )
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px]", children: formatTimestampDateTime(event.timestamp) })
         ] })
@@ -76252,7 +76597,9 @@ function SnapshotEntryForm({
   onSubmit,
   submitting
 }) {
-  const [maturity, setMaturity] = reactExports.useState("");
+  const [unstaked, setUnstaked] = reactExports.useState("");
+  const [staked, setStaked] = reactExports.useState("0");
+  const [autoStake, setAutoStake] = reactExports.useState(false);
   const icpToE8s2 = (icp) => {
     const n2 = Number(icp);
     if (!Number.isFinite(n2) || n2 < 0) return null;
@@ -76260,13 +76607,20 @@ function SnapshotEntryForm({
   };
   const handleSubmit = (ev) => {
     ev.preventDefault();
-    const maturityE8s = icpToE8s2(maturity);
-    if (maturityE8s == null) {
-      ue.error("Enter a valid ICP amount");
+    const unstakedE8s = icpToE8s2(unstaked);
+    const stakedE8s = icpToE8s2(staked);
+    if (unstakedE8s == null) {
+      ue.error("Enter a valid withdrawable maturity amount");
       return;
     }
-    onSubmit(maturityE8s);
-    setMaturity("");
+    if (stakedE8s == null) {
+      ue.error("Enter a valid staked maturity amount");
+      return;
+    }
+    onSubmit(unstakedE8s, stakedE8s, autoStake);
+    setUnstaked("");
+    setStaked("0");
+    setAutoStake(false);
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Manual snapshot" }) }),
@@ -76276,22 +76630,68 @@ function SnapshotEntryForm({
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Label$1,
           {
-            htmlFor: "maturity",
-            "data-ocid": "neuron_detail.snapshot.maturity.label",
-            children: "Maturity (ICP)"
+            htmlFor: "unstaked-maturity",
+            "data-ocid": "neuron_detail.snapshot.unstaked.label",
+            children: "Withdrawable maturity (ICP)"
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           Input,
           {
-            id: "maturity",
+            id: "unstaked-maturity",
             inputMode: "decimal",
             placeholder: "0.0000",
-            value: maturity,
-            onChange: (e3) => setMaturity(e3.target.value),
-            "data-ocid": "neuron_detail.snapshot.maturity.input",
+            value: unstaked,
+            onChange: (e3) => setUnstaked(e3.target.value),
+            "data-ocid": "neuron_detail.snapshot.unstaked.input",
             className: "font-mono",
             required: true
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Label$1,
+          {
+            htmlFor: "staked-maturity",
+            "data-ocid": "neuron_detail.snapshot.staked.label",
+            children: "Staked maturity (ICP)"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Input,
+          {
+            id: "staked-maturity",
+            inputMode: "decimal",
+            placeholder: "0.0000",
+            value: staked,
+            onChange: (e3) => setStaked(e3.target.value),
+            "data-ocid": "neuron_detail.snapshot.staked.input",
+            className: "font-mono",
+            required: true
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-0.5", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Label$1,
+            {
+              htmlFor: "auto-stake",
+              className: "text-sm",
+              "data-ocid": "neuron_detail.snapshot.auto_stake.label",
+              children: "Auto-stake maturity"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px]", children: "Stake new maturity instead of leaving it withdrawable." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Switch,
+          {
+            id: "auto-stake",
+            checked: autoStake,
+            onCheckedChange: setAutoStake,
+            "data-ocid": "neuron_detail.snapshot.auto_stake.switch"
           }
         )
       ] }),

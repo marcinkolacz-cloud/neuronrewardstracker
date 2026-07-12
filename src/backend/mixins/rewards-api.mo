@@ -13,18 +13,31 @@ mixin (
   neurons : Map.Map<Common.NeuronId, NeuronTypes.Neuron>,
 ) {
   /// Record a manual maturity snapshot for a neuron. Computes the delta vs the
-  /// previous snapshot. Serves as the fallback when governance sync is blocked
-  /// by a missing hotkey.
+  /// previous snapshot's combined maturity total. Serves as the fallback when
+  /// governance sync is blocked by a missing hotkey.
+  ///
+  /// Both maturity components are recorded separately so a neuron that
+  /// switches auto-stake mode over time keeps a continuous history.
+  /// `autoStakeMaturity` is an informational flag only.
   public shared ({ caller }) func recordSnapshot(
     neuronId : Common.NeuronId,
-    maturityE8s : Nat64,
+    unstakedMaturityE8s : Nat64,
+    stakedMaturityE8s : Nat64,
+    autoStakeMaturity : Bool,
   ) : async Types.DailyReward {
     if (Principal.isAnonymous(caller)) {
       Runtime.trap("Anonymous caller not allowed");
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
-    RewardsLib.recordSnapshot(rewards, neuronId, maturityE8s, Time.now());
+    RewardsLib.recordSnapshot(
+      rewards,
+      neuronId,
+      unstakedMaturityE8s,
+      stakedMaturityE8s,
+      autoStakeMaturity,
+      Time.now(),
+    );
   };
 
   /// Return all snapshots for a neuron, sorted by timestamp ascending.
@@ -40,7 +53,7 @@ mixin (
   };
 
   /// Bulk import historical entries for backfilling. Computes deltas the same
-  /// way as recordSnapshot.
+  /// way as recordSnapshot (from the combined maturity total).
   public shared ({ caller }) func importHistoricalData(
     neuronId : Common.NeuronId,
     entries : [Types.HistoricalEntry],

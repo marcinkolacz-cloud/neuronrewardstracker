@@ -77,7 +77,9 @@ export const EventType = IDL.Variant({
   'disburseOrSpawn' : IDL.Null,
 });
 export const DailyReward = IDL.Record({
-  'maturityE8s' : E8s,
+  'stakedMaturityE8s' : E8s,
+  'unstakedMaturityE8s' : E8s,
+  'autoStakeMaturity' : IDL.Bool,
   'timestamp' : Timestamp,
   'neuronId' : NeuronId,
   'deltaE8s' : DeltaE8s,
@@ -90,7 +92,8 @@ export const SyncStatus = IDL.Variant({
   'synced' : IDL.Null,
 });
 export const HistoricalEntry = IDL.Record({
-  'maturityE8s' : E8s,
+  'stakedMaturityE8s' : E8s,
+  'unstakedMaturityE8s' : E8s,
   'timestamp' : Timestamp,
 });
 export const Neuron = IDL.Record({
@@ -137,7 +140,11 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], []),
-  'recordSnapshot' : IDL.Func([NeuronId, IDL.Nat64], [DailyReward], []),
+  'recordSnapshot' : IDL.Func(
+      [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool],
+      [DailyReward],
+      [],
+    ),
   'removeNeuron' : IDL.Func([NeuronId], [], []),
   'schema' : IDL.Func([], [IDL.Text], ['query']),
   'syncAllMyNeurons' : IDL.Func([], [IDL.Vec(SyncResult)], []),
@@ -217,7 +224,9 @@ export const idlFactory = ({ IDL }) => {
     'disburseOrSpawn' : IDL.Null,
   });
   const DailyReward = IDL.Record({
-    'maturityE8s' : E8s,
+    'stakedMaturityE8s' : E8s,
+    'unstakedMaturityE8s' : E8s,
+    'autoStakeMaturity' : IDL.Bool,
     'timestamp' : Timestamp,
     'neuronId' : NeuronId,
     'deltaE8s' : DeltaE8s,
@@ -230,7 +239,8 @@ export const idlFactory = ({ IDL }) => {
     'synced' : IDL.Null,
   });
   const HistoricalEntry = IDL.Record({
-    'maturityE8s' : E8s,
+    'stakedMaturityE8s' : E8s,
+    'unstakedMaturityE8s' : E8s,
     'timestamp' : Timestamp,
   });
   const Neuron = IDL.Record({
@@ -277,7 +287,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], []),
-    'recordSnapshot' : IDL.Func([NeuronId, IDL.Nat64], [DailyReward], []),
+    'recordSnapshot' : IDL.Func(
+        [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool],
+        [DailyReward],
+        [],
+      ),
     'removeNeuron' : IDL.Func([NeuronId], [], []),
     'schema' : IDL.Func([], [IDL.Text], ['query']),
     'syncAllMyNeurons' : IDL.Func([], [IDL.Vec(SyncResult)], []),

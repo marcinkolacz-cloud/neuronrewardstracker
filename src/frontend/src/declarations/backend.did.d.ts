@@ -12,7 +12,9 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export interface Cell { 'value' : Value, 'name' : string }
 export interface DailyReward {
-  'maturityE8s' : E8s,
+  'stakedMaturityE8s' : E8s,
+  'unstakedMaturityE8s' : E8s,
+  'autoStakeMaturity' : boolean,
   'timestamp' : Timestamp,
   'neuronId' : NeuronId,
   'deltaE8s' : DeltaE8s,
@@ -39,7 +41,8 @@ export type EventType = { 'normalGrowth' : null } |
   { 'firstReading' : null } |
   { 'disburseOrSpawn' : null };
 export interface HistoricalEntry {
-  'maturityE8s' : E8s,
+  'stakedMaturityE8s' : E8s,
+  'unstakedMaturityE8s' : E8s,
   'timestamp' : Timestamp,
 }
 export interface MonthlyBreakdown {
@@ -120,7 +123,10 @@ export interface _SERVICE {
   >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listMyNeurons' : ActorMethod<[], Array<Neuron>>,
-  'recordSnapshot' : ActorMethod<[NeuronId, bigint], DailyReward>,
+  'recordSnapshot' : ActorMethod<
+    [NeuronId, bigint, bigint, boolean],
+    DailyReward
+  >,
   'removeNeuron' : ActorMethod<[NeuronId], undefined>,
   'schema' : ActorMethod<[], string>,
   'syncAllMyNeurons' : ActorMethod<[], Array<SyncResult>>,

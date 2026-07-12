@@ -3,6 +3,7 @@ import Map "mo:core/Map";
 import Error "mo:core/Error";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Nat64 "mo:core/Nat64";
 import Types "../types/governance-sync";
 import Common "../types/common";
 import RewardTypes "../types/rewards";
@@ -70,6 +71,14 @@ module {
   /// are still caught by the surrounding try/catch (Error.message). Never
   /// traps — returns a SyncResult describing the outcome so callers (notably
   /// the timer loop) can continue to the next neuron.
+  ///
+  /// All three maturity fields are read on every successful sync regardless
+  /// of auto-stake mode: `maturity_e8s_equivalent` (unstaked, always
+  /// present), `staked_maturity_e8s_equivalent` (optional, default 0), and
+  /// `auto_stake_maturity` (optional, default false). Both maturity values
+  /// are recorded on the snapshot; the returned `SyncResult.maturityE8s`
+  /// carries the COMBINED total (unstaked + staked) for backward
+  /// compatibility with callers that want a single maturity figure.
   public func doSync(
     governance : Types.Governance,
     rewards : Map.Map<NeuronId, List.List<RewardTypes.DailyReward>>,
@@ -81,11 +90,28 @@ module {
       let result = await governance.get_full_neuron(neuronId);
       switch (result) {
         case (#Ok neuron) {
-          let maturity = neuron.maturity_e8s_equivalent;
-          ignore RewardsLib.recordSnapshot(rewards, neuronId, maturity, Time.now());
+          let unstakedMaturityE8s = neuron.maturity_e8s_equivalent;
+          let stakedMaturityE8s : Nat64 = switch (neuron.staked_maturity_e8s_equivalent) {
+            case (?v) v;
+            case null 0;
+          };
+          let autoStakeMaturity : Bool = switch (neuron.auto_stake_maturity) {
+            case (?v) v;
+            case null false;
+          };
+          ignore RewardsLib.recordSnapshot(
+            rewards,
+            neuronId,
+            unstakedMaturityE8s,
+            stakedMaturityE8s,
+            autoStakeMaturity,
+            Time.now(),
+          );
           setSyncStatus(syncStatuses, neuronId, #synced);
           clearSyncError(syncErrors, neuronId);
-          { neuronId; status = #synced; maturityE8s = ?maturity; lastSyncError = null };
+          // Combined total for backward-compatible single-figure return.
+          let combined : Nat64 = unstakedMaturityE8s + stakedMaturityE8s;
+          { neuronId; status = #synced; maturityE8s = ?combined; lastSyncError = null };
         };
         case (#Err govErr) {
           let reason = govErr.error_message;

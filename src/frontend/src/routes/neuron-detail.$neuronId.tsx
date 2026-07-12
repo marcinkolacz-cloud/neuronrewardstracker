@@ -13,7 +13,7 @@
  *   - recharts AreaChart of maturity growth over time (from DailyReward)
  *   - Activity feed timeline (DailyReward events)
  *   - Sync now button
- *   - Manual snapshot entry form (recordSnapshot(neuronId, maturityE8s))
+ *   - Manual snapshot entry form (recordSnapshot(neuronId, unstakedMaturityE8s, stakedMaturityE8s, autoStakeMaturity))
  *   - Edit (updateNeuron) and delete (removeNeuron) actions
  */
 
@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { useRemoveNeuron, useUpdateNeuron } from "@/hooks/use-neurons";
 import { useNeurons } from "@/hooks/use-neurons";
 import { useRewardHistory, useSyncStatus } from "@/hooks/use-rewards";
@@ -175,19 +176,26 @@ export function NeuronDetailPage() {
     );
   }
 
-  // Current maturity = last reward snapshot's maturityE8s (if any).
+  // Current maturity = last reward snapshot's combined maturity (unstaked + staked).
   const sortedRewards = [...(rewards ?? [])].sort((a, b) =>
     Number(a.timestamp - b.timestamp),
   );
   const lastReward = sortedRewards[sortedRewards.length - 1];
-  const maturityE8s = lastReward?.maturityE8s ?? 0n;
+  const unstakedE8s = lastReward?.unstakedMaturityE8s ?? 0n;
+  const stakedE8s = lastReward?.stakedMaturityE8s ?? 0n;
+  const maturityE8s = unstakedE8s + stakedE8s;
+  const autoStakeMaturity = lastReward?.autoStakeMaturity ?? false;
   const maturityPercent = stats?.percentageReturn ?? 0;
 
-  const chartData = sortedRewards.map((p) => ({
-    date: formatTimestamp(p.timestamp),
-    maturity: Number(p.maturityE8s) / 1e8,
-    raw: p.maturityE8s,
-  }));
+  const chartData = sortedRewards.map((p) => {
+    const combined = p.unstakedMaturityE8s + p.stakedMaturityE8s;
+    return {
+      date: formatTimestamp(p.timestamp),
+      maturity: Number(combined) / 1e8,
+      staked: Number(p.stakedMaturityE8s) / 1e8,
+      raw: combined,
+    };
+  });
 
   return (
     <div className="bg-background">
@@ -216,6 +224,9 @@ export function NeuronDetailPage() {
         <NeuronHeader
           neuron={neuron}
           maturityE8s={maturityE8s}
+          unstakedE8s={unstakedE8s}
+          stakedE8s={stakedE8s}
+          autoStakeMaturity={autoStakeMaturity}
           maturityPercent={maturityPercent}
           syncStatus={syncStatus ?? null}
           errorReason={syncError ?? null}
@@ -260,9 +271,14 @@ export function NeuronDetailPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <NeuronStatsCard stats={stats} />
           <SnapshotEntryForm
-            onSubmit={(maturity) => {
+            onSubmit={(unstaked, staked, autoStake) => {
               recordSnapshot.mutate(
-                { neuronId: BigInt(neuronId), maturityE8s: maturity },
+                {
+                  neuronId: BigInt(neuronId),
+                  unstakedMaturityE8s: unstaked,
+                  stakedMaturityE8s: staked,
+                  autoStakeMaturity: autoStake,
+                },
                 {
                   onSuccess: () => toast.success("Snapshot recorded"),
                   onError: (err) => toast.error(err.message),
@@ -280,6 +296,9 @@ export function NeuronDetailPage() {
 function NeuronHeader({
   neuron,
   maturityE8s,
+  unstakedE8s,
+  stakedE8s,
+  autoStakeMaturity,
   maturityPercent,
   syncStatus,
   errorReason,
@@ -292,6 +311,9 @@ function NeuronHeader({
 }: {
   neuron: Neuron;
   maturityE8s: bigint;
+  unstakedE8s: bigint;
+  stakedE8s: bigint;
+  autoStakeMaturity: boolean;
   maturityPercent: number;
   syncStatus: SyncStatus | null;
   errorReason?: string | null;
@@ -395,11 +417,29 @@ function NeuronHeader({
             value={formatIcpCompact(neuron.initialStakeE8s)}
             icon={Wallet}
           />
-          <Stat
-            label="Maturity"
-            value={formatIcpCompact(maturityE8s)}
-            icon={TrendingUp}
-          />
+          <div className="space-y-1">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] tracking-wider uppercase">
+              <TrendingUp className="size-3.5" />
+              Maturity
+            </div>
+            <p className="text-foreground font-mono text-sm font-semibold">
+              {formatIcpCompact(maturityE8s)}
+            </p>
+            <p className="text-muted-foreground font-mono text-[10px]">
+              Withdrawable {formatIcp(unstakedE8s, 4, false)} · Staked{" "}
+              {formatIcp(stakedE8s, 4, false)}
+            </p>
+            {autoStakeMaturity && (
+              <Badge
+                variant="outline"
+                className="border-accent/40 bg-accent/10 text-accent mt-1 gap-1 text-[10px]"
+                data-ocid="neuron_detail.header.auto_stake_badge"
+              >
+                <Sparkles className="size-2.5" />
+                Auto-stake
+              </Badge>
+            )}
+          </div>
           <Stat
             label="Return"
             value={formatPercent(maturityPercent)}
@@ -508,7 +548,7 @@ function SyncStatusBadge({
 function MaturityChart({
   data,
 }: {
-  data: { date: string; maturity: number; raw: bigint }[];
+  data: { date: string; maturity: number; staked: number; raw: bigint }[];
 }) {
   const hasData = data.length > 0;
 
@@ -517,9 +557,25 @@ function MaturityChart({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Maturity growth</CardTitle>
-          <Badge variant="secondary" className="font-mono text-[10px]">
-            ICP
-          </Badge>
+          <div className="flex items-center gap-3">
+            <div className="text-muted-foreground flex items-center gap-1.5 text-[10px]">
+              <span
+                className="inline-block size-2 rounded-full"
+                style={{ background: "oklch(0.78 0.16 195)" }}
+                aria-hidden
+              />
+              Total
+              <span
+                className="ml-2 inline-block size-2 rounded-full"
+                style={{ background: "oklch(0.72 0.14 145)" }}
+                aria-hidden
+              />
+              Staked
+            </div>
+            <Badge variant="secondary" className="font-mono text-[10px]">
+              ICP
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -540,6 +596,18 @@ function MaturityChart({
                     <stop
                       offset="100%"
                       stopColor="oklch(0.78 0.16 195)"
+                      stopOpacity={0}
+                    />
+                  </linearGradient>
+                  <linearGradient id="stakedFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor="oklch(0.72 0.14 145)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="oklch(0.72 0.14 145)"
                       stopOpacity={0}
                     />
                   </linearGradient>
@@ -580,7 +648,12 @@ function MaturityChart({
                   }}
                   labelStyle={{ color: "oklch(0.62 0.012 260)" }}
                   itemStyle={{ color: "oklch(0.95 0.005 260)" }}
-                  formatter={(v: number) => [`${v.toFixed(4)} ICP`, "Maturity"]}
+                  formatter={(v: number, name: string) => {
+                    if (name === "staked") {
+                      return [`${v.toFixed(4)} ICP`, "Staked"];
+                    }
+                    return [`${v.toFixed(4)} ICP`, "Total"];
+                  }}
                 />
                 <Area
                   type="monotone"
@@ -590,6 +663,15 @@ function MaturityChart({
                   fill="url(#maturityFill)"
                   dot={false}
                   activeDot={{ r: 4, fill: "oklch(0.78 0.16 195)" }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="staked"
+                  stroke="oklch(0.72 0.14 145)"
+                  strokeWidth={1.5}
+                  fill="url(#stakedFill)"
+                  dot={false}
+                  activeDot={{ r: 3, fill: "oklch(0.72 0.14 145)" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -678,8 +760,10 @@ function ActivityItem({ event, index }: { event: DailyReward; index: number }) {
       ? "text-accent bg-accent/10"
       : "text-muted-foreground bg-muted";
 
+  // Combined maturity total = unstaked (withdrawable) + staked.
+  const combinedE8s = event.unstakedMaturityE8s + event.stakedMaturityE8s;
   // "increased maturity from X ICP to Y ICP (+delta)"
-  const fromE8s = event.maturityE8s - event.deltaE8s;
+  const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
 
   return (
@@ -706,8 +790,22 @@ function ActivityItem({ event, index }: { event: DailyReward; index: number }) {
           </span>
         </div>
         <p className="text-muted-foreground font-mono text-[11px]">
-          {formatIcp(fromE8s, 4, false)} →{" "}
-          {formatIcp(event.maturityE8s, 4, false)} ICP
+          {formatIcp(fromE8s, 4, false)} → {formatIcp(combinedE8s, 4, false)}{" "}
+          ICP
+        </p>
+        <p className="text-muted-foreground font-mono text-[11px]">
+          Withdrawable {formatIcp(event.unstakedMaturityE8s, 4, false)} · Staked{" "}
+          {formatIcp(event.stakedMaturityE8s, 4, false)}
+          {event.autoStakeMaturity && (
+            <Badge
+              variant="outline"
+              className="border-accent/40 bg-accent/10 text-accent ml-1.5 gap-0.5 text-[9px]"
+              data-ocid={`neuron_detail.activity.auto_stake_badge.${index + 1}`}
+            >
+              <Sparkles className="size-2" />
+              Auto-stake
+            </Badge>
+          )}
         </p>
         <p className="text-muted-foreground font-mono text-[11px]">
           {formatTimestampDateTime(event.timestamp)}
@@ -777,10 +875,16 @@ function SnapshotEntryForm({
   onSubmit,
   submitting,
 }: {
-  onSubmit: (maturityE8s: bigint) => void;
+  onSubmit: (
+    unstakedMaturityE8s: bigint,
+    stakedMaturityE8s: bigint,
+    autoStakeMaturity: boolean,
+  ) => void;
   submitting: boolean;
 }) {
-  const [maturity, setMaturity] = useState("");
+  const [unstaked, setUnstaked] = useState("");
+  const [staked, setStaked] = useState("0");
+  const [autoStake, setAutoStake] = useState(false);
 
   const icpToE8s = (icp: string): bigint | null => {
     const n = Number(icp);
@@ -790,13 +894,20 @@ function SnapshotEntryForm({
 
   const handleSubmit = (ev: React.FormEvent) => {
     ev.preventDefault();
-    const maturityE8s = icpToE8s(maturity);
-    if (maturityE8s == null) {
-      toast.error("Enter a valid ICP amount");
+    const unstakedE8s = icpToE8s(unstaked);
+    const stakedE8s = icpToE8s(staked);
+    if (unstakedE8s == null) {
+      toast.error("Enter a valid withdrawable maturity amount");
       return;
     }
-    onSubmit(maturityE8s);
-    setMaturity("");
+    if (stakedE8s == null) {
+      toast.error("Enter a valid staked maturity amount");
+      return;
+    }
+    onSubmit(unstakedE8s, stakedE8s, autoStake);
+    setUnstaked("");
+    setStaked("0");
+    setAutoStake(false);
   };
 
   return (
@@ -812,20 +923,58 @@ function SnapshotEntryForm({
           </p>
           <div className="space-y-2">
             <Label
-              htmlFor="maturity"
-              data-ocid="neuron_detail.snapshot.maturity.label"
+              htmlFor="unstaked-maturity"
+              data-ocid="neuron_detail.snapshot.unstaked.label"
             >
-              Maturity (ICP)
+              Withdrawable maturity (ICP)
             </Label>
             <Input
-              id="maturity"
+              id="unstaked-maturity"
               inputMode="decimal"
               placeholder="0.0000"
-              value={maturity}
-              onChange={(e) => setMaturity(e.target.value)}
-              data-ocid="neuron_detail.snapshot.maturity.input"
+              value={unstaked}
+              onChange={(e) => setUnstaked(e.target.value)}
+              data-ocid="neuron_detail.snapshot.unstaked.input"
               className="font-mono"
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="staked-maturity"
+              data-ocid="neuron_detail.snapshot.staked.label"
+            >
+              Staked maturity (ICP)
+            </Label>
+            <Input
+              id="staked-maturity"
+              inputMode="decimal"
+              placeholder="0.0000"
+              value={staked}
+              onChange={(e) => setStaked(e.target.value)}
+              data-ocid="neuron_detail.snapshot.staked.input"
+              className="font-mono"
+              required
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
+            <div className="space-y-0.5">
+              <Label
+                htmlFor="auto-stake"
+                className="text-sm"
+                data-ocid="neuron_detail.snapshot.auto_stake.label"
+              >
+                Auto-stake maturity
+              </Label>
+              <p className="text-muted-foreground text-[11px]">
+                Stake new maturity instead of leaving it withdrawable.
+              </p>
+            </div>
+            <Switch
+              id="auto-stake"
+              checked={autoStake}
+              onCheckedChange={setAutoStake}
+              data-ocid="neuron_detail.snapshot.auto_stake.switch"
             />
           </div>
           <div className="flex justify-end">
