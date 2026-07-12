@@ -731,8 +731,11 @@ module {
     });
     let avgDailyGrowthRate : Float = sum / 30.0;
 
-    // APY = (1 + avgDailyGrowthRate)^365 - 1
-    Float.pow(1.0 + avgDailyGrowthRate, 365.0) - 1.0;
+    // APY = (1 + avgDailyGrowthRate)^365 - 1, pre-scaled x100 to match the
+    // percentageReturn/overallReturnPct convention (e.g. 11.4 for 11.4%) so
+    // frontend formatters (formatApy/formatPercent) render all percentage-like
+    // fields uniformly without per-field special-casing.
+    (Float.pow(1.0 + avgDailyGrowthRate, 365.0) - 1.0) * 100.0;
   };
 
   /// Populate momDeltaE8s (month-over-month delta) on a chronologically-sorted

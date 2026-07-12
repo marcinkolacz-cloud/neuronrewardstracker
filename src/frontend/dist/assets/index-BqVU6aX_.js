@@ -79045,8 +79045,10 @@ function NeuronCard({
   const { data: syncError } = useSyncError(
     syncStatus === "failed" ? idStr : null
   );
+  const stakedE8s = neuron.stakedE8s ?? 0n;
   const maturityE8s = (stats == null ? void 0 : stats.totalRewardsE8s) ?? 0n;
-  const maturityPercent = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
+  const totalValueE8s = stakedE8s + maturityE8s;
+  const percentReturn = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     motion.div,
     {
@@ -79090,19 +79092,29 @@ function NeuronCard({
             ] }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Maturity" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Total Value" }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(maturityE8s) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(totalValueE8s) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "span",
                     {
                       className: cn(
                         "font-mono text-xs",
-                        maturityPercent >= 0 ? "text-primary" : "text-destructive"
+                        percentReturn >= 0 ? "text-primary" : "text-destructive"
                       ),
-                      children: formatPercent(maturityPercent)
+                      children: formatPercent(percentReturn)
                     }
                   )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Principal" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-sm font-medium", children: formatIcpCompact(stakedE8s) })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Rewards" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-sm font-medium", children: formatIcpCompact(maturityE8s) })
                 ] })
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
@@ -79123,8 +79135,15 @@ function WtnCard({
 }) {
   const idStr = position.id.toString();
   const { data: stats } = useWtnStats(idStr);
-  const redeemableIcp = (stats == null ? void 0 : stats.redeemableIcpValue) ?? 0;
-  const totalEarned = (stats == null ? void 0 : stats.totalEarned) ?? 0;
+  const redeemableE8s = BigInt(
+    Math.trunc(((stats == null ? void 0 : stats.redeemableIcpValue) ?? 0) * Number(E8S_PER_ICP))
+  );
+  const principalE8s = BigInt(
+    Math.trunc(((stats == null ? void 0 : stats.totalCapitalContributed) ?? 0) * Number(E8S_PER_ICP))
+  );
+  const rewardsE8s = BigInt(
+    Math.trunc(((stats == null ? void 0 : stats.totalEarned) ?? 0) * Number(E8S_PER_ICP))
+  );
   const percentReturn = (stats == null ? void 0 : stats.percentReturn) ?? 0;
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     motion.div,
@@ -79171,11 +79190,9 @@ function WtnCard({
             ] }) }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Redeemable" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Total Value" }),
                 /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(
-                    BigInt(Math.trunc(redeemableIcp * Number(E8S_PER_ICP)))
-                  ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(redeemableE8s) }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx(
                     "span",
                     {
@@ -79186,15 +79203,16 @@ function WtnCard({
                       children: formatPercent(percentReturn)
                     }
                   )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Principal" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-sm font-medium", children: formatIcpCompact(principalE8s) })
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px] mt-1", children: [
-                  "Earned",
-                  " ",
-                  formatIcpCompact(
-                    BigInt(Math.trunc(totalEarned * Number(E8S_PER_ICP)))
-                  ),
-                  " ",
-                  "ICP"
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Rewards" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-sm font-medium", children: formatIcpCompact(rewardsE8s) })
                 ] })
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [

@@ -745,9 +745,13 @@ function NeuronCard({
     syncStatus === ("failed" as SyncStatus) ? idStr : null,
   );
 
-  // Current maturity and % return come from getNeuronStats, not the Neuron record.
+  // Total value = current stake + accrued maturity (apples-to-apples with
+  // WTN redeemable). Principal = staked amount. Rewards = maturity.
+  // % return comes from getNeuronStats (percentageReturn, pre-scaled).
+  const stakedE8s = neuron.stakedE8s ?? 0n;
   const maturityE8s = stats?.totalRewardsE8s ?? 0n;
-  const maturityPercent = stats?.percentageReturn ?? 0;
+  const totalValueE8s = stakedE8s + maturityE8s;
+  const percentReturn = stats?.percentageReturn ?? 0;
 
   return (
     <motion.div
@@ -799,20 +803,38 @@ function NeuronCard({
           <CardContent className="space-y-3">
             <div>
               <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
-                Maturity
+                Total Value
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-foreground font-mono text-xl font-semibold">
-                  {formatIcpCompact(maturityE8s)}
+                  {formatIcpCompact(totalValueE8s)}
                 </span>
                 <span
                   className={cn(
                     "font-mono text-xs",
-                    maturityPercent >= 0 ? "text-primary" : "text-destructive",
+                    percentReturn >= 0 ? "text-primary" : "text-destructive",
                   )}
                 >
-                  {formatPercent(maturityPercent)}
+                  {formatPercent(percentReturn)}
                 </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                  Principal
+                </p>
+                <p className="text-foreground font-mono text-sm font-medium">
+                  {formatIcpCompact(stakedE8s)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                  Rewards
+                </p>
+                <p className="text-foreground font-mono text-sm font-medium">
+                  {formatIcpCompact(maturityE8s)}
+                </p>
               </div>
             </div>
             <div className="border-border/40 border-t pt-2.5">
@@ -842,12 +864,19 @@ function WtnCard({
   const idStr = position.id.toString();
   const { data: stats } = useWtnStats(idStr);
 
-  // redeemableIcpValue is the latest snapshot's redeemable ICP value for the
-  // position (the primary "Redeemable" display). totalEarned is the sum of
-  // organic growth deltas, shown as a secondary stat. percentReturn gives the
-  // capital-weighted return for the WTN badge accent.
-  const redeemableIcp = stats?.redeemableIcpValue ?? 0;
-  const totalEarned = stats?.totalEarned ?? 0;
+  // WTN stats fields are in ICP float units, NOT e8s — convert via
+  // BigInt(Math.trunc(x * Number(E8S_PER_ICP))) before formatIcpCompact.
+  // Total Value = redeemable (already includes growth). Principal = cost
+  // basis (totalCapitalContributed). Rewards = totalEarned (organic growth).
+  const redeemableE8s = BigInt(
+    Math.trunc((stats?.redeemableIcpValue ?? 0) * Number(E8S_PER_ICP)),
+  );
+  const principalE8s = BigInt(
+    Math.trunc((stats?.totalCapitalContributed ?? 0) * Number(E8S_PER_ICP)),
+  );
+  const rewardsE8s = BigInt(
+    Math.trunc((stats?.totalEarned ?? 0) * Number(E8S_PER_ICP)),
+  );
   const percentReturn = stats?.percentReturn ?? 0;
 
   return (
@@ -903,13 +932,11 @@ function WtnCard({
           <CardContent className="space-y-3">
             <div>
               <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
-                Redeemable
+                Total Value
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-foreground font-mono text-xl font-semibold">
-                  {formatIcpCompact(
-                    BigInt(Math.trunc(redeemableIcp * Number(E8S_PER_ICP))),
-                  )}
+                  {formatIcpCompact(redeemableE8s)}
                 </span>
                 <span
                   className={cn(
@@ -920,13 +947,24 @@ function WtnCard({
                   {formatPercent(percentReturn)}
                 </span>
               </div>
-              <p className="text-muted-foreground font-mono text-[11px] mt-1">
-                Earned{" "}
-                {formatIcpCompact(
-                  BigInt(Math.trunc(totalEarned * Number(E8S_PER_ICP))),
-                )}{" "}
-                ICP
-              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                  Principal
+                </p>
+                <p className="text-foreground font-mono text-sm font-medium">
+                  {formatIcpCompact(principalE8s)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                  Rewards
+                </p>
+                <p className="text-foreground font-mono text-sm font-medium">
+                  {formatIcpCompact(rewardsE8s)}
+                </p>
+              </div>
             </div>
             <div className="border-border/40 border-t pt-2.5">
               <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
