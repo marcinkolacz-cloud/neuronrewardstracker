@@ -1,0 +1,115 @@
+// Version: 4.0.0
+type AccessControlState__954572192 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__222667396<Principal, UserRole__199018766>
+  };
+type DailyReward__451108649 =
+  {
+    deltaE8s : Int;
+    eventType : {#disburseOrSpawn; #firstReading; #normalGrowth};
+    maturityE8s : Nat64;
+    neuronId : NeuronId__718533348;
+    timestamp : Int
+  };
+type DailyReward__995244002 =
+  {
+    deltaE8s : DeltaE8s__948048688;
+    eventType : EventType__1059448065;
+    maturityE8s : E8s__716808324;
+    neuronId : NeuronId__95609221;
+    timestamp : Timestamp__209438455
+  };
+type Data__80296667<K, V> =
+  {var count : Nat__1040412405; kvs : [var ?(K, V)]};
+type DeltaE8s__431503976 = Int;
+type DeltaE8s__948048688 = DeltaE8s__431503976;
+type E8s__328334695 = Nat64;
+type E8s__342726471 = E8s__328334695;
+type E8s__716808324 = E8s__328334695;
+type EventType__1059448065 = {#disburseOrSpawn; #firstReading; #normalGrowth};
+type Internal__41346355<K, V> =
+  {children : [var ?Node__1000929467<K, V>]; data : Data__80296667<K, V>};
+type Leaf__712614010<K, V> = {data : Data__80296667<K, V>};
+type List__529703492<T> =
+  {
+    var blockIndex : Nat__1040412405;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__1040412405
+  };
+type List__560604548<T> = List__529703492<T>;
+type Map__222667396<K, V> = Map__912772452<K, V>;
+type Map__709709801<K, V> =
+  {var root : Node__1000929467<K, V>; var size : Nat__1040412405};
+type Map__912772452<K, V> = Map__709709801<K, V>;
+type Nat__1040412405 = Nat__920180692;
+type Nat__920180692 = Nat;
+type NeuronId__542779660 = Nat64;
+type NeuronId__718533348 = Nat64;
+type NeuronId__95609221 = NeuronId__542779660;
+type NeuronId__982282573 = NeuronId__542779660;
+type Neuron__339149340 =
+  {
+    dissolveDelaySeconds : Nat64;
+    id : NeuronId__718533348;
+    initialStakeE8s : Nat64;
+    name : Text;
+    ownerId : Principal;
+    startDate : Int
+  };
+type Neuron__380296793 =
+  {
+    dissolveDelaySeconds : Nat64;
+    id : NeuronId__982282573;
+    initialStakeE8s : E8s__342726471;
+    name : Text;
+    ownerId : Principal;
+    startDate : Timestamp__1042659080
+  };
+type NewActor__299107891 =
+  {
+    var accessControlState : AccessControlState__954572192;
+    var neurons : Map__222667396<NeuronId__718533348, Neuron__339149340>;
+    var rewards :
+      Map__222667396<NeuronId__718533348,
+                      List__560604548<DailyReward__451108649>>;
+    var syncStatuses :
+      Map__222667396<NeuronId__718533348, SyncStatus__53123139>
+  };
+type Node__1000929467<K, V> =
+  {#internal : Internal__41346355<K, V>; #leaf : Leaf__712614010<K, V>};
+type OldActor__150656829 = {};
+type SyncStatus__186983160 = {#hotkeyRequired; #neverSynced; #synced};
+type SyncStatus__53123139 = {#hotkeyRequired; #neverSynced; #synced};
+type Timestamp__1042659080 = Timestamp__301639476;
+type Timestamp__209438455 = Timestamp__301639476;
+type Timestamp__301639476 = Int;
+type UserRole__199018766 = {#admin; #guest; #user};
+type UserRole__686137147 = {#admin; #guest; #user};
+{
+  "20260712_000000" : (_old : OldActor__150656829) -> NewActor__299107891
+}
+actor  {
+  stable accessControlState :
+    {
+      var adminAssigned : Bool;
+      userRoles : Map__222667396<Principal, UserRole__686137147>
+    };
+  stable neurons :
+    {
+      var root : Node__1000929467<NeuronId__542779660, Neuron__380296793>;
+      var size : Nat__1040412405
+    };
+  stable rewards :
+    {
+      var root :
+        Node__1000929467<NeuronId__542779660,
+                          List__560604548<DailyReward__995244002>>;
+      var size : Nat__1040412405
+    };
+  stable syncStatuses :
+    {
+      var root : Node__1000929467<NeuronId__542779660, SyncStatus__186983160>;
+      var size : Nat__1040412405
+    }
+};

@@ -1,0 +1,154 @@
+type Value = 
+ variant {
+   "bool": bool;
+   float: float64;
+   "int": int;
+   "nat": nat;
+   "null";
+   "text": text;
+ };
+type UserRole = 
+ variant {
+   admin;
+   guest;
+   user;
+ };
+type Timestamp = int;
+type SyncStatus = 
+ variant {
+   hotkeyRequired;
+   neverSynced;
+   synced;
+ };
+type SyncResult = 
+ record {
+   maturityE8s: opt nat64;
+   neuronId: NeuronId;
+   status: SyncStatus;
+ };
+type Result__1 = 
+ variant {
+   err: Error;
+   ok;
+ };
+type Result = 
+ record {
+   hasMore: bool;
+   rows: vec vec Cell;
+ };
+type PortfolioStats = 
+ record {
+   neuronCount: nat;
+   percentageReturn: float64;
+   totalRewardsE8s: int;
+   totalStakedE8s: E8s;
+ };
+type NeuronStats = 
+ record {
+   averageDailyRewardE8s: int;
+   monthly: vec MonthlyBreakdown;
+   neuronId: NeuronId;
+   percentageReturn: float64;
+   totalRewardsE8s: int;
+ };
+type NeuronId = nat64;
+type Neuron = 
+ record {
+   dissolveDelaySeconds: nat64;
+   id: NeuronId;
+   initialStakeE8s: E8s;
+   name: text;
+   ownerId: principal;
+   startDate: Timestamp;
+ };
+type MonthlyBreakdown = 
+ record {
+   month: nat;
+   readingCount: nat;
+   totalDeltaE8s: int;
+   year: nat;
+ };
+type HistoricalEntry = 
+ record {
+   maturityE8s: E8s;
+   timestamp: Timestamp;
+ };
+type EventType = 
+ variant {
+   disburseOrSpawn;
+   firstReading;
+   normalGrowth;
+ };
+type Error = 
+ variant {
+   AmbiguousAttribute: record {
+                         field: text;
+                         sources: vec text;
+                       };
+   FrontendOriginMismatch: record {
+                             expected: vec text;
+                             got: text;
+                           };
+   FrontendOriginsNotConfigured;
+   MalformedCandid;
+   MissingField: text;
+   MixedSsoSources: record {
+                      otherKeys: vec text;
+                      ssoKeys: vec text;
+                    };
+   NoAttributes;
+   Stale: record {ageNs: nat;};
+   UnknownNonce;
+   UntrustedSsoSource: record {domain: text;};
+ };
+type E8s = nat64;
+type DeltaE8s = int;
+type DailyReward = 
+ record {
+   deltaE8s: DeltaE8s;
+   eventType: EventType;
+   maturityE8s: E8s;
+   neuronId: NeuronId;
+   timestamp: Timestamp;
+ };
+type Cell = 
+ record {
+   name: text;
+   value: Value;
+ };
+service : {
+  __accessControlState: () -> (reserved) query;
+  __neurons: (ko: opt NeuronId, count: opt nat) ->
+   (vec record {
+          NeuronId;
+          Neuron;
+        }) query;
+  __rewards: () -> (reserved) query;
+  __syncStatuses: (ko: opt NeuronId, count: opt nat) ->
+   (vec record {
+          NeuronId;
+          SyncStatus;
+        }) query;
+  _initialize_access_control: () -> ();
+  _internet_identity_sign_in_finish: () -> (Result__1);
+  _internet_identity_sign_in_start: () -> (blob);
+  addNeuron: (id: NeuronId, name: text, startDate: int, dissolveDelaySeconds:
+   nat64, initialStakeE8s: nat64) -> ();
+  assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  execute: (qJson: text) -> (Result) query;
+  getCallerUserRole: () -> (UserRole) query;
+  getNeuronStats: (neuronId: NeuronId) -> (NeuronStats);
+  getPortfolioStats: () -> (PortfolioStats);
+  getRewardHistory: (neuronId: NeuronId) -> (vec DailyReward);
+  getSyncStatus: (neuronId: NeuronId) -> (SyncStatus);
+  importHistoricalData: (neuronId: NeuronId, entries: vec HistoricalEntry) ->
+   ();
+  isCallerAdmin: () -> (bool) query;
+  listMyNeurons: () -> (vec Neuron);
+  recordSnapshot: (neuronId: NeuronId, maturityE8s: nat64) -> (DailyReward);
+  removeNeuron: (neuronId: NeuronId) -> ();
+  schema: () -> (text) query;
+  syncAllMyNeurons: () -> (vec SyncResult);
+  syncNeuron: (neuronId: NeuronId) -> (SyncResult);
+  updateNeuron: (neuron: Neuron) -> ();
+}
