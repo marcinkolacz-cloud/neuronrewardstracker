@@ -11,6 +11,9 @@ module {
     #normalGrowth;      // positive delta — maturity grew
     #disburseOrSpawn;   // negative delta — maturity disbursed or spawned
     #firstReading;      // no prior snapshot — baseline reading, delta 0
+    #mergedToStake;     // unstaked maturity merged into stake — value stays in
+                        // the neuron, NOT a disbursement; excluded from Total
+                        // Disbursed. Delta reflects the maturity that moved.
   };
 
   /// A single maturity reading for a neuron at a point in time.

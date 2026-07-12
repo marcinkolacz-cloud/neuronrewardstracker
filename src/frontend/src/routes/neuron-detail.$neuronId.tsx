@@ -63,6 +63,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useRemoveNeuron, useUpdateNeuron } from "@/hooks/use-neurons";
 import { useNeurons } from "@/hooks/use-neurons";
+import { useHistoricalPrices, useIcpPrice } from "@/hooks/use-prices";
 import {
   useDeleteSnapshot,
   useEditSnapshot,
@@ -79,31 +80,39 @@ import {
 import type {
   DailyReward,
   HistoricalEntry,
+  MonthlyBreakdown,
   Neuron,
+  PriceSnapshot,
   SyncStatus,
 } from "@/lib/backend-actor";
-import { downloadCsv, rewardsToCsv } from "@/lib/csv";
+import { type PriceMap, downloadCsv, rewardsToCsv } from "@/lib/csv";
 import {
   E8S_PER_ICP,
+  formatApy,
   formatIcp,
   formatIcpCompact,
   formatPercent,
+  formatPln,
   formatTimestamp,
   formatTimestampDateTime,
+  formatUsd,
   shortenNeuronId,
   shortenPrincipal,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
   ArrowDownToLine,
   ArrowLeft,
+  BarChart3,
   BrainCircuit,
   Calendar,
   ChevronDown,
   ClipboardPaste,
+  DollarSign,
   Loader2,
   Pencil,
   RefreshCw,
@@ -120,6 +129,8 @@ import { useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -133,8 +144,46 @@ const ACTIVITY_PAGE_SIZE = 25;
 /** Max height of the scrollable activity feed container. */
 const ACTIVITY_MAX_HEIGHT = "max-h-[400px]";
 
+/**
+ * Convert a bigint nanosecond timestamp into a `YYYY-MM-DD` date string.
+ * This format is the cache key expected by the backend's
+ * getHistoricalIcpPrice (which internally reorders to `DD-MM-YYYY` for the
+ * CoinGecko API) and matches csv.ts dateKeyFromTimestamp. Uses UTC so the
+ * same instant always maps to the same date key regardless of the viewer's
+ * timezone.
+ */
+function nsToDateKey(ns: bigint): string {
+  const ms = Number(ns / 1_000_000n);
+  if (!Number.isFinite(ms) || ms <= 0) return "";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+}
+
+/** Format a (year, month) pair as "Mon YYYY" for chart/table labels. */
+function formatMonthLabel(year: bigint, month: bigint): string {
+  const y = Number(year);
+  const m = Number(month); // 1-12
+  if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) {
+    return "—";
+  }
+  const date = new Date(Date.UTC(y, m - 1, 1));
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+}
+
+/** Convert e8s to an ICP number (for chart values). */
+function e8sToIcpNumber(e8s: bigint): number {
+  return Number(e8s) / Number(E8S_PER_ICP);
+}
+
 export function NeuronDetailPage() {
   const { neuronId } = useParams({ from: "/neuron-detail/$neuronId" });
+  const queryClient = useQueryClient();
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
   const { data: rewards, isLoading: rewardsLoading } =
     useRewardHistory(neuronId);
@@ -150,6 +199,15 @@ export function NeuronDetailPage() {
   const editSnapshot = useEditSnapshot();
   const deleteSnapshot = useDeleteSnapshot();
   const navigate = useNavigate();
+
+  // Live ICP price (USD + PLN). Refetches on mount; no auto-polling.
+  const icpPriceQuery = useIcpPrice();
+  const icpPrice = icpPriceQuery.data ?? null;
+  const priceRefreshing = icpPriceQuery.isFetching;
+
+  const handleRefreshPrice = () => {
+    void queryClient.invalidateQueries({ queryKey: ["icp-price", "current"] });
+  };
 
   const neuron = useMemo(() => {
     if (!neurons) return undefined;
@@ -203,11 +261,48 @@ export function NeuronDetailPage() {
       toast.error("No reward history to export");
       return;
     }
-    const csv = rewardsToCsv(rewards);
+    // Build a PriceMap (YYYY-MM-DD -> {usd, pln}) from the already-fetched
+    // summaryPrices so the CSV's USD/PLN columns are populated. summaryPrices
+    // is keyed by the same YYYY-MM-DD date keys nsToDateKey produces.
+    const priceMap: PriceMap | undefined = summaryPrices
+      ? new Map(
+          [...summaryPrices.entries()].map(([date, snap]) => [
+            date,
+            { usd: snap.usd, pln: snap.pln },
+          ]),
+        )
+      : undefined;
+    const csv = rewardsToCsv(rewards, priceMap);
     const safeId = neuronId.replace(/[^a-zA-Z0-9_-]/g, "_");
     downloadCsv(`neuron-${safeId}-rewards.csv`, csv);
     toast.success("CSV downloaded");
   };
+
+  // Hooks must run unconditionally before any early return. Compute the
+  // reward-derived data and historical price query up front so React's
+  // Rules of Hooks are satisfied even when the neuron is loading/missing.
+  const sortedRewards = useMemo(
+    () =>
+      [...(rewards ?? [])].sort((a, b) => Number(a.timestamp - b.timestamp)),
+    [rewards],
+  );
+
+  // Historical price fetch for the RewardsSummaryCard (all-time rewards value).
+  // We fetch prices for every distinct reward date so the summary can show
+  // the total USD + PLN value of all positive-delta rewards. Dates are
+  // deduplicated to keep the request batch small.
+  const summaryDateKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of sortedRewards) {
+      if (r.deltaE8s > 0n) {
+        const key = nsToDateKey(r.timestamp);
+        if (key) set.add(key);
+      }
+    }
+    return [...set];
+  }, [sortedRewards]);
+  const summaryPricesQuery = useHistoricalPrices(summaryDateKeys);
+  const summaryPrices = summaryPricesQuery.data ?? null;
 
   if (loading) {
     return <DetailSkeleton />;
@@ -234,9 +329,6 @@ export function NeuronDetailPage() {
   }
 
   // Current maturity = last reward snapshot's combined maturity (unstaked + staked).
-  const sortedRewards = [...(rewards ?? [])].sort((a, b) =>
-    Number(a.timestamp - b.timestamp),
-  );
   const lastReward = sortedRewards[sortedRewards.length - 1];
   const unstakedE8s = lastReward?.unstakedMaturityE8s ?? 0n;
   const stakedE8s = lastReward?.stakedMaturityE8s ?? 0n;
@@ -261,7 +353,7 @@ export function NeuronDetailPage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-48 opacity-30"
         style={{
           background:
-            "radial-gradient(50% 60% at 50% 0%, oklch(0.78 0.16 195 / 0.10) 0%, oklch(0.145 0.014 260 / 0) 70%)",
+            "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.10) 0%, oklch(var(--background) / 0) 70%)",
         }}
       />
       <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -295,6 +387,9 @@ export function NeuronDetailPage() {
           deleting={removeNeuron.isPending}
           onExportCsv={handleExportCsv}
           exportDisabled={!rewards || rewards.length === 0}
+          icpPrice={icpPrice}
+          priceRefreshing={priceRefreshing}
+          onRefreshPrice={handleRefreshPrice}
         />
 
         {/* Sync failure callout */}
@@ -321,6 +416,8 @@ export function NeuronDetailPage() {
           <RewardsSummaryCard
             rewards={sortedRewards}
             loading={rewardsLoading}
+            summaryPrices={summaryPrices}
+            summaryPricesLoading={summaryPricesQuery.isFetching}
           />
         </div>
 
@@ -384,6 +481,9 @@ export function NeuronDetailPage() {
           />
         </div>
 
+        {/* Monthly breakdown (table + bar chart) */}
+        <MonthlyBreakdownSection monthly={stats?.monthly ?? []} />
+
         {/* Import historical maturity readings */}
         <ImportHistoricalPanel
           neuronId={BigInt(neuronId)}
@@ -411,6 +511,9 @@ function NeuronHeader({
   deleting,
   onExportCsv,
   exportDisabled,
+  icpPrice,
+  priceRefreshing,
+  onRefreshPrice,
 }: {
   neuron: Neuron;
   maturityE8s: bigint;
@@ -428,7 +531,32 @@ function NeuronHeader({
   deleting: boolean;
   onExportCsv: () => void;
   exportDisabled: boolean;
+  icpPrice: PriceSnapshot | null;
+  priceRefreshing: boolean;
+  onRefreshPrice: () => void;
 }) {
+  // Live price badge: show USD + PLN. Treat cached values older than the
+  // 10-minute backend TTL as stale (warning style).
+  const priceUsd = icpPrice?.usd ?? null;
+  const pricePln = icpPrice?.pln ?? null;
+  const priceHasValue =
+    priceUsd != null && !Number.isNaN(priceUsd) && priceUsd > 0;
+  const priceAgeMs = icpPrice?.timestamp
+    ? Date.now() - Number(icpPrice.timestamp / 1_000_000n)
+    : null;
+  const isStale = priceAgeMs != null && priceAgeMs > 10 * 60 * 1000;
+
+  // Withdrawable maturity value in USD + PLN at the current ICP price.
+  const withdrawableIcp = e8sToIcpNumber(unstakedE8s);
+  const withdrawableUsd =
+    priceUsd != null && !Number.isNaN(priceUsd) && priceUsd > 0
+      ? withdrawableIcp * priceUsd
+      : null;
+  const withdrawablePln =
+    pricePln != null && !Number.isNaN(pricePln) && pricePln > 0
+      ? withdrawableIcp * pricePln
+      : null;
+
   return (
     <Card className="bg-card/60 border-border/60">
       <CardHeader>
@@ -438,7 +566,7 @@ function NeuronHeader({
               <BrainCircuit className="size-6 text-primary-foreground" />
             </span>
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-foreground font-display text-xl font-semibold tracking-tight">
                   {neuron.name || `Neuron ${shortenNeuronId(neuron.id)}`}
                 </h1>
@@ -446,6 +574,22 @@ function NeuronHeader({
                   status={syncStatus}
                   errorReason={errorReason}
                 />
+                {priceHasValue && (
+                  <span
+                    className={cn("price-badge", isStale && "price-stale")}
+                    title={
+                      icpPrice?.timestamp
+                        ? `Last updated ${formatTimestampDateTime(icpPrice.timestamp)}`
+                        : "ICP spot price"
+                    }
+                    data-ocid="neuron_detail.header.price_badge"
+                  >
+                    <DollarSign className="size-3" />
+                    {formatUsd(priceUsd)}
+                    <span className="opacity-60">·</span>
+                    {formatPln(pricePln)}
+                  </span>
+                )}
               </div>
               <p className="text-muted-foreground font-mono text-xs mt-0.5">
                 Owner {shortenPrincipal(neuron.ownerId.toString(), 8)}
@@ -453,6 +597,19 @@ function NeuronHeader({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefreshPrice}
+              disabled={priceRefreshing}
+              aria-label="Refresh ICP price"
+              data-ocid="neuron_detail.refresh_price"
+            >
+              <RefreshCw
+                className={priceRefreshing ? "size-4 animate-spin" : "size-4"}
+              />
+              <span className="hidden sm:inline">Refresh price</span>
+            </Button>
             <Button
               variant="outline"
               onClick={onExportCsv}
@@ -545,15 +702,41 @@ function NeuronHeader({
               Withdrawable {formatIcp(unstakedE8s, 4, false)} · Staked{" "}
               {formatIcp(stakedE8s, 4, false)}
             </p>
-            {autoStakeMaturity && (
-              <Badge
-                variant="outline"
-                className="border-accent/40 bg-accent/10 text-accent mt-1 gap-1 text-[10px]"
-                data-ocid="neuron_detail.header.auto_stake_badge"
-              >
-                <Sparkles className="size-2.5" />
-                Auto-stake
-              </Badge>
+            <div className="flex flex-wrap items-center gap-1 pt-0.5">
+              {withdrawableUsd != null && (
+                <span
+                  className="value-pill"
+                  title="Withdrawable maturity value in USD at current ICP price"
+                  data-ocid="neuron_detail.header.withdrawable_usd_pill"
+                >
+                  {formatUsd(withdrawableUsd)}
+                </span>
+              )}
+              {withdrawablePln != null && (
+                <span
+                  className="value-pill"
+                  title="Withdrawable maturity value in PLN at current ICP price"
+                  data-ocid="neuron_detail.header.withdrawable_pln_pill"
+                >
+                  {formatPln(withdrawablePln)}
+                </span>
+              )}
+              {autoStakeMaturity && (
+                <Badge
+                  variant="outline"
+                  className="border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]"
+                  data-ocid="neuron_detail.header.auto_stake_badge"
+                >
+                  <Sparkles className="size-2.5" />
+                  Auto-stake
+                </Badge>
+              )}
+            </div>
+            {icpPrice?.timestamp && (
+              <p className="text-muted-foreground/70 font-mono text-[10px]">
+                Price {isStale ? "stale" : "live"} ·{" "}
+                {formatTimestampDateTime(icpPrice.timestamp)}
+              </p>
             )}
           </div>
           <Stat
@@ -665,27 +848,55 @@ function SyncStatusBadge({
  * Rewards summary panel — Total earned (sum of positive deltas) vs Total
  * disbursed (sum of absolute values of disburseOrSpawn deltas). Computed
  * from the full DailyReward[] returned by useRewardHistory.
+ *
+ * When `summaryPrices` (a Map<date, PriceSnapshot>) is available, the card
+ * also shows the all-time USD + PLN value of total earned rewards, valued
+ * at each reward's historical ICP price on the day it was recorded.
  */
 function RewardsSummaryCard({
   rewards,
   loading,
+  summaryPrices,
+  summaryPricesLoading,
 }: {
   rewards: DailyReward[];
   loading: boolean;
+  summaryPrices: Map<string, PriceSnapshot> | null;
+  summaryPricesLoading: boolean;
 }) {
-  const { totalEarnedE8s, totalDisbursedE8s } = useMemo(() => {
-    let earned = 0n;
-    let disbursed = 0n;
-    for (const r of rewards) {
-      if (r.deltaE8s > 0n) {
-        earned += r.deltaE8s;
+  const { totalEarnedE8s, totalDisbursedE8s, totalUsd, totalPln, hasPrice } =
+    useMemo(() => {
+      let earned = 0n;
+      let disbursed = 0n;
+      let usd = 0;
+      let pln = 0;
+      let sawPrice = false;
+      for (const r of rewards) {
+        if (r.deltaE8s > 0n) {
+          earned += r.deltaE8s;
+          if (summaryPrices) {
+            const key = nsToDateKey(r.timestamp);
+            const snap = key ? summaryPrices.get(key) : undefined;
+            if (snap && snap.usd > 0) {
+              const icp = e8sToIcpNumber(r.deltaE8s);
+              usd += icp * snap.usd;
+              pln += icp * snap.pln;
+              sawPrice = true;
+            }
+          }
+        }
+        if (r.eventType === EventType.disburseOrSpawn) {
+          disbursed += r.deltaE8s < 0n ? -r.deltaE8s : r.deltaE8s;
+        }
       }
-      if (r.eventType === EventType.disburseOrSpawn) {
-        disbursed += r.deltaE8s < 0n ? -r.deltaE8s : r.deltaE8s;
-      }
-    }
-    return { totalEarnedE8s: earned, totalDisbursedE8s: disbursed };
-  }, [rewards]);
+      return {
+        totalEarnedE8s: earned,
+        totalDisbursedE8s: disbursed,
+        totalUsd: usd,
+        totalPln: pln,
+        hasPrice: sawPrice,
+      };
+    }, [rewards, summaryPrices]);
 
   return (
     <Card className="bg-card/60 border-border/60">
@@ -711,6 +922,34 @@ function RewardsSummaryCard({
               <p className="text-muted-foreground text-xs mt-1">
                 Sum of all positive maturity deltas across history.
               </p>
+              {hasPrice ? (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span
+                    className="value-pill"
+                    title="All-time earned value in USD at historical ICP prices"
+                    data-ocid="neuron_detail.summary.earned_usd_pill"
+                  >
+                    {formatUsd(totalUsd)}
+                  </span>
+                  <span
+                    className="value-pill"
+                    title="All-time earned value in PLN at historical ICP prices"
+                    data-ocid="neuron_detail.summary.earned_pln_pill"
+                  >
+                    {formatPln(totalPln)}
+                  </span>
+                </div>
+              ) : summaryPricesLoading && summaryPrices === null ? (
+                <p className="text-muted-foreground/70 mt-2 font-mono text-[11px]">
+                  Fetching historical prices…
+                </p>
+              ) : (
+                rewards.length > 0 && (
+                  <p className="text-muted-foreground/70 mt-2 font-mono text-[11px]">
+                    Historical price unavailable
+                  </p>
+                )
+              )}
             </div>
             <div className="border-accent/30 bg-accent/5 rounded-xl border p-4">
               <div className="text-accent flex items-center gap-1.5 text-[11px] tracking-wider uppercase">
@@ -747,13 +986,13 @@ function MaturityChart({
             <div className="text-muted-foreground flex items-center gap-1.5 text-[10px]">
               <span
                 className="inline-block size-2 rounded-full"
-                style={{ background: "oklch(0.78 0.16 195)" }}
+                style={{ background: "oklch(var(--chart-1))" }}
                 aria-hidden
               />
               Total
               <span
                 className="ml-2 inline-block size-2 rounded-full"
-                style={{ background: "oklch(0.72 0.14 145)" }}
+                style={{ background: "oklch(var(--chart-4))" }}
                 aria-hidden
               />
               Staked
@@ -776,47 +1015,47 @@ function MaturityChart({
                   <linearGradient id="maturityFill" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="0%"
-                      stopColor="oklch(0.78 0.16 195)"
+                      stopColor="oklch(var(--chart-1))"
                       stopOpacity={0.35}
                     />
                     <stop
                       offset="100%"
-                      stopColor="oklch(0.78 0.16 195)"
+                      stopColor="oklch(var(--chart-1))"
                       stopOpacity={0}
                     />
                   </linearGradient>
                   <linearGradient id="stakedFill" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="0%"
-                      stopColor="oklch(0.72 0.14 145)"
+                      stopColor="oklch(var(--chart-4))"
                       stopOpacity={0.3}
                     />
                     <stop
                       offset="100%"
-                      stopColor="oklch(0.72 0.14 145)"
+                      stopColor="oklch(var(--chart-4))"
                       stopOpacity={0}
                     />
                   </linearGradient>
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="oklch(0.3 0.02 260)"
+                  stroke="oklch(var(--border))"
                   vertical={false}
                 />
                 <XAxis
                   dataKey="date"
                   tick={{
-                    fill: "oklch(0.62 0.012 260)",
+                    fill: "oklch(var(--muted-foreground))",
                     fontSize: 11,
                     fontFamily: "var(--font-mono)",
                   }}
-                  axisLine={{ stroke: "oklch(0.3 0.02 260)" }}
+                  axisLine={{ stroke: "oklch(var(--border))" }}
                   tickLine={false}
                   minTickGap={24}
                 />
                 <YAxis
                   tick={{
-                    fill: "oklch(0.62 0.012 260)",
+                    fill: "oklch(var(--muted-foreground))",
                     fontSize: 11,
                     fontFamily: "var(--font-mono)",
                   }}
@@ -826,14 +1065,14 @@ function MaturityChart({
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "oklch(0.22 0.018 260)",
-                    border: "1px solid oklch(0.3 0.02 260)",
+                    backgroundColor: "oklch(var(--popover))",
+                    border: "1px solid oklch(var(--border))",
                     borderRadius: "0.5rem",
                     fontSize: "12px",
                     fontFamily: "var(--font-mono)",
                   }}
-                  labelStyle={{ color: "oklch(0.62 0.012 260)" }}
-                  itemStyle={{ color: "oklch(0.95 0.005 260)" }}
+                  labelStyle={{ color: "oklch(var(--muted-foreground))" }}
+                  itemStyle={{ color: "oklch(var(--foreground))" }}
                   formatter={(v: number, name: string) => {
                     if (name === "staked") {
                       return [`${v.toFixed(4)} ICP`, "Staked"];
@@ -844,20 +1083,20 @@ function MaturityChart({
                 <Area
                   type="monotone"
                   dataKey="maturity"
-                  stroke="oklch(0.78 0.16 195)"
+                  stroke="oklch(var(--chart-1))"
                   strokeWidth={2}
                   fill="url(#maturityFill)"
                   dot={false}
-                  activeDot={{ r: 4, fill: "oklch(0.78 0.16 195)" }}
+                  activeDot={{ r: 4, fill: "oklch(var(--chart-1))" }}
                 />
                 <Area
                   type="monotone"
                   dataKey="staked"
-                  stroke="oklch(0.72 0.14 145)"
+                  stroke="oklch(var(--chart-4))"
                   strokeWidth={1.5}
                   fill="url(#stakedFill)"
                   dot={false}
-                  activeDot={{ r: 3, fill: "oklch(0.72 0.14 145)" }}
+                  activeDot={{ r: 3, fill: "oklch(var(--chart-4))" }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -903,6 +1142,22 @@ function ActivityFeed({
   const reversed = useMemo(() => [...rewards].reverse(), [rewards]);
   const visible = reversed.slice(0, visibleCount);
   const hasMore = reversed.length > visibleCount;
+
+  // Lazy paginated historical price fetch: only fetch prices for the dates
+  // of the currently visible entries. This keeps the CoinGecko request batch
+  // small and grows it as the user clicks "Load more". Dates are deduped
+  // across the visible window so a single day with many readings costs one
+  // backend call.
+  const visibleDateKeys = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of visible) {
+      const key = nsToDateKey(r.timestamp);
+      if (key) set.add(key);
+    }
+    return [...set];
+  }, [visible]);
+  const visiblePricesQuery = useHistoricalPrices(visibleDateKeys);
+  const visiblePrices = visiblePricesQuery.data ?? null;
 
   const handleLoadMore = () => {
     setVisibleCount((c) => c + ACTIVITY_PAGE_SIZE);
@@ -961,6 +1216,7 @@ function ActivityFeed({
                   key={`${r.neuronId}-${r.timestamp}-${i}`}
                   event={r}
                   index={i}
+                  price={visiblePrices?.get(nsToDateKey(r.timestamp)) ?? null}
                   onEdit={() => setEditing(r)}
                   onDelete={() => setDeleting(r)}
                 />
@@ -1030,32 +1286,52 @@ function ActivityFeed({
   );
 }
 
-const EVENT_TYPE_LABEL: Record<EventType, string> = {
+// mergedToStake is a newer EventType member not yet present in the
+// generated bindings (until bindgen re-runs after the backend change).
+// The mapped type accepts the new key now and after bindgen, so the
+// ActivityItem label lookup stays exhaustive.
+const EVENT_TYPE_LABEL: { [K in EventType | "mergedToStake"]: string } = {
   normalGrowth: "Maturity growth",
   firstReading: "First reading",
   disburseOrSpawn: "Disburse / spawn",
+  mergedToStake: "Merged to stake",
 };
 
 function ActivityItem({
   event,
   index,
+  price,
   onEdit,
   onDelete,
 }: {
   event: DailyReward;
   index: number;
+  price: PriceSnapshot | null;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const isDisburse = event.eventType === EventType.disburseOrSpawn;
   const isFirst = event.eventType === EventType.firstReading;
+  // mergedToStake is a newer EventType member not yet in the generated
+  // bindings, so compare as a string. It represents maturity minted to
+  // the same neuron's stake (governance merge), distinct from a disburse
+  // / spawn payout.
+  const isMergedToStake = event.eventType === ("mergedToStake" as EventType);
 
-  const Icon = isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
-  const accent = isDisburse
-    ? "text-primary bg-primary/10"
-    : isFirst
-      ? "text-accent bg-accent/10"
-      : "text-muted-foreground bg-muted";
+  const Icon = isMergedToStake
+    ? ArrowDownToLine
+    : isDisburse
+      ? Zap
+      : isFirst
+        ? Sparkles
+        : TrendingUp;
+  const accent = isMergedToStake
+    ? "text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/15"
+    : isDisburse
+      ? "text-primary bg-primary/10"
+      : isFirst
+        ? "text-accent bg-accent/10"
+        : "text-muted-foreground bg-muted";
 
   // Combined maturity total = unstaked (withdrawable) + staked.
   const combinedE8s = event.unstakedMaturityE8s + event.stakedMaturityE8s;
@@ -1063,6 +1339,16 @@ function ActivityItem({
   const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
   const deltaNegative = event.deltaE8s < 0n;
+
+  // USD + PLN value of this entry's delta at the historical ICP price for
+  // the entry's date. Only meaningful for positive deltas (rewards); for
+  // disbursements the delta is a balance movement, not income, so we hide
+  // the value pills there to avoid implying a USD gain.
+  const showValuePills = !deltaNegative && price != null && price.usd > 0;
+  const deltaIcp = e8sToIcpNumber(event.deltaE8s);
+  const deltaUsd = showValuePills ? deltaIcp * price.usd : null;
+  const deltaPln = showValuePills ? deltaIcp * price.pln : null;
+  const priceUnavailable = !deltaNegative && price == null;
 
   return (
     <motion.li
@@ -1111,9 +1397,37 @@ function ActivityItem({
             </Badge>
           )}
         </p>
-        <p className="text-muted-foreground font-mono text-[11px]">
-          {formatTimestampDateTime(event.timestamp)}
-        </p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="text-muted-foreground font-mono text-[11px]">
+            {formatTimestampDateTime(event.timestamp)}
+          </p>
+          {deltaUsd != null && (
+            <span
+              className="value-pill"
+              title="Delta value in USD at historical ICP price"
+              data-ocid={`neuron_detail.activity.usd_pill.${index + 1}`}
+            >
+              {formatUsd(deltaUsd)}
+            </span>
+          )}
+          {deltaPln != null && (
+            <span
+              className="value-pill"
+              title="Delta value in PLN at historical ICP price"
+              data-ocid={`neuron_detail.activity.pln_pill.${index + 1}`}
+            >
+              {formatPln(deltaPln)}
+            </span>
+          )}
+          {priceUnavailable && (
+            <span
+              className="text-muted-foreground/60 font-mono text-[10px]"
+              data-ocid={`neuron_detail.activity.price_unavailable.${index + 1}`}
+            >
+              price unavailable
+            </span>
+          )}
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
         <Button
@@ -1377,6 +1691,18 @@ function NeuronStatsCard({
             />
             <Separator />
             <StatRow
+              label="APY (30-day)"
+              value={formatApy(stats.apy30d)}
+              dataOcid="neuron_detail.stats.apy30d"
+            />
+            <Separator />
+            <StatRow
+              label="Overall return"
+              value={formatPercent(stats.overallReturnPct)}
+              dataOcid="neuron_detail.stats.overall_return"
+            />
+            <Separator />
+            <StatRow
               label="Monthly readings"
               value={stats.monthly.length.toString()}
             />
@@ -1387,14 +1713,195 @@ function NeuronStatsCard({
   );
 }
 
-function StatRow({ label, value }: { label: string; value: string }) {
+function StatRow({
+  label,
+  value,
+  dataOcid,
+}: {
+  label: string;
+  value: string;
+  dataOcid?: string;
+}) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between" data-ocid={dataOcid}>
       <span className="text-muted-foreground text-sm">{label}</span>
       <span className="text-foreground font-mono text-sm font-semibold">
         {value}
       </span>
     </div>
+  );
+}
+
+/**
+ * Monthly breakdown section — table + bar chart of total ICP earned per
+ * calendar month, derived from NeuronStats.monthly. The monthly array is
+ * already grouped by year/month and sorted chronologically by the backend;
+ * we sort defensively here in case the wire order changes.
+ *
+ * Layout: two-column grid on large screens (chart left, table right),
+ * stacked on small screens. Bars use the chart-1 cyan token
+ * (oklch(0.78 0.16 195)) to match the maturity growth chart.
+ */
+function MonthlyBreakdownSection({
+  monthly,
+}: {
+  monthly: MonthlyBreakdown[];
+}) {
+  const sorted = useMemo(
+    () =>
+      [...monthly].sort((a, b) => {
+        const y = Number(a.year - b.year);
+        if (y !== 0) return y;
+        return Number(a.month - b.month);
+      }),
+    [monthly],
+  );
+
+  const chartData = useMemo(
+    () =>
+      sorted.map((m) => ({
+        label: formatMonthLabel(m.year, m.month),
+        icp: e8sToIcpNumber(m.totalDeltaE8s),
+        raw: m.totalDeltaE8s,
+      })),
+    [sorted],
+  );
+
+  const hasData = sorted.length > 0;
+
+  return (
+    <Card className="bg-card/60 border-border/60 mt-6">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Monthly breakdown</CardTitle>
+          <Badge variant="secondary" className="font-mono text-[10px]">
+            {sorted.length} {sorted.length === 1 ? "month" : "months"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {!hasData ? (
+          <div className="flex h-48 flex-col items-center justify-center text-center">
+            <BarChart3 className="text-muted-foreground/50 size-7" />
+            <p className="text-muted-foreground mt-3 text-sm">
+              No monthly breakdown available yet. Record more snapshots to see
+              per-month totals.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Bar chart */}
+            <div className="h-72 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 8, right: 8, bottom: 0, left: -16 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="oklch(var(--border))"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="label"
+                    tick={{
+                      fill: "oklch(var(--muted-foreground))",
+                      fontSize: 11,
+                      fontFamily: "var(--font-mono)",
+                    }}
+                    axisLine={{ stroke: "oklch(var(--border))" }}
+                    tickLine={false}
+                    minTickGap={20}
+                  />
+                  <YAxis
+                    tick={{
+                      fill: "oklch(var(--muted-foreground))",
+                      fontSize: 11,
+                      fontFamily: "var(--font-mono)",
+                    }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={56}
+                    tickFormatter={(v: number) =>
+                      formatIcpCompact(BigInt(Math.round(v * 1e8)))
+                    }
+                  />
+                  <Tooltip
+                    cursor={{ fill: "oklch(var(--chart-1) / 0.08)" }}
+                    contentStyle={{
+                      backgroundColor: "oklch(var(--popover))",
+                      border: "1px solid oklch(var(--border))",
+                      borderRadius: "0.5rem",
+                      fontSize: "12px",
+                      fontFamily: "var(--font-mono)",
+                    }}
+                    labelStyle={{ color: "oklch(var(--muted-foreground))" }}
+                    itemStyle={{ color: "oklch(var(--foreground))" }}
+                    formatter={(v: number) => [`${v.toFixed(4)} ICP`, "Earned"]}
+                  />
+                  <Bar
+                    dataKey="icp"
+                    fill="oklch(var(--chart-1))"
+                    radius={[3, 3, 0, 0]}
+                    maxBarSize={48}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-lg border border-border/60">
+              <Table data-ocid="neuron_detail.monthly.table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[11px]">Month</TableHead>
+                    <TableHead className="text-[11px] text-right">
+                      Total earned
+                    </TableHead>
+                    <TableHead className="text-[11px] text-right">
+                      MoM delta
+                    </TableHead>
+                    <TableHead className="text-[11px] text-right">
+                      Readings
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sorted.map((m, i) => {
+                    const momNegative = m.momDeltaE8s < 0n;
+                    return (
+                      <TableRow
+                        key={`monthly-${m.year}-${m.month}`}
+                        data-ocid={`neuron_detail.monthly.row.${i + 1}`}
+                      >
+                        <TableCell className="text-foreground font-mono text-xs">
+                          {formatMonthLabel(m.year, m.month)}
+                        </TableCell>
+                        <TableCell className="text-foreground font-mono text-right text-xs">
+                          {formatIcp(m.totalDeltaE8s, 4, false)}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "font-mono text-right text-xs",
+                            momNegative ? "text-destructive" : "text-primary",
+                          )}
+                        >
+                          {momNegative ? "" : "+"}
+                          {formatIcp(m.momDeltaE8s, 4, false)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground font-mono text-right text-xs">
+                          {Number(m.readingCount)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1548,8 +2055,13 @@ function ImportHistoricalPanel({
 
   const handleConfirm = () => {
     if (!canConfirm) return;
+    // Backend timestamps are nanoseconds since epoch (IC Time.now()
+    // convention — see types/common.mo). r.dateMs is JS epoch milliseconds
+    // from Date.UTC in parsePaste, so multiply by 1_000_000 to get ns.
+    // NEVER divide — that would produce seconds and sort imported entries
+    // ~1e9x earlier than real Time.now() snapshots, breaking chronology.
     const entries: HistoricalEntry[] = rows.map((r) => ({
-      timestamp: BigInt(Math.floor(r.dateMs / 1000)),
+      timestamp: BigInt(Math.floor(r.dateMs)) * 1_000_000n,
       unstakedMaturityE8s: r.amountE8s,
       stakedMaturityE8s: 0n,
     }));
@@ -1812,6 +2324,27 @@ function parsePaste(input: string): {
     const day = Number(dateMatch[1]);
     const month = Number(dateMatch[2]);
     const year = Number(dateMatch[3]);
+    // Explicit range checks give clearer errors than the round-trip check
+    // alone (e.g. "day 13 in month 99" vs a generic "invalid date").
+    if (month < 1 || month > 12) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid month "${dateStr}" (month must be 01-12)`,
+      });
+      continue;
+    }
+    if (day < 1 || day > 31) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid day "${dateStr}" (day must be 01-31)`,
+      });
+      continue;
+    }
+    // Construct via Date.UTC(year, monthIndex-1, day) — NEVER pass the
+    // DD/MM/YYYY string to the Date constructor, which interprets it as
+    // MM/DD/YYYY US format (Invalid Date for days >12, silent month/day
+    // swap for days 01-12). The round-trip check below catches 29/02 on
+    // non-leap years and days > the month's actual length.
     const dateObj = new Date(Date.UTC(year, month - 1, day));
     if (
       dateObj.getUTCFullYear() !== year ||
@@ -1820,7 +2353,7 @@ function parsePaste(input: string): {
     ) {
       errors.push({
         rowIndex: dataRowIndex,
-        message: `invalid date "${dateStr}"`,
+        message: `invalid date "${dateStr}" (no such calendar day, e.g. 29/02 on a non-leap year)`,
       });
       continue;
     }

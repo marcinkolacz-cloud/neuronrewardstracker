@@ -1,6 +1,6 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
-import Array "mo:core/Array";
+import VarArray "mo:core/VarArray";
 import Int "mo:core/Int";
 import Nat64 "mo:core/Nat64";
 import Runtime "mo:core/Runtime";
@@ -24,6 +24,15 @@ module {
   /// and `stakedMaturityE8s` — does not produce a spurious negative delta;
   /// the total stays continuous. Negative deltas are classified as
   /// #disburseOrSpawn; the first reading is #firstReading with delta 0.
+  ///
+  /// `eventTypeOverride` lets a caller that has extra context (notably
+  /// governance sync, which can see `cached_neuron_stake_e8s`) force a
+  /// specific eventType instead of the auto-classification. This is how
+  /// Merge Maturity events are marked #mergedToStake: the combined-total
+  /// delta is still computed (and is negative, reflecting the maturity that
+  /// left the maturity bucket and entered the stake bucket), but the
+  /// #mergedToStake tag tells the stats layer to exclude the event from
+  /// Total Disbursed. Pass null for the default auto-classification.
   public func recordSnapshot(
     rewards : Map.Map<NeuronId, List.List<DailyReward>>,
     neuronId : NeuronId,
@@ -31,6 +40,7 @@ module {
     stakedMaturityE8s : E8s,
     autoStakeMaturity : Bool,
     timestamp : Timestamp,
+    eventTypeOverride : ?EventType,
   ) : DailyReward {
     let history = switch (rewards.get(neuronId)) {
       case (?h) h;
@@ -41,15 +51,32 @@ module {
       };
     };
 
-    let combinedTotal : Int = Int.fromNat(unstakedMaturityE8s.toNat()) + Int.fromNat(stakedMaturityE8s.toNat());
+    let combinedTotal : Int = Nat.toInt(unstakedMaturityE8s.toNat()) + Nat.toInt(stakedMaturityE8s.toNat());
 
-    let (delta, eventType) = switch (history.last()) {
-      case (?prev) {
-        let prevCombined : Int = Int.fromNat(prev.unstakedMaturityE8s.toNat()) + Int.fromNat(prev.stakedMaturityE8s.toNat());
-        let d : Int = combinedTotal - prevCombined;
-        if (d < 0) { (d, #disburseOrSpawn) } else { (d, #normalGrowth) };
+    let (delta, eventType) = switch (eventTypeOverride) {
+      case (?override) {
+        // Caller-provided eventType (e.g. #mergedToStake). Still compute the
+        // delta from the combined total so the history stays continuous; for
+        // a first reading with an override, delta is 0.
+        let d : Int = switch (history.last()) {
+          case (?prev) {
+            let prevCombined : Int = Nat.toInt(prev.unstakedMaturityE8s.toNat()) + Nat.toInt(prev.stakedMaturityE8s.toNat());
+            combinedTotal - prevCombined;
+          };
+          case null 0;
+        };
+        (d, override);
       };
-      case null { (0, #firstReading) };
+      case null {
+        switch (history.last()) {
+          case (?prev) {
+            let prevCombined : Int = Nat.toInt(prev.unstakedMaturityE8s.toNat()) + Nat.toInt(prev.stakedMaturityE8s.toNat());
+            let d : Int = combinedTotal - prevCombined;
+            if (d < 0) { (d, #disburseOrSpawn) } else { (d, #normalGrowth) };
+          };
+          case null { (0, #firstReading) };
+        };
+      };
     };
 
     let snapshot : DailyReward = {
@@ -160,7 +187,7 @@ module {
     var prevCombined : ?Int = null;
 
     for (entry in merged.vals()) {
-      let combinedTotal : Int = Int.fromNat(entry.unstakedMaturityE8s.toNat()) + Int.fromNat(entry.stakedMaturityE8s.toNat());
+      let combinedTotal : Int = Nat.toInt(entry.unstakedMaturityE8s.toNat()) + Nat.toInt(entry.stakedMaturityE8s.toNat());
       let (delta, eventType) = switch (prevCombined) {
         case (?prev) {
           let d : Int = combinedTotal - prev;
@@ -188,7 +215,7 @@ module {
 
   /// Combined maturity total (unstaked + staked) as a signed Int for delta math.
   func combinedTotal(r : DailyReward) : Int {
-    Int.fromNat(r.unstakedMaturityE8s.toNat()) + Int.fromNat(r.stakedMaturityE8s.toNat());
+    Nat.toInt(r.unstakedMaturityE8s.toNat()) + Nat.toInt(r.stakedMaturityE8s.toNat());
   };
 
   /// Compute (delta, eventType) for an entry given the previous entry's
@@ -260,7 +287,7 @@ module {
 
     // Re-sort chronologically by the (possibly changed) timestamp. `sort` on a
     // [var T] is not available, so round-trip through an immutable array.
-    let reSortedImm = Array.fromVarArray(sorted).sort(func(a, b) = Int.compare(a.timestamp, b.timestamp));
+    let reSortedImm = sorted.toArray().sort(func(a, b) = Int.compare(a.timestamp, b.timestamp));
     let reSorted = reSortedImm.toVarArray<DailyReward>();
 
     // Recompute deltas for the edited entry and its new prev/next neighbors.
@@ -285,7 +312,7 @@ module {
     };
 
     // Rebuild the List from the recomputed array and persist.
-    let newHistory = List.fromArray<DailyReward>(Array.fromVarArray(reSorted));
+    let newHistory = List.fromArray<DailyReward>(reSorted.toArray());
     rewards.add(neuronId, newHistory);
   };
 
@@ -336,7 +363,7 @@ module {
     };
 
     // Rebuild the List and persist.
-    let newHistory = List.fromArray<DailyReward>(Array.fromVarArray(remaining));
+    let newHistory = List.fromArray<DailyReward>(remaining.toArray());
     rewards.add(neuronId, newHistory);
   };
 };

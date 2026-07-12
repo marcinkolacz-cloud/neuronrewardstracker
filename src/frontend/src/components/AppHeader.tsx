@@ -14,7 +14,8 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth, useShortPrincipal } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BrainCircuit, LogOut, RefreshCw } from "lucide-react";
+import { BrainCircuit, LogOut, Moon, RefreshCw, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 interface NavItem {
   label: string;
@@ -36,6 +37,8 @@ export function AppHeader({ rightAction }: AppHeaderProps) {
   const { isAuthenticated, clear, isLoggingIn, login } = useAuth();
   const principal = useShortPrincipal();
   const location = useLocation();
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <header className="bg-card/80 border-border/60 sticky top-0 z-40 w-full border-b shadow-subtle backdrop-blur-md">
@@ -91,6 +94,20 @@ export function AppHeader({ rightAction }: AppHeaderProps) {
 
         <div className="ml-auto flex items-center gap-3">
           {rightAction}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            data-ocid="header.theme_toggle"
+            aria-label={
+              isDark ? "Switch to light theme" : "Switch to dark theme"
+            }
+            title={isDark ? "Switch to light theme" : "Switch to dark theme"}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+          </Button>
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2.5">

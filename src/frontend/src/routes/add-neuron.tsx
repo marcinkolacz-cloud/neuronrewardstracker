@@ -135,7 +135,7 @@ export function AddNeuronPage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-48 opacity-30"
         style={{
           background:
-            "radial-gradient(50% 60% at 50% 0%, oklch(0.78 0.16 195 / 0.10) 0%, oklch(0.145 0.014 260 / 0) 70%)",
+            "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.10) 0%, oklch(var(--background) / 0) 70%)",
         }}
       />
       <div className="relative mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">

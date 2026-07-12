@@ -9,16 +9,31 @@ type AccessControlState__35176948 =
     var adminAssigned : Bool;
     userRoles : Map__246123559<Principal, UserRole__655048888>
   };
+type AccessControlState__473348648 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__246123559<Principal, UserRole__911458864>
+  };
 type AccessControlState__509257403 =
   {
     var adminAssigned : Bool;
     userRoles : Map__246123559<Principal, UserRole__1012927824>
+  };
+type AccessControlState__605128517 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__246123559<Principal, UserRole__265985887>
   };
 type AccessControlState__954572192 =
   {
     var adminAssigned : Bool;
     userRoles : Map__246123559<Principal, UserRole__199018766>
   };
+type CachedPrice__276662518 =
+  {fetchedAtNanos : Int; pln : Float; usd : Float};
+type CachedPrice__914092644 =
+  {fetchedAtNanos : Int; pln : Float; usd : Float};
+type CachedPrice__93330426 = {fetchedAtNanos : Int; pln : Float; usd : Float};
 type DailyReward__451108649 =
   {
     deltaE8s : Int;
@@ -26,6 +41,16 @@ type DailyReward__451108649 =
     maturityE8s : Nat64;
     neuronId : NeuronId__718533348;
     timestamp : Int
+  };
+type DailyReward__716673578 =
+  {
+    autoStakeMaturity : Bool;
+    deltaE8s : Int;
+    eventType : {#disburseOrSpawn; #firstReading; #normalGrowth};
+    neuronId : NeuronId__833149837;
+    stakedMaturityE8s : Nat64;
+    timestamp : Int;
+    unstakedMaturityE8s : Nat64
   };
 type DailyReward__858131868 =
   {
@@ -61,7 +86,8 @@ type DeltaE8s__948048688 = DeltaE8s__431503976;
 type E8s__328334695 = Nat64;
 type E8s__342726471 = E8s__328334695;
 type E8s__716808324 = E8s__328334695;
-type EventType__1059448065 = {#disburseOrSpawn; #firstReading; #normalGrowth};
+type EventType__1059448065 =
+  {#disburseOrSpawn; #firstReading; #mergedToStake; #normalGrowth};
 type Internal__455405067<K, V> =
   {children : [var ?Node__279997185<K, V>]; data : Data__552063367<K, V>};
 type Leaf__114713147<K, V> = {data : Data__552063367<K, V>};
@@ -82,7 +108,9 @@ type NeuronId__542779660 = Nat64;
 type NeuronId__608231430 = Nat64;
 type NeuronId__61849652 = Nat64;
 type NeuronId__718533348 = Nat64;
+type NeuronId__833149837 = Nat64;
 type NeuronId__869635506 = Nat64;
+type NeuronId__916429454 = Nat64;
 type NeuronId__95609221 = NeuronId__542779660;
 type NeuronId__982282573 = NeuronId__542779660;
 type Neuron__159507543 =
@@ -121,6 +149,50 @@ type Neuron__380296793 =
     ownerId : Principal;
     stakedE8s : E8s__342726471;
     startDate : Timestamp__1042659080
+  };
+type Neuron__926684610 =
+  {
+    dissolveDelaySeconds : Nat64;
+    id : NeuronId__833149837;
+    initialStakeE8s : Nat64;
+    name : Text;
+    ownerId : Principal;
+    stakedE8s : Nat64;
+    startDate : Int
+  };
+type Neuron__979630822 =
+  {
+    dissolveDelaySeconds : Nat64;
+    id : NeuronId__916429454;
+    initialStakeE8s : Nat64;
+    name : Text;
+    ownerId : Principal;
+    stakedE8s : Nat64;
+    startDate : Int
+  };
+type NewActor__111766593 =
+  {
+    var accessControlState : AccessControlState__605128517;
+    var neurons : Map__246123559<NeuronId__833149837, Neuron__926684610>;
+    var priceCache : Map__246123559<Text, CachedPrice__914092644>;
+    var rewards :
+      Map__246123559<NeuronId__833149837,
+                      List__852723865<DailyReward__716673578>>;
+    var syncErrors : Map__246123559<NeuronId__833149837, Text>;
+    var syncStatuses :
+      Map__246123559<NeuronId__833149837, SyncStatus__469055630>
+  };
+type NewActor__184347585 =
+  {
+    var accessControlState : AccessControlState__473348648;
+    var neurons : Map__246123559<NeuronId__916429454, Neuron__979630822>;
+    var priceCache : Map__246123559<Text, CachedPrice__276662518>;
+    var rewards :
+      Map__246123559<NeuronId__916429454,
+                      List__852723865<NewDailyReward__222562901>>;
+    var syncErrors : Map__246123559<NeuronId__916429454, Text>;
+    var syncStatuses :
+      Map__246123559<NeuronId__916429454, SyncStatus__1037512719>
   };
 type NewActor__299107891 =
   {
@@ -165,6 +237,16 @@ type NewActor__960717915 =
     var syncStatuses :
       Map__246123559<NeuronId__608231430, SyncStatus__951457596>
   };
+type NewDailyReward__222562901 =
+  {
+    autoStakeMaturity : Bool;
+    deltaE8s : Int;
+    eventType : NewEventType__59839688;
+    neuronId : NeuronId__916429454;
+    stakedMaturityE8s : Nat64;
+    timestamp : Int;
+    unstakedMaturityE8s : Nat64
+  };
 type NewDailyReward__614583504 =
   {
     autoStakeMaturity : Bool;
@@ -175,6 +257,8 @@ type NewDailyReward__614583504 =
     timestamp : Int;
     unstakedMaturityE8s : Nat64
   };
+type NewEventType__59839688 =
+  {#disburseOrSpawn; #firstReading; #mergedToStake; #normalGrowth};
 type NewNeuron__170592010 =
   {
     dissolveDelaySeconds : Nat64;
@@ -189,6 +273,18 @@ type NewSyncStatus__40033319 =
   {#failed; #hotkeyRequired; #neverSynced; #synced};
 type Node__279997185<K, V> =
   {#internal : Internal__455405067<K, V>; #leaf : Leaf__114713147<K, V>};
+type OldActor__102868948 =
+  {
+    var accessControlState : AccessControlState__473348648;
+    var neurons : Map__246123559<NeuronId__916429454, Neuron__979630822>;
+    var priceCache : Map__246123559<Text, CachedPrice__276662518>;
+    var rewards :
+      Map__246123559<NeuronId__916429454,
+                      List__852723865<OldDailyReward__810454362>>;
+    var syncErrors : Map__246123559<NeuronId__916429454, Text>;
+    var syncStatuses :
+      Map__246123559<NeuronId__916429454, SyncStatus__1037512719>
+  };
 type OldActor__150656829 = {};
 type OldActor__252756497 =
   {
@@ -211,6 +307,17 @@ type OldActor__398153673 =
     var syncStatuses :
       Map__246123559<NeuronId__869635506, SyncStatus__900218883>
   };
+type OldActor__85163019 =
+  {
+    var accessControlState : AccessControlState__605128517;
+    var neurons : Map__246123559<NeuronId__833149837, Neuron__926684610>;
+    var rewards :
+      Map__246123559<NeuronId__833149837,
+                      List__852723865<DailyReward__716673578>>;
+    var syncErrors : Map__246123559<NeuronId__833149837, Text>;
+    var syncStatuses :
+      Map__246123559<NeuronId__833149837, SyncStatus__469055630>
+  };
 type OldActor__95473603 =
   {
     var accessControlState : AccessControlState__129954352;
@@ -230,6 +337,18 @@ type OldDailyReward__775893138 =
     neuronId : NeuronId__608231430;
     timestamp : Int
   };
+type OldDailyReward__810454362 =
+  {
+    autoStakeMaturity : Bool;
+    deltaE8s : Int;
+    eventType : OldEventType__444601761;
+    neuronId : NeuronId__916429454;
+    stakedMaturityE8s : Nat64;
+    timestamp : Int;
+    unstakedMaturityE8s : Nat64
+  };
+type OldEventType__444601761 =
+  {#disburseOrSpawn; #firstReading; #normalGrowth};
 type OldNeuron__953447437 =
   {
     dissolveDelaySeconds : Nat64;
@@ -240,7 +359,11 @@ type OldNeuron__953447437 =
     startDate : Int
   };
 type OldSyncStatus__900359465 = {#hotkeyRequired; #neverSynced; #synced};
+type SyncStatus__1037512719 =
+  {#failed; #hotkeyRequired; #neverSynced; #synced};
 type SyncStatus__186983160 =
+  {#failed; #hotkeyRequired; #neverSynced; #synced};
+type SyncStatus__469055630 =
   {#failed; #hotkeyRequired; #neverSynced; #synced};
 type SyncStatus__53123139 = {#hotkeyRequired; #neverSynced; #synced};
 type SyncStatus__900218883 =
@@ -252,14 +375,18 @@ type Timestamp__209438455 = Timestamp__301639476;
 type Timestamp__301639476 = Int;
 type UserRole__1012927824 = {#admin; #guest; #user};
 type UserRole__199018766 = {#admin; #guest; #user};
+type UserRole__265985887 = {#admin; #guest; #user};
 type UserRole__270657174 = {#admin; #guest; #user};
 type UserRole__655048888 = {#admin; #guest; #user};
 type UserRole__686137147 = {#admin; #guest; #user};
+type UserRole__911458864 = {#admin; #guest; #user};
 {
   "20260712_000000" : (_old : OldActor__150656829) -> NewActor__299107891;
   "20260712_000100" : (old : OldActor__252756497) -> NewActor__472879847;
   "20260712_103757" : (old : OldActor__95473603) -> NewActor__960717915;
-  "20260712_120000" : (old : OldActor__398153673) -> NewActor__754780594
+  "20260712_120000" : (old : OldActor__398153673) -> NewActor__754780594;
+  "20260712_130000" : (old : OldActor__85163019) -> NewActor__111766593;
+  "20260712_140000" : (old : OldActor__102868948) -> NewActor__184347585
 }
 actor  {
   stable accessControlState :
@@ -270,6 +397,11 @@ actor  {
   stable neurons :
     {
       var root : Node__279997185<NeuronId__542779660, Neuron__380296793>;
+      var size : Nat__93962160
+    };
+  stable priceCache :
+    {
+      var root : Node__279997185<Text, CachedPrice__93330426>;
       var size : Nat__93962160
     };
   stable rewards :

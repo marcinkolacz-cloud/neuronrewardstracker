@@ -4,6 +4,8 @@ import Error "mo:core/Error";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Nat64 "mo:core/Nat64";
+import Int "mo:core/Int";
+import Float "mo:core/Float";
 import Types "../types/governance-sync";
 import Common "../types/common";
 import RewardTypes "../types/rewards";
@@ -110,7 +112,73 @@ module {
             case null false;
           };
 
+          // --- Merge Maturity detection ---
+          // A Merge Maturity governance event moves unstaked maturity into the
+          // neuron's stake: `maturity_e8s_equivalent` (unstaked) drops and
+          // `cached_neuron_stake_e8s` (stake) rises by a roughly corresponding
+          // amount in the same sync. The combined-total delta is negative
+          // (maturity left the maturity bucket), so without an override
+          // recordSnapshot would auto-classify it as #disburseOrSpawn — but
+          // the value stayed inside the neuron, so it must NOT count toward
+          // Total Disbursed. Detect the pattern here and pass
+          // ?#mergedToStake as the eventTypeOverride.
+          //
+          // We need the PREVIOUS snapshot's unstaked maturity and the
+          // neuron's stakedE8s BEFORE this sync updates it, plus the new
+          // governance-reported stake. Read both before calling
+          // recordSnapshot / updateStakedE8s.
+          let prevUnstaked : ?Nat64 = switch (rewards.get(neuronId)) {
+            case (?history) {
+              switch (history.last()) {
+                case (?last) ?last.unstakedMaturityE8s;
+                case null null;
+              };
+            };
+            case null null;
+          };
+          let prevStakedE8s : ?Nat64 = switch (neurons.get(neuronId)) {
+            case (?n) ?n.stakedE8s;
+            case null null;
+          };
+          let newStakedE8s : ?Nat64 = neuron.cached_neuron_stake_e8s;
+
+          // Threshold for "unstaked maturity dropped significantly". A small
+          // drop could be ordinary rounding/fees; require a meaningful drop.
+          // Use 1_000 e8s (= 0.00001 ICP) as the floor to avoid noise.
+          let mergeThreshold : Nat64 = 1_000;
+
+          let isMergeMaturity : Bool = switch (prevUnstaked, newStakedE8s, prevStakedE8s) {
+            case (?prevUnstakedVal, ?newStake, ?prevStake) {
+              // Unstaked maturity dropped by more than the threshold...
+              let unstakedDrop : Int = Nat.toInt(prevUnstakedVal.toNat()) - Nat.toInt(unstaked.toNat());
+              if (unstakedDrop <= Nat.toInt(mergeThreshold.toNat())) { false }
+              else {
+                // ...and the stake rose by a roughly corresponding amount.
+                // "Roughly corresponding" = the stake increase is positive
+                // and within a small tolerance of the unstaked drop. Allow a
+                // 10% tolerance either way to absorb governance rounding.
+                let stakeIncrease : Int = Nat.toInt(newStake.toNat()) - Nat.toInt(prevStake.toNat());
+                if (stakeIncrease <= 0) { false }
+                else {
+                  let drop = unstakedDrop.toFloat();
+                  let rise = stakeIncrease.toFloat();
+                  let tolerance = drop * 0.10;
+                  (rise >= drop - tolerance) and (rise <= drop + tolerance);
+                };
+              };
+            };
+            case _ false;
+          };
+
+          let eventTypeOverride : ?RewardTypes.EventType = if (isMergeMaturity) {
+            ?#mergedToStake;
+          } else {
+            null;
+          };
+
           // Record the maturity snapshot (delta computed from combined total).
+          // Pass the override so a Merge Maturity event is tagged
+          // #mergedToStake instead of auto-classified as #disburseOrSpawn.
           ignore RewardsLib.recordSnapshot(
             rewards,
             neuronId,
@@ -118,12 +186,13 @@ module {
             stakedMaturity,
             autoStake,
             Time.now(),
+            eventTypeOverride,
           );
 
           // Update the neuron's sync-sourced staked amount from
           // cached_neuron_stake_e8s when governance reports it. When absent,
           // leave stakedE8s unchanged (initialStakeE8s remains the fallback).
-          let stakedE8s : ?Nat64 = switch (neuron.cached_neuron_stake_e8s) {
+          let stakedE8s : ?Nat64 = switch (newStakedE8s) {
             case (?v) {
               NeuronsLib.updateStakedE8s(neurons, caller, neuronId, v);
               ?v;

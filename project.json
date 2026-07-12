@@ -1,19 +1,22 @@
 {
-  "overview": "Track ICP neuron staking rewards over time with maturity growth charts, governance sync, historical import, and snapshot editing.",
+  "overview": "Track ICP neuron staking rewards with daily sync, portfolio aggregation, historical import, and light/dark themes.",
   "features": [
-    "Cascade delete removes all neuron data on removal",
-    "Rewards summary panel showing total earned vs total disbursed",
-    "Scrollable activity feed with load more for long histories",
-    "CSV export for single neuron and all neurons combined",
-    "Edit and delete individual reward snapshots with delta recompute"
+    "Daily reward snapshots synced from IC governance",
+    "Portfolio dashboard with total staked, maturity, and blended APY",
+    "Paste-in historical data import with DD/MM/YYYY parsing",
+    "Fixed daily sync at 18:01 Europe/Warsaw (DST-aware)",
+    "Merge maturity event detection distinct from disbursements",
+    "Light and dark theme toggle persisted per user",
+    "Activity feed with editable snapshots and CSV export",
+    "Monthly breakdown charts and per-neuron APY"
   ],
-  "category": "productivity",
+  "category": "finance-tracker",
   "tags": [
     "icp",
     "neuron",
-    "rewards",
     "staking",
-    "tracker"
+    "rewards",
+    "internet-computer"
   ],
-  "last_updated": "2026-07-12T11:55:33.052Z"
+  "last_updated": "2026-07-12T13:05:56.140Z"
 }

@@ -54,6 +54,16 @@ function record_opt_to_undefined<T>(arg: T | null): T | undefined {
 import { ExternalBlob } from "@caffeineai/object-storage";
 export { ExternalBlob } from "@caffeineai/object-storage";
 export type Timestamp = bigint;
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
+}
+export interface HttpRequestResult {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
+}
 export type Result__1 = {
     __kind__: "ok";
     ok: null;
@@ -116,6 +126,11 @@ export interface MonthlyBreakdown {
     totalDeltaE8s: bigint;
     year: bigint;
     readingCount: bigint;
+    momDeltaE8s: bigint;
+}
+export interface HttpHeader {
+    value: string;
+    name: string;
 }
 export interface DailyReward {
     stakedMaturityE8s: E8s;
@@ -126,12 +141,16 @@ export interface DailyReward {
     deltaE8s: DeltaE8s;
     eventType: EventType;
 }
+export type TimerId = bigint;
 export interface Result {
     hasMore: boolean;
     rows: Array<Array<Cell>>;
 }
 export interface PortfolioStats {
+    totalMaturityE8s: bigint;
+    totalRewardsThisMonthE8s: bigint;
     totalRewardsE8s: bigint;
+    blendedApy: number;
     totalStakedE8s: E8s;
     percentageReturn: number;
     neuronCount: bigint;
@@ -145,10 +164,15 @@ export interface Neuron {
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
-export type E8s = bigint;
-export interface Cell {
-    value: Value;
-    name: string;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: HttpRequestResult;
+}
+export interface PriceSnapshot {
+    pln: number;
+    usd: number;
+    timestamp: bigint;
+    cached: boolean;
 }
 export interface SyncResult {
     status: SyncStatus;
@@ -180,11 +204,19 @@ export type Value = {
 export interface NeuronStats {
     averageDailyRewardE8s: bigint;
     totalRewardsE8s: bigint;
+    apy30d: number;
     percentageReturn: number;
     neuronId: NeuronId;
     monthly: Array<MonthlyBreakdown>;
+    overallReturnPct: number;
+}
+export type E8s = bigint;
+export interface Cell {
+    value: Value;
+    name: string;
 }
 export enum EventType {
+    mergedToStake = "mergedToStake",
     normalGrowth = "normalGrowth",
     firstReading = "firstReading",
     disburseOrSpawn = "disburseOrSpawn"
@@ -203,6 +235,7 @@ export enum UserRole {
 export interface backendInterface {
     __accessControlState(): Promise<any>;
     __neurons(): Promise<any>;
+    __priceCache(): Promise<any>;
     __rewards(): Promise<any>;
     __syncErrors(): Promise<any>;
     __syncStatuses(): Promise<any>;
@@ -215,6 +248,8 @@ export interface backendInterface {
     editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
     execute(qJson: string): Promise<Result>;
     getCallerUserRole(): Promise<UserRole>;
+    getCurrentIcpPrice(): Promise<PriceSnapshot>;
+    getHistoricalIcpPrice(date: string): Promise<PriceSnapshot>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
     getPortfolioStats(): Promise<PortfolioStats>;
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
@@ -225,9 +260,40 @@ export interface backendInterface {
     listMyNeurons(): Promise<Array<Neuron>>;
     recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
+    /**
+     * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
+     * / target on every call so DST transitions do not cause drift. After the
+     * / sync runs, reschedules for the following 18:01 Warsaw.
+     * /
+     * / `Timer.setTimer<system>` requires the `<system>` capability, which is
+     * / available in `shared` functions and async callbacks but NOT in a plain
+     * / actor `func` or a transient-let initializer. This function is therefore
+     * / only ever called from two system-capable contexts: (1) the
+     * / `public shared func startDailySync()` below, and (2) the async timer
+     * / callback passed to `Timer.setTimer` (which itself has the system
+     * / capability, so rescheduling works). It must NOT be called from a plain
+     * / transient let or a non-shared private func.
+     */
+    scheduleNextSync(): Promise<TimerId>;
     schema(): Promise<string>;
+    /**
+     * / Install the daily sync timer on first call. Public shared functions run
+     * / in an async context that has the `<system>` capability, so
+     * / `scheduleNextSync()` (which calls `Timer.setTimer<system>`) is valid
+     * / here. Idempotent: subsequent calls are no-ops once the timer is running
+     * / (the timer reschedules itself from its own async callback, which also
+     * / has the system capability).
+     */
+    startDailySync(): Promise<void>;
     syncAllMyNeurons(): Promise<Array<SyncResult>>;
     syncNeuron(neuronId: NeuronId): Promise<SyncResult>;
+    /**
+     * / IC HTTP outcall transform callback. Required by the IC HTTP outcall
+     * / protocol: it must be a public `query` function on the actor and strips
+     * / response headers so the response body is the only thing that survives
+     * / into consensus. Passed to PricesLib functions and the PricesApi mixin.
+     */
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateNeuron(neuron: Neuron): Promise<void>;
 }
 import type { Cell as _Cell, DailyReward as _DailyReward, DeltaE8s as _DeltaE8s, E8s as _E8s, Error as _Error, EventType as _EventType, NeuronId as _NeuronId, Result as _Result, Result__1 as _Result__1, SyncResult as _SyncResult, SyncStatus as _SyncStatus, Timestamp as _Timestamp, UserRole as _UserRole, Value as _Value } from "./declarations/backend.did.d.ts";
@@ -258,6 +324,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.__neurons();
+            return result;
+        }
+    }
+    async __priceCache(): Promise<any> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.__priceCache();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.__priceCache();
             return result;
         }
     }
@@ -429,6 +509,34 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getCurrentIcpPrice(): Promise<PriceSnapshot> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCurrentIcpPrice();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCurrentIcpPrice();
+            return result;
+        }
+    }
+    async getHistoricalIcpPrice(arg0: string): Promise<PriceSnapshot> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getHistoricalIcpPrice(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getHistoricalIcpPrice(arg0);
+            return result;
+        }
+    }
     async getNeuronStats(arg0: NeuronId): Promise<NeuronStats> {
         if (this.processError) {
             try {
@@ -569,6 +677,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async scheduleNextSync(): Promise<TimerId> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.scheduleNextSync();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.scheduleNextSync();
+            return result;
+        }
+    }
     async schema(): Promise<string> {
         if (this.processError) {
             try {
@@ -580,6 +702,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.schema();
+            return result;
+        }
+    }
+    async startDailySync(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.startDailySync();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.startDailySync();
             return result;
         }
     }
@@ -609,6 +745,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.syncNeuron(arg0);
             return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.transform(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.transform(arg0);
+            return result;
         }
     }
     async updateNeuron(arg0: Neuron): Promise<void> {
@@ -814,13 +964,15 @@ function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uin
     } : value;
 }
 function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    mergedToStake: null;
+} | {
     normalGrowth: null;
 } | {
     firstReading: null;
 } | {
     disburseOrSpawn: null;
 }): EventType {
-    return "normalGrowth" in value ? EventType.normalGrowth : "firstReading" in value ? EventType.firstReading : "disburseOrSpawn" in value ? EventType.disburseOrSpawn : value;
+    return "mergedToStake" in value ? EventType.mergedToStake : "normalGrowth" in value ? EventType.normalGrowth : "firstReading" in value ? EventType.firstReading : "disburseOrSpawn" in value ? EventType.disburseOrSpawn : value;
 }
 function from_candid_variant_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     hotkeyRequired: null;

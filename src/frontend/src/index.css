@@ -51,6 +51,14 @@
     --accent: 0.78 0.15 75;
     --accent-foreground: 0.145 0.014 260;
 
+    --success: 0.72 0.15 150;
+    --success-foreground: 0.145 0.014 260;
+    --warning: 0.78 0.13 75;
+    --warning-foreground: 0.145 0.014 260;
+
+    --pill-background: 0.95 0.005 260;
+    --pill-foreground: 0.25 0.014 260;
+
     --destructive: 0.62 0.22 25;
     --destructive-foreground: 0.98 0 0;
 
@@ -92,6 +100,14 @@
 
     --accent: 0.78 0.15 75;
     --accent-foreground: 0.145 0.014 260;
+
+    --success: 0.72 0.15 150;
+    --success-foreground: 0.145 0.014 260;
+    --warning: 0.78 0.13 75;
+    --warning-foreground: 0.145 0.014 260;
+
+    --pill-background: 0.24 0.018 260;
+    --pill-foreground: 0.88 0.008 260;
 
     --destructive: 0.65 0.21 25;
     --destructive-foreground: 0.145 0.014 260;
@@ -155,5 +171,32 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+
+  .stat-card {
+    @apply rounded-xl bg-card border border-border shadow-elevated p-6;
+    background-image: linear-gradient(
+      180deg,
+      oklch(var(--card) / 0.4) 0%,
+      oklch(var(--card) / 0) 60%
+    );
+  }
+
+  .value-pill {
+    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono tabular-nums text-xs;
+    background-color: oklch(var(--pill-background));
+    color: oklch(var(--pill-foreground));
+  }
+
+  .price-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono tabular-nums text-xs;
+    background-color: oklch(var(--success) / 0.14);
+    color: oklch(var(--success));
+  }
+
+  .price-stale {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono tabular-nums text-xs;
+    background-color: oklch(var(--warning) / 0.14);
+    color: oklch(var(--warning));
   }
 }

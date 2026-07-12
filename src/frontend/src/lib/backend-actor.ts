@@ -30,6 +30,7 @@ export type {
   PortfolioStats,
   MonthlyBreakdown,
   HistoricalEntry,
+  PriceSnapshot,
   E8s,
   DeltaE8s,
   Timestamp,

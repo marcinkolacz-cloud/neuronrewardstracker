@@ -37,6 +37,7 @@ mixin (
       stakedMaturityE8s,
       autoStakeMaturity,
       Time.now(),
+      null,
     );
   };
 

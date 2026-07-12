@@ -24,7 +24,11 @@ Aurora-cyan primary against ink-charcoal with amber reserved exclusively for rew
 | muted      | 0.24 0.018 260     | secondary surfaces, code blocks       |
 | destructive| 0.65 0.21 25       | errors, negative deltas               |
 | border     | 0.3 0.02 260       | hairline dividers                      |
-| chart-1    | 0.78 0.16 195      | aurora-cyan — primary series          |
+| success    | 0.72 0.15 150      | APY/growth indicators, live price      |
+| warning    | 0.78 0.13 75       | price staleness, muted amber alerts    |
+| pill-bg    | 0.24 0.018 260     | USD/PLN value-pill background (dark)   |
+| pill-fg    | 0.88 0.008 260     | USD/PLN value-pill foreground (dark)   |
+| chart-1    | 0.78 0.16 195      | aurora-cyan — primary series, bars     |
 | chart-2    | 0.78 0.15 75       | amber — reward series                 |
 | chart-3    | 0.66 0.1 220       | muted blue — secondary series         |
 | chart-4    | 0.72 0.12 150      | muted green — stake series             |
@@ -49,6 +53,9 @@ Two-tier shadow hierarchy: `shadow-subtle` for resting cards, `shadow-elevated` 
 | Sidebar | bg-sidebar          | border-r       | nav items, active = primary tint        |
 | Content | bg-background       | —              | alternating bg-muted/30 sections       |
 | Cards   | bg-card             | border         | neuron cards, summary panel            |
+| Stat    | bg-card + gradient  | border         | APY/maturity/earned stat-card, shadow-elevated |
+| Pills   | bg-pill-background  | —              | value-pill — USD/PLN fiat, mono numerics |
+| Badges  | success/warning tint| —              | price-badge live, price-stale muted    |
 | Footer  | bg-muted/40         | border-t       | minimal, mono captions                 |
 
 ## Spacing & Rhythm
@@ -61,6 +68,10 @@ Section gaps `gap-8 py-10`, card padding `p-6`, micro-spacing `gap-2`. Tight mon
 - Cards: `rounded-xl bg-card border border-border shadow-subtle`, hover lifts to `shadow-elevated`
 - Badges: `rounded-full` — cyan for synced, amber for rewards, slate for pending
 - Figures: always `font-mono`, tabular-nums, amber for positive deltas
+- APY stat card: `.stat-card` — large mono % in success green, muted trailing-period label below
+- Monthly bar chart: recharts BarChart, bars filled chart-1 (cyan), mono axis labels, 12-month range
+- Live price display: `.price-badge` (success tint) next to withdrawable maturity; `.price-stale` (warning tint) when cache stale
+- USD/PLN pills: `.value-pill` — muted bg, mono tabular-nums, appended to reward entries and portfolio totals
 
 ## Motion
 

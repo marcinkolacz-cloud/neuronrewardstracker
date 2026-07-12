@@ -28,7 +28,7 @@ export const rootRoute = createRootRoute({
 
 function RootComponent() {
   return (
-    <div className="dark bg-background text-foreground flex min-h-screen flex-col">
+    <div className="bg-background text-foreground flex min-h-screen flex-col">
       <AppHeader />
       <ProtectedRoute>
         <main className="flex-1">

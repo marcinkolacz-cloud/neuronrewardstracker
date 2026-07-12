@@ -2,20 +2,28 @@
  * Dashboard page — portfolio summary + neuron cards grid.
  *
  * Shows:
- *   - Portfolio summary panel (total staked, total rewards, % return)
+ *   - Portfolio summary panel (4 enriched stat cards: Total Staked, Total
+ *     Maturity, Blended APY, ICP Earned This Month) using .stat-card utility
+ *   - Current portfolio value in USD + PLN (computed from
+ *     (totalStakedE8s + totalMaturityE8s) * currentPrice / E8S_PER_ICP)
+ *     with .value-pill utility
+ *   - Current ICP price badge (.price-badge / .price-stale when cached)
+ *     with last-updated timestamp + a refresh-price button
  *   - Neuron cards grid (name, current maturity, % return, sync status)
  *   - Refresh All button + Export CSV button + Add Neuron button
  *   - Empty state when no neurons are tracked
  *
  * The Export CSV button fetches every tracked neuron's DailyReward history
  * in parallel and downloads a single combined CSV (with a neuronId column)
- * via rewardsToCombinedCsv + downloadCsv from lib/csv.ts.
+ * via rewardsToCombinedCsv + downloadCsv from lib/csv.ts. The CSV logic is
+ * owned by this dashboard and is NOT modified by the price-enrichment task.
  *
  * Portfolio stats come from getPortfolioStats (real PortfolioStats:
- * totalStakedE8s, totalRewardsE8s, percentageReturn, neuronCount).
- * Per-neuron maturity / % return come from getNeuronStats, and sync
- * status from getSyncStatus — the Neuron record itself only carries
- * id, name, startDate, dissolveDelaySeconds, initialStakeE8s, ownerId.
+ * totalStakedE8s, totalRewardsE8s, percentageReturn, neuronCount,
+ * blendedApy, totalMaturityE8s, totalRewardsThisMonthE8s). Per-neuron
+ * maturity / % return come from getNeuronStats, and sync status from
+ * getSyncStatus. Current ICP price comes from getCurrentIcpPrice via
+ * useIcpPrice().
  */
 
 import { Badge } from "@/components/ui/badge";
@@ -29,17 +37,23 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useNeurons } from "@/hooks/use-neurons";
+import { useIcpPrice } from "@/hooks/use-prices";
 import { useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats, usePortfolioStats } from "@/hooks/use-stats";
 import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
 import { useBackendActor } from "@/lib/backend-actor";
 import type { DailyReward, Neuron, SyncStatus } from "@/lib/backend-actor";
-import { downloadCsv, rewardsToCombinedCsv } from "@/lib/csv";
+import { type PriceMap, downloadCsv, rewardsToCombinedCsv } from "@/lib/csv";
 import {
+  E8S_PER_ICP,
+  formatApy,
   formatIcp,
   formatIcpCompact,
   formatPercent,
+  formatPln,
   formatTimestamp,
+  formatTimestampDateTime,
+  formatUsd,
   shortenNeuronId,
   shortenPrincipal,
 } from "@/lib/format";
@@ -48,9 +62,11 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   BrainCircuit,
+  Coins,
   Download,
   Plus,
   RefreshCw,
+  Sparkles,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -61,6 +77,7 @@ import { toast } from "sonner";
 export function DashboardPage() {
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
+  const priceQuery = useIcpPrice();
   const syncAll = useSyncAllNeurons();
   const { actor } = useBackendActor();
   const navigate = useNavigate();
@@ -91,6 +108,10 @@ export function DashboardPage() {
     });
   };
 
+  const handleRefreshPrice = () => {
+    priceQuery.refetch();
+  };
+
   const handleExportCsv = async () => {
     if (!actor || !neurons || neurons.length === 0) return;
     setIsExporting(true);
@@ -108,7 +129,38 @@ export function DashboardPage() {
         toast.info("No reward snapshots to export yet");
         return;
       }
-      const csv = rewardsToCombinedCsv(groups);
+      // Build a PriceMap keyed by YYYY-MM-DD by fetching the historical ICP
+      // price for every distinct reward date across the exported neurons.
+      // Dates are deduplicated to keep the CoinGecko request batch small;
+      // failures for individual dates are skipped so a single bad date does
+      // not block the whole export (those rows just get empty price columns).
+      const dateSet = new Set<string>();
+      for (const g of nonEmpty) {
+        for (const r of g.rewards) {
+          const ms = Number(r.timestamp / 1_000_000n);
+          if (!Number.isFinite(ms) || ms <= 0) continue;
+          const d = new Date(ms);
+          if (Number.isNaN(d.getTime())) continue;
+          const pad = (n: number) => String(n).padStart(2, "0");
+          dateSet.add(
+            `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`,
+          );
+        }
+      }
+      const priceMap: PriceMap = new Map();
+      await Promise.all(
+        [...dateSet].map(async (date) => {
+          try {
+            const snap = await actor.getHistoricalIcpPrice(date);
+            if (snap && snap.usd > 0) {
+              priceMap.set(date, { usd: snap.usd, pln: snap.pln });
+            }
+          } catch {
+            // skip this date — row will have empty price columns
+          }
+        }),
+      );
+      const csv = rewardsToCombinedCsv(groups, priceMap);
       downloadCsv("neuron-rewards-export.csv", csv);
       toast.success(
         `Exported ${nonEmpty.length} neuron${nonEmpty.length === 1 ? "" : "s"} to CSV`,
@@ -128,7 +180,7 @@ export function DashboardPage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40"
         style={{
           background:
-            "radial-gradient(50% 60% at 50% 0%, oklch(0.78 0.16 195 / 0.12) 0%, oklch(0.145 0.014 260 / 0) 70%)",
+            "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.12) 0%, oklch(var(--background) / 0) 70%)",
         }}
       />
       <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -191,9 +243,21 @@ export function DashboardPage() {
         <section className="mt-8" data-ocid="dashboard.portfolio_summary">
           <PortfolioSummary
             totalStaked={portfolio?.totalStakedE8s ?? null}
-            totalRewards={portfolio?.totalRewardsE8s ?? null}
-            overallReturn={portfolio?.percentageReturn ?? null}
+            totalMaturity={portfolio?.totalMaturityE8s ?? null}
+            blendedApy={portfolio?.blendedApy ?? null}
+            rewardsThisMonth={portfolio?.totalRewardsThisMonthE8s ?? null}
             neuronCount={portfolio?.neuronCount ?? null}
+            loading={portfolioLoading}
+          />
+        </section>
+
+        {/* Portfolio valuation (USD + PLN) with current price badge */}
+        <section className="mt-6" data-ocid="dashboard.portfolio_value">
+          <PortfolioValuation
+            totalStakedE8s={portfolio?.totalStakedE8s ?? null}
+            totalMaturityE8s={portfolio?.totalMaturityE8s ?? null}
+            priceQuery={priceQuery}
+            onRefreshPrice={handleRefreshPrice}
             loading={portfolioLoading}
           />
         </section>
@@ -230,16 +294,20 @@ export function DashboardPage() {
   );
 }
 
+type PriceQueryLike = ReturnType<typeof useIcpPrice>;
+
 function PortfolioSummary({
   totalStaked,
-  totalRewards,
-  overallReturn,
+  totalMaturity,
+  blendedApy,
+  rewardsThisMonth,
   neuronCount,
   loading,
 }: {
   totalStaked: bigint | null;
-  totalRewards: bigint | null;
-  overallReturn: number | null;
+  totalMaturity: bigint | null;
+  blendedApy: number | null;
+  rewardsThisMonth: bigint | null;
   neuronCount: bigint | null;
   loading: boolean;
 }) {
@@ -249,40 +317,48 @@ function PortfolioSummary({
       value: formatIcp(totalStaked, 2),
       icon: Wallet,
       accent: "text-primary",
+      hint:
+        !loading && neuronCount != null
+          ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}`
+          : null,
     },
     {
-      label: "Total Rewards",
-      value: formatIcp(totalRewards, 2),
-      icon: Activity,
+      label: "Total Maturity",
+      value: formatIcp(totalMaturity, 2),
+      icon: Coins,
       accent: "text-accent",
+      hint: "Withdrawable + staked",
     },
     {
-      label: "Overall Return",
-      value: formatPercent(overallReturn),
+      label: "Blended APY",
+      value: formatApy(blendedApy),
       icon: TrendingUp,
       accent:
-        overallReturn != null && overallReturn >= 0
+        blendedApy != null && blendedApy > 0
           ? "text-primary"
-          : "text-destructive",
+          : "text-muted-foreground",
+      hint: blendedApy === 0 ? "Insufficient history" : null,
+    },
+    {
+      label: "Earned This Month",
+      value: formatIcp(rewardsThisMonth, 2),
+      icon: Sparkles,
+      accent: "text-primary",
+      hint: "ICP rewards this month",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {stats.map((stat) => (
-        <Card
-          key={stat.label}
-          className="bg-card/60 border-border/60 overflow-hidden"
-        >
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-                {stat.label}
-              </CardTitle>
-              <stat.icon className={cn("size-4", stat.accent)} />
-            </div>
-          </CardHeader>
-          <CardContent>
+        <div key={stat.label} className="stat-card">
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+              {stat.label}
+            </p>
+            <stat.icon className={cn("size-4", stat.accent)} />
+          </div>
+          <div className="mt-3">
             {loading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
@@ -290,17 +366,135 @@ function PortfolioSummary({
                 {stat.value}
               </p>
             )}
-            {stat.label === "Total Staked" &&
-              !loading &&
-              neuronCount != null && (
-                <p className="text-muted-foreground mt-1 font-mono text-xs">
-                  {neuronCount.toString()} neuron{neuronCount === 1n ? "" : "s"}
-                </p>
-              )}
-          </CardContent>
-        </Card>
+            {stat.hint && !loading && (
+              <p className="text-muted-foreground mt-1 font-mono text-xs">
+                {stat.hint}
+              </p>
+            )}
+          </div>
+        </div>
       ))}
     </div>
+  );
+}
+
+function PortfolioValuation({
+  totalStakedE8s,
+  totalMaturityE8s,
+  priceQuery,
+  onRefreshPrice,
+  loading,
+}: {
+  totalStakedE8s: bigint | null;
+  totalMaturityE8s: bigint | null;
+  priceQuery: PriceQueryLike;
+  onRefreshPrice: () => void;
+  loading: boolean;
+}) {
+  const price = priceQuery.data ?? null;
+  const priceLoading = priceQuery.isLoading;
+  const priceStale = price?.cached === true;
+
+  // Portfolio value in ICP = (staked + maturity) / E8S_PER_ICP
+  const totalE8s =
+    totalStakedE8s != null && totalMaturityE8s != null
+      ? totalStakedE8s + totalMaturityE8s
+      : null;
+  const icpAmount =
+    totalE8s != null
+      ? Number(totalE8s / E8S_PER_ICP) +
+        Number(totalE8s % E8S_PER_ICP) / Number(E8S_PER_ICP)
+      : null;
+
+  const usdValue =
+    icpAmount != null && price?.usd != null ? icpAmount * price.usd : null;
+  const plnValue =
+    icpAmount != null && price?.pln != null ? icpAmount * price.pln : null;
+
+  const showValueLoading = loading || priceLoading;
+
+  return (
+    <Card className="bg-card/60 border-border/60 overflow-hidden">
+      <CardContent className="p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* Portfolio value */}
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+              Current Portfolio Value
+            </p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              {showValueLoading ? (
+                <Skeleton className="h-9 w-40" />
+              ) : (
+                <span className="text-foreground font-mono text-3xl font-semibold tracking-tight">
+                  {formatUsd(usdValue)}
+                </span>
+              )}
+              {!showValueLoading && (
+                <span className="value-pill" data-ocid="dashboard.value.pln">
+                  {formatPln(plnValue)}
+                </span>
+              )}
+            </div>
+            <p className="text-muted-foreground mt-1.5 font-mono text-xs">
+              {icpAmount != null ? `${formatIcpCompact(totalE8s)} total` : "—"}
+            </p>
+          </div>
+
+          {/* Price badge + refresh */}
+          <div className="flex flex-col items-start gap-2 lg:items-end">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  priceStale ? "price-stale" : "price-badge",
+                  priceLoading && "opacity-60",
+                )}
+                data-ocid="dashboard.price_badge"
+                title={
+                  price?.timestamp != null
+                    ? `Last updated ${formatTimestampDateTime(price.timestamp)}`
+                    : undefined
+                }
+              >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    priceStale ? "bg-warning" : "bg-success",
+                  )}
+                  style={{ backgroundColor: "currentColor" }}
+                />
+                {priceLoading
+                  ? "Loading price…"
+                  : price
+                    ? `ICP ${formatUsd(price.usd)} · ${formatPln(price.pln)}`
+                    : "Price unavailable"}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRefreshPrice}
+                disabled={priceQuery.isFetching}
+                data-ocid="dashboard.refresh_price"
+                aria-label="Refresh ICP price"
+              >
+                <RefreshCw
+                  className={
+                    priceQuery.isFetching ? "size-4 animate-spin" : "size-4"
+                  }
+                />
+                <span className="sr-only">Refresh price</span>
+              </Button>
+            </div>
+            {price?.timestamp != null && !priceLoading && (
+              <p className="text-muted-foreground font-mono text-[11px]">
+                Updated {formatTimestampDateTime(price.timestamp)}
+                {priceStale ? " · cached" : ""}
+              </p>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

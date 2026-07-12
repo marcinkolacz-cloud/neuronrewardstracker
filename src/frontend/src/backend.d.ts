@@ -8,6 +8,16 @@ export interface None {
 }
 export type Option<T> = Some<T> | None;
 export type Timestamp = bigint;
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
+}
+export interface HttpRequestResult {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<HttpHeader>;
+}
 export type Result__1 = {
     __kind__: "ok";
     ok: null;
@@ -70,6 +80,11 @@ export interface MonthlyBreakdown {
     totalDeltaE8s: bigint;
     year: bigint;
     readingCount: bigint;
+    momDeltaE8s: bigint;
+}
+export interface HttpHeader {
+    value: string;
+    name: string;
 }
 export interface DailyReward {
     stakedMaturityE8s: E8s;
@@ -80,12 +95,16 @@ export interface DailyReward {
     deltaE8s: DeltaE8s;
     eventType: EventType;
 }
+export type TimerId = bigint;
 export interface Result {
     hasMore: boolean;
     rows: Array<Array<Cell>>;
 }
 export interface PortfolioStats {
+    totalMaturityE8s: bigint;
+    totalRewardsThisMonthE8s: bigint;
     totalRewardsE8s: bigint;
+    blendedApy: number;
     totalStakedE8s: E8s;
     percentageReturn: number;
     neuronCount: bigint;
@@ -99,10 +118,15 @@ export interface Neuron {
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
-export type E8s = bigint;
-export interface Cell {
-    value: Value;
-    name: string;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: HttpRequestResult;
+}
+export interface PriceSnapshot {
+    pln: number;
+    usd: number;
+    timestamp: bigint;
+    cached: boolean;
 }
 export interface SyncResult {
     status: SyncStatus;
@@ -134,11 +158,19 @@ export type Value = {
 export interface NeuronStats {
     averageDailyRewardE8s: bigint;
     totalRewardsE8s: bigint;
+    apy30d: number;
     percentageReturn: number;
     neuronId: NeuronId;
     monthly: Array<MonthlyBreakdown>;
+    overallReturnPct: number;
+}
+export type E8s = bigint;
+export interface Cell {
+    value: Value;
+    name: string;
 }
 export enum EventType {
+    mergedToStake = "mergedToStake",
     normalGrowth = "normalGrowth",
     firstReading = "firstReading",
     disburseOrSpawn = "disburseOrSpawn"
@@ -161,6 +193,8 @@ export interface backendInterface {
     editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
     execute(qJson: string): Promise<Result>;
     getCallerUserRole(): Promise<UserRole>;
+    getCurrentIcpPrice(): Promise<PriceSnapshot>;
+    getHistoricalIcpPrice(date: string): Promise<PriceSnapshot>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
     getPortfolioStats(): Promise<PortfolioStats>;
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
@@ -171,8 +205,39 @@ export interface backendInterface {
     listMyNeurons(): Promise<Array<Neuron>>;
     recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
+    /**
+     * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
+     * / target on every call so DST transitions do not cause drift. After the
+     * / sync runs, reschedules for the following 18:01 Warsaw.
+     * /
+     * / `Timer.setTimer<system>` requires the `<system>` capability, which is
+     * / available in `shared` functions and async callbacks but NOT in a plain
+     * / actor `func` or a transient-let initializer. This function is therefore
+     * / only ever called from two system-capable contexts: (1) the
+     * / `public shared func startDailySync()` below, and (2) the async timer
+     * / callback passed to `Timer.setTimer` (which itself has the system
+     * / capability, so rescheduling works). It must NOT be called from a plain
+     * / transient let or a non-shared private func.
+     */
+    scheduleNextSync(): Promise<TimerId>;
     schema(): Promise<string>;
+    /**
+     * / Install the daily sync timer on first call. Public shared functions run
+     * / in an async context that has the `<system>` capability, so
+     * / `scheduleNextSync()` (which calls `Timer.setTimer<system>`) is valid
+     * / here. Idempotent: subsequent calls are no-ops once the timer is running
+     * / (the timer reschedules itself from its own async callback, which also
+     * / has the system capability).
+     */
+    startDailySync(): Promise<void>;
     syncAllMyNeurons(): Promise<Array<SyncResult>>;
     syncNeuron(neuronId: NeuronId): Promise<SyncResult>;
+    /**
+     * / IC HTTP outcall transform callback. Required by the IC HTTP outcall
+     * / protocol: it must be a public `query` function on the actor and strips
+     * / response headers so the response body is the only thing that survives
+     * / into consensus. Passed to PricesLib functions and the PricesApi mixin.
+     */
+    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateNeuron(neuron: Neuron): Promise<void>;
 }

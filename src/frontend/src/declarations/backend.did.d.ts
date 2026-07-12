@@ -37,7 +37,8 @@ export type Error = { 'FrontendOriginsNotConfigured' : null } |
   { 'UntrustedSsoSource' : { 'domain' : string } } |
   { 'MissingField' : string } |
   { 'FrontendOriginMismatch' : { 'got' : string, 'expected' : Array<string> } };
-export type EventType = { 'normalGrowth' : null } |
+export type EventType = { 'mergedToStake' : null } |
+  { 'normalGrowth' : null } |
   { 'firstReading' : null } |
   { 'disburseOrSpawn' : null };
 export interface HistoricalEntry {
@@ -45,11 +46,18 @@ export interface HistoricalEntry {
   'unstakedMaturityE8s' : E8s,
   'timestamp' : Timestamp,
 }
+export interface HttpHeader { 'value' : string, 'name' : string }
+export interface HttpRequestResult {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<HttpHeader>,
+}
 export interface MonthlyBreakdown {
   'month' : bigint,
   'totalDeltaE8s' : bigint,
   'year' : bigint,
   'readingCount' : bigint,
+  'momDeltaE8s' : bigint,
 }
 export interface Neuron {
   'id' : NeuronId,
@@ -64,15 +72,26 @@ export type NeuronId = bigint;
 export interface NeuronStats {
   'averageDailyRewardE8s' : bigint,
   'totalRewardsE8s' : bigint,
+  'apy30d' : number,
   'percentageReturn' : number,
   'neuronId' : NeuronId,
   'monthly' : Array<MonthlyBreakdown>,
+  'overallReturnPct' : number,
 }
 export interface PortfolioStats {
+  'totalMaturityE8s' : bigint,
+  'totalRewardsThisMonthE8s' : bigint,
   'totalRewardsE8s' : bigint,
+  'blendedApy' : number,
   'totalStakedE8s' : E8s,
   'percentageReturn' : number,
   'neuronCount' : bigint,
+}
+export interface PriceSnapshot {
+  'pln' : number,
+  'usd' : number,
+  'timestamp' : bigint,
+  'cached' : boolean,
 }
 export interface Result { 'hasMore' : boolean, 'rows' : Array<Array<Cell>> }
 export type Result__1 = { 'ok' : null } |
@@ -88,7 +107,17 @@ export type SyncStatus = { 'hotkeyRequired' : null } |
   { 'neverSynced' : null } |
   { 'failed' : null } |
   { 'synced' : null };
+export type TimerId = bigint;
 export type Timestamp = bigint;
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : HttpRequestResult,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<HttpHeader>,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -101,6 +130,7 @@ export type Value = { 'int' : bigint } |
 export interface _SERVICE {
   '__accessControlState' : ActorMethod<[], any>,
   '__neurons' : ActorMethod<[], any>,
+  '__priceCache' : ActorMethod<[], any>,
   '__rewards' : ActorMethod<[], any>,
   '__syncErrors' : ActorMethod<[], any>,
   '__syncStatuses' : ActorMethod<[], any>,
@@ -116,6 +146,8 @@ export interface _SERVICE {
   'editSnapshot' : ActorMethod<[NeuronId, bigint, bigint, bigint], undefined>,
   'execute' : ActorMethod<[string], Result>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCurrentIcpPrice' : ActorMethod<[], PriceSnapshot>,
+  'getHistoricalIcpPrice' : ActorMethod<[string], PriceSnapshot>,
   'getNeuronStats' : ActorMethod<[NeuronId], NeuronStats>,
   'getPortfolioStats' : ActorMethod<[], PortfolioStats>,
   'getRewardHistory' : ActorMethod<[NeuronId], Array<DailyReward>>,
@@ -132,9 +164,40 @@ export interface _SERVICE {
     DailyReward
   >,
   'removeNeuron' : ActorMethod<[NeuronId], undefined>,
+  /**
+   * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
+   * / target on every call so DST transitions do not cause drift. After the
+   * / sync runs, reschedules for the following 18:01 Warsaw.
+   * /
+   * / `Timer.setTimer<system>` requires the `<system>` capability, which is
+   * / available in `shared` functions and async callbacks but NOT in a plain
+   * / actor `func` or a transient-let initializer. This function is therefore
+   * / only ever called from two system-capable contexts: (1) the
+   * / `public shared func startDailySync()` below, and (2) the async timer
+   * / callback passed to `Timer.setTimer` (which itself has the system
+   * / capability, so rescheduling works). It must NOT be called from a plain
+   * / transient let or a non-shared private func.
+   */
+  'scheduleNextSync' : ActorMethod<[], TimerId>,
   'schema' : ActorMethod<[], string>,
+  /**
+   * / Install the daily sync timer on first call. Public shared functions run
+   * / in an async context that has the `<system>` capability, so
+   * / `scheduleNextSync()` (which calls `Timer.setTimer<system>`) is valid
+   * / here. Idempotent: subsequent calls are no-ops once the timer is running
+   * / (the timer reschedules itself from its own async callback, which also
+   * / has the system capability).
+   */
+  'startDailySync' : ActorMethod<[], undefined>,
   'syncAllMyNeurons' : ActorMethod<[], Array<SyncResult>>,
   'syncNeuron' : ActorMethod<[NeuronId], SyncResult>,
+  /**
+   * / IC HTTP outcall transform callback. Required by the IC HTTP outcall
+   * / protocol: it must be a public `query` function on the actor and strips
+   * / response headers so the response body is the only thing that survives
+   * / into consensus. Passed to PricesLib functions and the PricesApi mixin.
+   */
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateNeuron' : ActorMethod<[Neuron], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

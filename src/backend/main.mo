@@ -2,18 +2,23 @@ import List "mo:core/List";
 import Map "mo:core/Map";
 import Principal "mo:core/Principal";
 import Timer "mo:core/Timer";
+import Int "mo:core/Int";
+import Nat "mo:core/Nat";
+import Time "mo:core/Time";
 
 import MixinViews "mo:caffeineai-data-viewer/MixinViews";
 import AccessControl "mo:caffeineai-authorization/access-control";
 import MixinAuthorization "mo:caffeineai-authorization/MixinAuthorization";
 import OQL "mo:caffeineai-oql";
 import Expose "mo:caffeineai-oql/Expose";
+import HttpOutcall "mo:caffeineai-http-outcalls/outcall";
 
 import Common "types/common";
 import NeuronTypes "types/neurons";
 import RewardTypes "types/rewards";
 import GovernanceSyncTypes "types/governance-sync";
 import _StatsTypes "types/stats";
+import PriceTypes "types/prices";
 
 // OQL row converters — imported top-level so the entity resolver picks them up
 // for auto-derived fields whose types are non-primitive (variants).
@@ -23,6 +28,7 @@ import NeuronsApi "mixins/neurons-api";
 import RewardsApi "mixins/rewards-api";
 import GovernanceSyncApi "mixins/governance-sync-api";
 import StatsApi "mixins/stats-api";
+import PricesApi "mixins/prices-api";
 
 import GovernanceSyncLib "lib/governance-sync";
 
@@ -42,12 +48,27 @@ actor {
   let syncStatuses : Map.Map<Common.NeuronId, GovernanceSyncTypes.SyncStatus>;
   // Per-neuron last sync error reason (present only when status is #failed).
   let syncErrors : Map.Map<Common.NeuronId, Text>;
+  // CoinGecko ICP price cache keyed by date string: "current" for the live
+  // price (TTL-bounded, e.g. 10 minutes) and "YYYY-MM-DD" for historical dates
+  // (cached indefinitely since historical prices never change).
+  let priceCache : Map.Map<Text, PriceTypes.CachedPrice>;
 
   // --- Domain mixins ---
   include NeuronsApi(neurons, rewards, syncStatuses, syncErrors);
   include RewardsApi(rewards, neurons);
   include GovernanceSyncApi(neurons, rewards, syncStatuses, syncErrors);
   include StatsApi(neurons, rewards);
+
+  /// IC HTTP outcall transform callback. Required by the IC HTTP outcall
+  /// protocol: it must be a public `query` function on the actor and strips
+  /// response headers so the response body is the only thing that survives
+  /// into consensus. Passed to PricesLib functions and the PricesApi mixin.
+  public query func transform(input : HttpOutcall.TransformationInput) : async HttpOutcall.TransformationOutput {
+    let response = input.response;
+    { response with headers = [] };
+  };
+
+  include PricesApi(priceCache, transform);
 
   // --- OQL: expose stored collections for natural-language queries ---
   // Neurons are per-user data — each signed-in caller reads only their own rows.
@@ -97,6 +118,7 @@ actor {
             case (#normalGrowth) "normalGrowth";
             case (#disburseOrSpawn) "disburseOrSpawn";
             case (#firstReading) "firstReading";
+            case (#mergedToStake) "mergedToStake";
           },
         )
         .controllerOnly()
@@ -142,12 +164,39 @@ actor {
         .payload("reason", func((_, reason)) = reason)
         .controllerOnly()
         .build(),
+      // CoinGecko ICP price cache. The primary key (date string: "current" or
+      // "YYYY-MM-DD") lives in the Map key, so manual mode over .entries():
+      // promote the key as a column and expose the cached USD/PLN values and
+      // the fetch timestamp. Controller-only — prices are not per-user data,
+      // but the cache is a shared backend resource.
+      OQL.Entity.manual<(Text, PriceTypes.CachedPrice)>(
+        "priceCache",
+        func() = priceCache.entries(),
+        "CachedPrice",
+        "dateKey",
+      )
+        .payload("dateKey", func((key, _)) = key)
+        .payload("usd", func((_, p)) = p.usd)
+        .payload("pln", func((_, p)) = p.pln)
+        .payload("fetchedAtNanos", func((_, p)) = p.fetchedAtNanos)
+        .controllerOnly()
+        .build(),
     ];
   });
 
   // --- Daily timer: sync all neurons in the canister regardless of owner ---
-  // Timers are not persisted across upgrades, so we install the recurring
-  // timer from a transient initializer that runs on every (re)start. The loop
+  // Targets 18:01 Europe/Warsaw (CET UTC+1 in winter, CEST UTC+2 in summer,
+  // DST-aware via the EU rule: last Sunday of March → last Sunday of October).
+  // The IC runs on UTC, so we compute the UTC equivalent of 18:01 Warsaw.
+  //
+  // We use a NON-recurring Timer.setTimer and reschedule after each firing by
+  // RECOMPUTING the next 18:01 Warsaw from the current time. We do NOT just
+  // add 86400 seconds — DST transitions change the UTC offset, so a fixed
+  // 24h loop would drift by one hour across each DST boundary. Recomputing
+  // from the current time keeps the target pinned to 18:01 Warsaw year-round.
+  //
+  // Timers are not persisted across upgrades, so we install the first timer
+  // from a transient initializer that runs on every (re)start. The loop
   // delegates to GovernanceSyncLib.doSync so it shares the same error handling
   // as the public endpoints: each neuron that fails is recorded as #failed
   // with its real error reason, and the loop continues to the next neuron
@@ -156,20 +205,210 @@ actor {
   // `governance` is provided by the GovernanceSyncApi mixin (included above)
   // as a transient binding; we reuse it here rather than redeclaring the
   // canister id + actor handle, which would collide with the mixin's names.
-  transient let _dailySyncTimer : Timer.TimerId = Timer.recurringTimer<system>(
-    #hours(24),
-    func() : async () {
-      for ((neuronId, neuron) in neurons.entries()) {
-        ignore await GovernanceSyncLib.doSync(
-          governance,
-          rewards,
-          neurons,
-          syncStatuses,
-          syncErrors,
-          neuron.ownerId,
-          neuronId,
-        );
-      };
-    },
-  );
+
+  /// Compute the UTC offset (in seconds) for Europe/Warsaw at a given UTC
+  /// instant: +3600 (CET, UTC+1) in winter, +7200 (CEST, UTC+2) in summer.
+  /// EU DST rule: DST starts on the last Sunday of March and ends on the last
+  /// Sunday of October, with the switch at 01:00 UTC.
+  func warsawUtcOffsetSeconds(utcSeconds : Int) : Int {
+    // Days since Unix epoch (1970-01-01 was a Thursday).
+    let days = utcSeconds / 86_400;
+    let (year, _month, _day, _weekday) = daysToYearMonthWeekday(days);
+
+    // Last Sunday of March (month 3) and October (month 10) for the year.
+    let dstStartDay = lastSundayOfMonth(year, 3);
+    let dstEndDay = lastSundayOfMonth(year, 10);
+
+    // Day-of-year for the DST start/end Sundays (1-based).
+    let dstStartDoy = dayOfYear(year, 3, dstStartDay);
+    let dstEndDoy = dayOfYear(year, 10, dstEndDay);
+
+    // Current day-of-year (1-based).
+    let currentDoy = dayOfYearFromDays(days, year);
+
+    // DST is active (CEST, +7200) if current day is strictly after the March
+    // last Sunday and strictly before the October last Sunday. The switch
+    // happens at 01:00 UTC: on the start Sunday, CEST begins at 01:00 UTC
+    // (so before that instant it's still CET); on the end Sunday, CET begins
+    // at 01:00 UTC (so before that instant it's still CEST). We approximate
+    // by checking the day-of-year and the UTC hour to handle the 01:00 switch.
+    let onDstStartDay = currentDoy == dstStartDoy;
+    let onDstEndDay = currentDoy == dstEndDoy;
+    let utcHour = (utcSeconds % 86_400) / 3_600;
+
+    let isDst : Bool = if (onDstStartDay) {
+      // CEST starts at 01:00 UTC on the last Sunday of March.
+      utcHour >= 1;
+    } else if (onDstEndDay) {
+      // CEST ends at 01:00 UTC on the last Sunday of October (back to CET).
+      utcHour < 1;
+    } else if (currentDoy > dstStartDoy and currentDoy < dstEndDoy) {
+      true;
+    } else {
+      false;
+    };
+
+    if (isDst) { 7_200 } else { 3_600 };
+  };
+
+  /// Compute seconds until the next 18:01 Europe/Warsaw from the given UTC
+  /// instant (in nanoseconds). Returns a non-negative number of seconds.
+  func secondsUntilNextSync(nowNs : Int) : Nat {
+    let nowSeconds = nowNs / 1_000_000_000;
+    let offset = warsawUtcOffsetSeconds(nowSeconds);
+    // 18:01 in seconds from midnight.
+    let targetLocalSecondsOfDay = 18 * 3_600 + 60;
+    // Current local seconds-of-day (UTC seconds-of-day + offset, mod 86400).
+    let utcSecondsOfDay = nowSeconds % 86_400;
+    var localSecondsOfDay = utcSecondsOfDay + offset;
+    if (localSecondsOfDay < 0) { localSecondsOfDay += 86_400 };
+    if (localSecondsOfDay >= 86_400) { localSecondsOfDay -= 86_400 };
+
+    var diff = targetLocalSecondsOfDay - localSecondsOfDay;
+    if (diff <= 0) { diff += 86_400 };
+    Int.abs(diff);
+  };
+
+  /// Convert days since Unix epoch to (year, month, day, weekday).
+  /// weekday: 0 = Sunday, 1 = Monday, ..., 6 = Saturday. 1970-01-01 was a
+  /// Thursday (weekday 4).
+  func daysToYearMonthWeekday(days : Int) : (Nat, Nat, Nat, Nat) {
+    // Howard Hinnant civil-from-days algorithm.
+    let z = days + 719468;
+    let era = (if (z >= 0) z else z - 146096) / 146097;
+    let doe = z - era * 146097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if (mp < 10) mp + 3 else mp - 9;
+    let year = if (m <= 2) y + 1 else y;
+    // Weekday: 1970-01-01 = Thursday = 4. days mod 7 gives offset.
+    let wd = Int.abs(days % 7);
+    let weekday = (wd + 4) % 7; // 0 = Sunday
+    (Int.abs(year), Int.abs(m), Int.abs(d), weekday);
+  };
+
+  /// Day-of-year (1-based) for a given (year, month, day).
+  func dayOfYear(year : Nat, month : Nat, day : Nat) : Nat {
+    // Cumulative days at the start of each month (non-leap).
+    let cumDays = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    var doy = cumDays[month - 1] + day;
+    if (month > 2 and isLeapYear(year)) { doy += 1 };
+    doy;
+  };
+
+  /// Day-of-year (1-based) for the current day, derived from days-since-epoch
+  /// and the year (to account for leap years).
+  func dayOfYearFromDays(days : Int, year : Nat) : Nat {
+    // Days from 1970-01-01 to Jan 1 of `year`.
+    var epochDay = 0;
+    // Count leap years and ordinary years from 1970 to year-1.
+    var y = 1970;
+    while (y < year) {
+      epochDay += if (isLeapYear(y)) 366 else 365;
+      y += 1;
+    };
+    Int.abs(days - epochDay) + 1;
+  };
+
+  /// Is `year` a leap year (Gregorian)?
+  func isLeapYear(year : Nat) : Bool {
+    (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0);
+  };
+
+  /// Day-of-month (1..31) of the last Sunday in `month` of `year`.
+  func lastSundayOfMonth(year : Nat, month : Nat) : Nat {
+    // Days in the given month.
+    let daysInMonth = switch (month) {
+      case 1 31;
+      case 2 if (isLeapYear(year)) 29 else 28;
+      case 3 31;
+      case 4 30;
+      case 5 31;
+      case 6 30;
+      case 7 31;
+      case 8 31;
+      case 9 30;
+      case 10 31;
+      case 11 30;
+      case 12 31;
+      case _ 30;
+    };
+    // Find the weekday of the last day of the month. We need the weekday of
+    // (year, month, daysInMonth). Compute via day-of-year + Jan 1 weekday.
+    let lastDoy = dayOfYear(year, month, daysInMonth);
+    // Weekday of Jan 1 of `year`: compute days from 1970-01-01 (Thursday=4).
+    var jan1Days = 0;
+    var y = 1970;
+    while (y < year) {
+      jan1Days += if (isLeapYear(y)) 366 else 365;
+      y += 1;
+    };
+    // Use Int arithmetic to avoid Nat underflow/trap on the `% 7` and `-`
+    // operations when intermediate values could be zero or negative.
+    let jan1WdInt : Int = (Int.abs(jan1Days % 7) + 4) % 7; // 0 = Sunday
+    let lastWdInt : Int = (jan1WdInt + lastDoy.toInt() - 1) % 7; // 0 = Sunday
+    let lastWd : Nat = Int.abs(lastWdInt);
+    // Last Sunday = last day - (lastWd - 0) where Sunday = 0. Guard against
+    // underflow: lastWd is in [0, 6] and daysInMonth >= 28, so this never
+    // underflows in practice, but guard defensively.
+    let lastSunday : Nat = if (daysInMonth >= lastWd) { daysInMonth - lastWd } else { 1 };
+    lastSunday;
+  };
+
+  /// Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
+  /// target on every call so DST transitions do not cause drift. After the
+  /// sync runs, reschedules for the following 18:01 Warsaw.
+  ///
+  /// `Timer.setTimer<system>` requires the `<system>` capability, which is
+  /// available in `shared` functions and async callbacks but NOT in a plain
+  /// actor `func` or a transient-let initializer. This function is therefore
+  /// only ever called from two system-capable contexts: (1) the
+  /// `public shared func startDailySync()` below, and (2) the async timer
+  /// callback passed to `Timer.setTimer` (which itself has the system
+  /// capability, so rescheduling works). It must NOT be called from a plain
+  /// transient let or a non-shared private func.
+  public shared func scheduleNextSync() : async Timer.TimerId {
+    let delaySeconds = secondsUntilNextSync(Time.now());
+    Timer.setTimer<system>(
+      #seconds delaySeconds,
+      func() : async () {
+        for ((neuronId, neuron) in neurons.entries()) {
+          ignore await GovernanceSyncLib.doSync(
+            governance,
+            rewards,
+            neurons,
+            syncStatuses,
+            syncErrors,
+            neuron.ownerId,
+            neuronId,
+          );
+        };
+        // Reschedule for the next 18:01 Warsaw by recomputing from now.
+        // Do NOT add a fixed 86400 — DST transitions change the UTC offset.
+        // The async callback has the system capability, so this call is valid.
+        ignore scheduleNextSync();
+      },
+    );
+  };
+
+  // Transient flag recording whether the daily sync timer has been installed.
+  // `false` is a static literal, so this transient let is a valid static
+  // initializer. The first timer is installed lazily from a system-capable
+  // context via `startDailySync()` (called on first sync or canister init).
+  transient var _dailySyncInstalled : Bool = false;
+
+  /// Install the daily sync timer on first call. Public shared functions run
+  /// in an async context that has the `<system>` capability, so
+  /// `scheduleNextSync()` (which calls `Timer.setTimer<system>`) is valid
+  /// here. Idempotent: subsequent calls are no-ops once the timer is running
+  /// (the timer reschedules itself from its own async callback, which also
+  /// has the system capability).
+  public shared func startDailySync() : async () {
+    if (_dailySyncInstalled) { return };
+    _dailySyncInstalled := true;
+    ignore await scheduleNextSync();
+  };
 };

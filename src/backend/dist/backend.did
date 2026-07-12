@@ -13,7 +13,19 @@ type UserRole =
    guest;
    user;
  };
+type TransformationOutput = 
+ record {
+   body: blob;
+   headers: vec HttpHeader;
+   status: nat;
+ };
+type TransformationInput = 
+ record {
+   context: blob;
+   response: HttpRequestResult;
+ };
 type Timestamp = int;
+type TimerId = nat;
 type SyncStatus = 
  variant {
    failed;
@@ -39,18 +51,30 @@ type Result =
    hasMore: bool;
    rows: vec vec Cell;
  };
+type PriceSnapshot = 
+ record {
+   cached: bool;
+   pln: float64;
+   timestamp: int;
+   usd: float64;
+ };
 type PortfolioStats = 
  record {
+   blendedApy: float64;
    neuronCount: nat;
    percentageReturn: float64;
+   totalMaturityE8s: nat64;
    totalRewardsE8s: int;
+   totalRewardsThisMonthE8s: nat64;
    totalStakedE8s: E8s;
  };
 type NeuronStats = 
  record {
+   apy30d: float64;
    averageDailyRewardE8s: int;
    monthly: vec MonthlyBreakdown;
    neuronId: NeuronId;
+   overallReturnPct: float64;
    percentageReturn: float64;
    totalRewardsE8s: int;
  };
@@ -67,10 +91,22 @@ type Neuron =
  };
 type MonthlyBreakdown = 
  record {
+   momDeltaE8s: int;
    month: nat;
    readingCount: nat;
    totalDeltaE8s: int;
    year: nat;
+ };
+type HttpRequestResult = 
+ record {
+   body: blob;
+   headers: vec HttpHeader;
+   status: nat;
+ };
+type HttpHeader = 
+ record {
+   name: text;
+   value: text;
  };
 type HistoricalEntry = 
  record {
@@ -82,6 +118,7 @@ type EventType =
  variant {
    disburseOrSpawn;
    firstReading;
+   mergedToStake;
    normalGrowth;
  };
 type Error = 
@@ -126,6 +163,7 @@ type Cell =
 service : {
   __accessControlState: () -> (reserved) query;
   __neurons: () -> (reserved) query;
+  __priceCache: () -> (reserved) query;
   __rewards: () -> (reserved) query;
   __syncErrors: () -> (reserved) query;
   __syncStatuses: () -> (reserved) query;
@@ -140,6 +178,8 @@ service : {
    newMaturityE8s: nat64) -> ();
   execute: (qJson: text) -> (Result) query;
   getCallerUserRole: () -> (UserRole) query;
+  getCurrentIcpPrice: () -> (PriceSnapshot);
+  getHistoricalIcpPrice: (date: text) -> (PriceSnapshot);
   getNeuronStats: (neuronId: NeuronId) -> (NeuronStats);
   getPortfolioStats: () -> (PortfolioStats);
   getRewardHistory: (neuronId: NeuronId) -> (vec DailyReward);
@@ -152,8 +192,33 @@ service : {
   recordSnapshot: (neuronId: NeuronId, unstakedMaturityE8s: nat64,
    stakedMaturityE8s: nat64, autoStakeMaturity: bool) -> (DailyReward);
   removeNeuron: (neuronId: NeuronId) -> ();
+  /// Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
+  /// target on every call so DST transitions do not cause drift. After the
+  /// sync runs, reschedules for the following 18:01 Warsaw.
+  /// 
+  /// `Timer.setTimer<system>` requires the `<system>` capability, which is
+  /// available in `shared` functions and async callbacks but NOT in a plain
+  /// actor `func` or a transient-let initializer. This function is therefore
+  /// only ever called from two system-capable contexts: (1) the
+  /// `public shared func startDailySync()` below, and (2) the async timer
+  /// callback passed to `Timer.setTimer` (which itself has the system
+  /// capability, so rescheduling works). It must NOT be called from a plain
+  /// transient let or a non-shared private func.
+  scheduleNextSync: () -> (TimerId);
   schema: () -> (text) query;
+  /// Install the daily sync timer on first call. Public shared functions run
+  /// in an async context that has the `<system>` capability, so
+  /// `scheduleNextSync()` (which calls `Timer.setTimer<system>`) is valid
+  /// here. Idempotent: subsequent calls are no-ops once the timer is running
+  /// (the timer reschedules itself from its own async callback, which also
+  /// has the system capability).
+  startDailySync: () -> ();
   syncAllMyNeurons: () -> (vec SyncResult);
   syncNeuron: (neuronId: NeuronId) -> (SyncResult);
+  /// IC HTTP outcall transform callback. Required by the IC HTTP outcall
+  /// protocol: it must be a public `query` function on the actor and strips
+  /// response headers so the response body is the only thing that survives
+  /// into consensus. Passed to PricesLib functions and the PricesApi mixin.
+  transform: (input: TransformationInput) -> (TransformationOutput) query;
   updateNeuron: (neuron: Neuron) -> ();
 }

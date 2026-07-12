@@ -12,6 +12,7 @@ module {
         case (#normalGrowth) "normalGrowth";
         case (#disburseOrSpawn) "disburseOrSpawn";
         case (#firstReading) "firstReading";
+        case (#mergedToStake) "mergedToStake";
       }
     );
   };

@@ -140,3 +140,63 @@ export function shortenNeuronId(
   if (str.length <= 10) return `#${str}`;
   return `#${str.slice(0, 4)}...${str.slice(-4)}`;
 }
+
+/**
+ * Format a USD amount with a leading $ sign, thousands separators, and 2
+ * decimals. Returns "$0.00" for null/NaN so stat cards never show "NaN".
+ *
+ * @example formatUsd(1234.5) // "$1,234.50"
+ */
+export function formatUsd(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "$0.00";
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Format a PLN amount with thousands separators, 2 decimals, and a trailing
+ * " PLN" unit. Returns "0.00 PLN" for null/NaN.
+ *
+ * @example formatPln(1234.5) // "1,234.50 PLN"
+ */
+export function formatPln(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "0.00 PLN";
+  return `${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} PLN`;
+}
+
+/**
+ * Format an APY value (already in percent units, e.g. 12.34 means 12.34%).
+ * Returns "N/A" when the value is 0 (no growth data yet) so the UI can
+ * distinguish "no data" from a real 0% return.
+ *
+ * @example formatApy(12.34) // "12.34%"
+ *          formatApy(0)     // "N/A"
+ */
+export function formatApy(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value) || value === 0) return "N/A";
+  return `${value.toFixed(2)}%`;
+}
+
+/**
+ * Compact display of both USD and PLN prices for a price badge. Shows the
+ * USD price with 2 decimals and the PLN price with 2 decimals in
+ * parentheses, e.g. "$7.12 (28.45 PLN)". Returns "—" when both are
+ * unavailable so callers can render a stale/unavailable state.
+ *
+ * @example formatPrice(7.12, 28.45) // "$7.12 (28.45 PLN)"
+ */
+export function formatPrice(usd: number | null, pln: number | null): string {
+  const usdOk = usd != null && !Number.isNaN(usd) && usd > 0;
+  const plnOk = pln != null && !Number.isNaN(pln) && pln > 0;
+  if (!usdOk && !plnOk) return "—";
+  const usdPart = usdOk ? formatUsd(usd) : "$—";
+  const plnPart = plnOk ? formatPln(pln) : "— PLN";
+  return `${usdPart} (${plnPart})`;
+}

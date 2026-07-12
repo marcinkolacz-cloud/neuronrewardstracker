@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "mopsTomlDepsHash": "74f2925be2f62cbf9ffde39e98a965af35cbb3998719ed8a8653c8704077c006",
+  "mopsTomlDepsHash": "3651c0d53bbad2cb789733e902ac870c270a5f1bf4c31a65aff9c3d8de76cf7a",
   "deps": {
     "core": "2.6.0",
     "caffeineai-data-viewer": "0.1.0",
@@ -10,7 +10,9 @@
     "caffeineai-oql": "0.4.0",
     "json": "1.4.0",
     "xtended-numbers": "0.3.1",
-    "base": "0.11.1"
+    "base": "0.11.1",
+    "caffeineai-http-outcalls": "0.1.2",
+    "ic": "4.0.0"
   },
   "hashes": {
     "core@2.6.0": {
@@ -214,6 +216,19 @@
       "base@0.11.1/src/TrieMap.mo": "47e484b3509c7806ee186a03ee50084a2a5029d3b5b2cc1b86da2b3311fd7845",
       "base@0.11.1/src/TrieSet.mo": "147be4e31c39e0c7a9b817bbc542e2ca979bc57f3322533048ad7fb76235c7ce",
       "base@0.11.1/src/Trie.mo": "c26a320de28a5c963fcf8d17673d1aa46a5666e28939df11c7570b6389dd245d"
+    },
+    "caffeineai-http-outcalls@0.1.2": {
+      "caffeineai-http-outcalls@0.1.2/README.md": "c8dd0ee7548ac60f5c82c6f5f0a517bbcb847e1e876b71351a5b174b9a46a3fd",
+      "caffeineai-http-outcalls@0.1.2/mops.toml": "7e614a05258ac65d20ebfa39eaa2da9ca6e229a138ebd04da2d2d612e0ef71db",
+      "caffeineai-http-outcalls@0.1.2/src/outcall.mo": "82b2356d4eb135830beae0df7e3d4ad69437f801a14c9a2302329eaebf7770fd"
+    },
+    "ic@4.0.0": {
+      "ic@4.0.0/README.md": "7686aefce0c535d18ee2768e98660575563daa53b00d2c1041170032c232784c",
+      "ic@4.0.0/mops.toml": "7a6bb3d74b1ec5539b9bb88e0a0a0ba09e8c46e00b38cb5feda009d6b80723df",
+      "ic@4.0.0/src/Call.mo": "b4a3572e5617d0b1eb696450344b65e99504f844794e7ddf1cff664fcfeb2994",
+      "ic@4.0.0/src/lib.mo": "9d9ec84a85eb25d191c1cae99cb841d9b6e0cf0f9bc27c3f3805ac9673d7bef1",
+      "ic@4.0.0/LICENSE": "ec415b57f8143746b567c94bfad243f5342f3edf110c94641a1a60e02722db55",
+      "ic@4.0.0/src/Types.mo": "373c3a18e072058aecaaec99385a08f95746c7e86cc9694f9f23caa982c2ad6c"
     }
   }
 }

@@ -4446,7 +4446,7 @@ class w extends Error {
 }
 const L = 55799, R = /* @__PURE__ */ Symbol("CBOR_STOP_CODE");
 var u$1 = /* @__PURE__ */ ((t2) => (t2[t2.False = 20] = "False", t2[t2.True = 21] = "True", t2[t2.Null = 22] = "Null", t2[t2.Undefined = 23] = "Undefined", t2[t2.Break = 31] = "Break", t2))(u$1 || {}), c$2 = /* @__PURE__ */ ((t2) => (t2[t2.UnsignedInteger = 0] = "UnsignedInteger", t2[t2.NegativeInteger = 1] = "NegativeInteger", t2[t2.ByteString = 2] = "ByteString", t2[t2.TextString = 3] = "TextString", t2[t2.Array = 4] = "Array", t2[t2.Map = 5] = "Map", t2[t2.Tag = 6] = "Tag", t2[t2.Simple = 7] = "Simple", t2))(c$2 || {});
-const Y = 23, G = 255, P$1 = 65535, H = 4294967295, W = BigInt("0xffffffffffffffff");
+const Y = 23, G = 255, P$1 = 65535, H$1 = 4294967295, W$1 = BigInt("0xffffffffffffffff");
 var f$1 = /* @__PURE__ */ ((t2) => (t2[t2.Value = 23] = "Value", t2[t2.OneByte = 24] = "OneByte", t2[t2.TwoBytes = 25] = "TwoBytes", t2[t2.FourBytes = 26] = "FourBytes", t2[t2.EightBytes = 27] = "EightBytes", t2[t2.Indefinite = 31] = "Indefinite", t2))(f$1 || {});
 const l$1 = false;
 function K(t2) {
@@ -4457,25 +4457,25 @@ function Z(t2, e3) {
   return n2.set(t2), n2;
 }
 const q$1 = new TextDecoder();
-function J(t2) {
+function J$1(t2) {
   return (t2 & 224) >> 5;
 }
 function Q(t2) {
   return t2 & 31;
 }
-let S = new Uint8Array(), U, d$1 = 0;
+let S = new Uint8Array(), U$1, d$1 = 0;
 function ut(t2, e3) {
   S = t2, d$1 = 0;
   const n2 = B();
   return (e3 == null ? void 0 : e3(n2)) ?? n2;
 }
 function B(t2) {
-  const [e3, n2] = N();
+  const [e3, n2] = N$1();
   switch (e3) {
     case c$2.UnsignedInteger:
       return h$1(n2);
     case c$2.NegativeInteger:
-      return M$1(n2);
+      return M$2(n2);
     case c$2.ByteString:
       return $(n2);
     case c$2.TextString:
@@ -4487,15 +4487,15 @@ function B(t2) {
     case c$2.Tag:
       return v$2(n2);
     case c$2.Simple:
-      return b$1(n2);
+      return b$2(n2);
   }
   throw new w(`Unsupported major type: ${e3}`);
 }
-function N() {
+function N$1() {
   const t2 = S.at(d$1);
   if (K(t2))
     throw new w("Provided CBOR data is empty");
-  const e3 = J(t2), n2 = Q(t2);
+  const e3 = J$1(t2), n2 = Q(t2);
   return d$1++, [e3, n2];
 }
 function p$1(t2, e3) {
@@ -4514,7 +4514,7 @@ function p$1(t2, e3) {
   }
   return s2;
 }
-function b$1(t2) {
+function b$2(t2) {
   switch (t2) {
     case u$1.False:
       return false;
@@ -4532,41 +4532,41 @@ function b$1(t2) {
 function j(t2, e3) {
   const n2 = h$1(t2), s2 = {};
   if (n2 === 1 / 0) {
-    let [o, i] = N();
+    let [o, i] = N$1();
     for (; o !== c$2.Simple && i !== u$1.Break; ) {
-      const A = F(i), I = B();
-      s2[A] = I, [o, i] = N();
+      const A = F(i), I2 = B();
+      s2[A] = I2, [o, i] = N$1();
     }
     return s2;
   }
   for (let o = 0; o < n2; o++) {
-    const [i, A] = N();
+    const [i, A] = N$1();
     if (i !== c$2.TextString)
       throw new w("Map keys must be text strings");
-    const I = F(A), D = B();
-    s2[I] = D;
+    const I2 = F(A), D = B();
+    s2[I2] = D;
   }
   return s2;
 }
 function h$1(t2) {
   if (t2 <= f$1.Value)
     return t2;
-  switch (U = new DataView(S.buffer, S.byteOffset + d$1), t2) {
+  switch (U$1 = new DataView(S.buffer, S.byteOffset + d$1), t2) {
     case f$1.OneByte:
-      return d$1++, U.getUint8(0);
+      return d$1++, U$1.getUint8(0);
     case f$1.TwoBytes:
-      return d$1 += 2, U.getUint16(0, l$1);
+      return d$1 += 2, U$1.getUint16(0, l$1);
     case f$1.FourBytes:
-      return d$1 += 4, U.getUint32(0, l$1);
+      return d$1 += 4, U$1.getUint32(0, l$1);
     case f$1.EightBytes:
-      return d$1 += 8, U.getBigUint64(0, l$1);
+      return d$1 += 8, U$1.getBigUint64(0, l$1);
     case f$1.Indefinite:
       return 1 / 0;
     default:
       throw new w(`Unsupported integer info: ${t2.toString(2)}`);
   }
 }
-function M$1(t2) {
+function M$2(t2) {
   const e3 = h$1(t2);
   return typeof e3 == "number" ? -1 - e3 : -1n - e3;
 }
@@ -4587,16 +4587,16 @@ function v$2(t2, e3) {
     return B();
   throw new w(`Unsupported tag: ${n2}.`);
 }
-let x$1 = class x extends Error {
+let x$2 = class x extends Error {
   constructor(e3) {
     super(e3), this.name = "SerializationError";
   }
 };
-const C = 2 * 1024, V = 100, tt$1 = new TextEncoder();
+const C = 2 * 1024, V$1 = 100, tt$1 = new TextEncoder();
 function y$1(t2) {
   return t2 << 5;
 }
-let a$1 = new Uint8Array(C), g$1 = new DataView(a$1.buffer), r$1 = 0, O = [];
+let a$1 = new Uint8Array(C), g$1 = new DataView(a$1.buffer), r$1 = 0, O$1 = [];
 function gt(t2, e3) {
   r$1 = 0;
   const n2 = (e3 == null ? void 0 : e3(t2)) ?? t2;
@@ -4608,7 +4608,7 @@ function k$2(t2) {
     e3 *= 2;
   a$1 = Z(a$1, e3), g$1 = new DataView(a$1.buffer);
 }
-function _(t2, e3) {
+function _$1(t2, e3) {
   if (t2 === false || t2 === true || t2 === null || t2 === void 0) {
     rt(t2);
     return;
@@ -4618,7 +4618,7 @@ function _(t2, e3) {
     return;
   }
   if (typeof t2 == "string") {
-    z(t2);
+    z$1(t2);
     return;
   }
   if (t2 instanceof Uint8Array) {
@@ -4637,20 +4637,20 @@ function _(t2, e3) {
     nt(t2, e3);
     return;
   }
-  throw new x$1(`Unsupported type: ${typeof t2}`);
+  throw new x$2(`Unsupported type: ${typeof t2}`);
 }
 function et(t2, e3) {
-  E(c$2.Array, t2.length), t2.forEach((n2, s2) => {
-    _((e3 == null ? void 0 : e3(n2, s2.toString())) ?? n2, e3);
+  E$1(c$2.Array, t2.length), t2.forEach((n2, s2) => {
+    _$1((e3 == null ? void 0 : e3(n2, s2.toString())) ?? n2, e3);
   });
 }
 function nt(t2, e3) {
-  O = Object.entries(t2), E(c$2.Map, O.length), O.forEach(([n2, s2]) => {
-    z(n2), _((e3 == null ? void 0 : e3(s2, n2)) ?? s2, e3);
+  O$1 = Object.entries(t2), E$1(c$2.Map, O$1.length), O$1.forEach(([n2, s2]) => {
+    z$1(n2), _$1((e3 == null ? void 0 : e3(s2, n2)) ?? s2, e3);
   });
 }
-function E(t2, e3) {
-  if (r$1 > a$1.length - V && k$2(r$1 + V), e3 <= Y) {
+function E$1(t2, e3) {
+  if (r$1 > a$1.length - V$1 && k$2(r$1 + V$1), e3 <= Y) {
     g$1.setUint8(
       r$1++,
       y$1(t2) | Number(e3)
@@ -4671,24 +4671,24 @@ function E(t2, e3) {
     ), g$1.setUint16(r$1, Number(e3), l$1), r$1 += 2;
     return;
   }
-  if (e3 <= H) {
+  if (e3 <= H$1) {
     g$1.setUint8(
       r$1++,
       y$1(t2) | f$1.FourBytes
     ), g$1.setUint32(r$1, Number(e3), l$1), r$1 += 4;
     return;
   }
-  if (e3 <= W) {
+  if (e3 <= W$1) {
     g$1.setUint8(
       r$1++,
       y$1(t2) | f$1.EightBytes
     ), g$1.setBigUint64(r$1, BigInt(e3), l$1), r$1 += 8;
     return;
   }
-  throw new x$1(`Value too large to encode: ${e3}`);
+  throw new x$2(`Value too large to encode: ${e3}`);
 }
 function rt(t2) {
-  E(c$2.Simple, ct(t2));
+  E$1(c$2.Simple, ct(t2));
 }
 function ct(t2) {
   if (t2 === false)
@@ -4699,13 +4699,13 @@ function ct(t2) {
     return u$1.Null;
   if (t2 === void 0)
     return u$1.Undefined;
-  throw new x$1(`Unrecognized simple value: ${t2.toString()}`);
+  throw new x$2(`Unrecognized simple value: ${t2.toString()}`);
 }
 function T(t2, e3) {
-  E(t2, e3.length), r$1 > a$1.length - e3.length && k$2(r$1 + e3.length), a$1.set(e3, r$1), r$1 += e3.length;
+  E$1(t2, e3.length), r$1 > a$1.length - e3.length && k$2(r$1 + e3.length), a$1.set(e3, r$1), r$1 += e3.length;
 }
 function X$1(t2, e3) {
-  E(t2, e3);
+  E$1(t2, e3);
 }
 function it(t2) {
   X$1(c$2.UnsignedInteger, t2);
@@ -4719,14 +4719,14 @@ function st(t2) {
 function ot(t2) {
   t2 >= 0 ? it(t2) : st(t2);
 }
-function z(t2) {
+function z$1(t2) {
   T(c$2.TextString, tt$1.encode(t2));
 }
 function m$1(t2) {
   T(c$2.ByteString, t2);
 }
 function ft(t2, e3, n2) {
-  E(c$2.Tag, t2), _(e3, n2);
+  E$1(c$2.Tag, t2), _$1(e3, n2);
 }
 const JSON_KEY_EXPIRY = "__expiry__";
 const SECONDS_TO_MILLISECONDS = BigInt(1e3);
@@ -21353,10 +21353,10 @@ async function migrateFromLocalStorage(storage, keyType) {
   }
 }
 var define_process_env_default = {};
-const iiAttributesIDL = ({ IDL: I }) => I.Service({
-  _internet_identity_sign_in_start: I.Func([], [I.Vec(I.Nat8)], []),
-  _internet_identity_sign_in_finish: I.Func([], [I.Variant({ ok: I.Null, err: I.Record({}) })], []),
-  _initialize_access_control: I.Func([], [], [])
+const iiAttributesIDL = ({ IDL: I2 }) => I2.Service({
+  _internet_identity_sign_in_start: I2.Func([], [I2.Vec(I2.Nat8)], []),
+  _internet_identity_sign_in_finish: I2.Func([], [I2.Variant({ ok: I2.Null, err: I2.Record({}) })], []),
+  _initialize_access_control: I2.Func([], [], [])
 });
 const II_MAINNET_CANISTER_ID = "rdmx6-jaaaa-aaaaa-aaadq-cai";
 const II_SIGNER_CANISTER_ID = define_process_env_default.II_CANISTER_ID ?? II_MAINNET_CANISTER_ID;
@@ -21590,6 +21590,87 @@ function useActor(createActor2) {
     isFetching: actorQuery.isFetching
   };
 }
+var M$1 = (e3, i, s2, u2, m2, a2, l2, h2) => {
+  let d2 = document.documentElement, w2 = ["light", "dark"];
+  function p2(n2) {
+    (Array.isArray(e3) ? e3 : [e3]).forEach((y2) => {
+      let k2 = y2 === "class", S2 = k2 && a2 ? m2.map((f2) => a2[f2] || f2) : m2;
+      k2 ? (d2.classList.remove(...S2), d2.classList.add(a2 && a2[n2] ? a2[n2] : n2)) : d2.setAttribute(y2, n2);
+    }), R2(n2);
+  }
+  function R2(n2) {
+    h2 && w2.includes(n2) && (d2.style.colorScheme = n2);
+  }
+  function c2() {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  if (u2) p2(u2);
+  else try {
+    let n2 = localStorage.getItem(i) || s2, y2 = l2 && n2 === "system" ? c2() : n2;
+    p2(y2);
+  } catch (n2) {
+  }
+};
+var b$1 = ["light", "dark"], I = "(prefers-color-scheme: dark)", O = typeof window == "undefined", x$1 = reactExports.createContext(void 0), U = { setTheme: (e3) => {
+}, themes: [] }, z = () => {
+  var e3;
+  return (e3 = reactExports.useContext(x$1)) != null ? e3 : U;
+}, J = (e3) => reactExports.useContext(x$1) ? reactExports.createElement(reactExports.Fragment, null, e3.children) : reactExports.createElement(V, { ...e3 }), N = ["light", "dark"], V = ({ forcedTheme: e3, disableTransitionOnChange: i = false, enableSystem: s2 = true, enableColorScheme: u2 = true, storageKey: m2 = "theme", themes: a2 = N, defaultTheme: l2 = s2 ? "system" : "light", attribute: h2 = "data-theme", value: d2, children: w2, nonce: p2, scriptProps: R2 }) => {
+  let [c2, n2] = reactExports.useState(() => H(m2, l2)), [T2, y2] = reactExports.useState(() => c2 === "system" ? E() : c2), k2 = d2 ? Object.values(d2) : a2, S2 = reactExports.useCallback((o) => {
+    let r2 = o;
+    if (!r2) return;
+    o === "system" && s2 && (r2 = E());
+    let v2 = d2 ? d2[r2] : r2, C2 = i ? W(p2) : null, P2 = document.documentElement, L2 = (g2) => {
+      g2 === "class" ? (P2.classList.remove(...k2), v2 && P2.classList.add(v2)) : g2.startsWith("data-") && (v2 ? P2.setAttribute(g2, v2) : P2.removeAttribute(g2));
+    };
+    if (Array.isArray(h2) ? h2.forEach(L2) : L2(h2), u2) {
+      let g2 = b$1.includes(l2) ? l2 : null, D = b$1.includes(r2) ? r2 : g2;
+      P2.style.colorScheme = D;
+    }
+    C2 == null || C2();
+  }, [p2]), f2 = reactExports.useCallback((o) => {
+    let r2 = typeof o == "function" ? o(c2) : o;
+    n2(r2);
+    try {
+      localStorage.setItem(m2, r2);
+    } catch (v2) {
+    }
+  }, [c2]), A = reactExports.useCallback((o) => {
+    let r2 = E(o);
+    y2(r2), c2 === "system" && s2 && !e3 && S2("system");
+  }, [c2, e3]);
+  reactExports.useEffect(() => {
+    let o = window.matchMedia(I);
+    return o.addListener(A), A(o), () => o.removeListener(A);
+  }, [A]), reactExports.useEffect(() => {
+    let o = (r2) => {
+      r2.key === m2 && (r2.newValue ? n2(r2.newValue) : f2(l2));
+    };
+    return window.addEventListener("storage", o), () => window.removeEventListener("storage", o);
+  }, [f2]), reactExports.useEffect(() => {
+    S2(e3 != null ? e3 : c2);
+  }, [e3, c2]);
+  let Q2 = reactExports.useMemo(() => ({ theme: c2, setTheme: f2, forcedTheme: e3, resolvedTheme: c2 === "system" ? T2 : c2, themes: s2 ? [...a2, "system"] : a2, systemTheme: s2 ? T2 : void 0 }), [c2, f2, e3, T2, s2, a2]);
+  return reactExports.createElement(x$1.Provider, { value: Q2 }, reactExports.createElement(_, { forcedTheme: e3, storageKey: m2, attribute: h2, enableSystem: s2, enableColorScheme: u2, defaultTheme: l2, value: d2, themes: a2, nonce: p2, scriptProps: R2 }), w2);
+}, _ = reactExports.memo(({ forcedTheme: e3, storageKey: i, attribute: s2, enableSystem: u2, enableColorScheme: m2, defaultTheme: a2, value: l2, themes: h2, nonce: d2, scriptProps: w2 }) => {
+  let p2 = JSON.stringify([s2, i, a2, e3, h2, l2, u2, m2]).slice(1, -1);
+  return reactExports.createElement("script", { ...w2, suppressHydrationWarning: true, nonce: typeof window == "undefined" ? d2 : "", dangerouslySetInnerHTML: { __html: `(${M$1.toString()})(${p2})` } });
+}), H = (e3, i) => {
+  if (O) return;
+  let s2;
+  try {
+    s2 = localStorage.getItem(e3) || void 0;
+  } catch (u2) {
+  }
+  return s2 || i;
+}, W = (e3) => {
+  let i = document.createElement("style");
+  return e3 && i.setAttribute("nonce", e3), i.appendChild(document.createTextNode("*,*::before,*::after{-webkit-transition:none!important;-moz-transition:none!important;-o-transition:none!important;-ms-transition:none!important;transition:none!important}")), document.head.appendChild(i), () => {
+    window.getComputedStyle(document.body), setTimeout(() => {
+      document.head.removeChild(i);
+    }, 1);
+  };
+}, E = (e3) => (e3 || (e3 = window.matchMedia(I)), e3.matches ? "dark" : "light");
 var client = { exports: {} };
 var reactDomClient_production = {};
 var scheduler = { exports: {} };
@@ -36241,6 +36322,26 @@ function shortenNeuronId(id2) {
   if (str.length <= 10) return `#${str}`;
   return `#${str.slice(0, 4)}...${str.slice(-4)}`;
 }
+function formatUsd(value) {
+  if (value == null || Number.isNaN(value)) return "$0.00";
+  return value.toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+function formatPln(value) {
+  if (value == null || Number.isNaN(value)) return "0.00 PLN";
+  return `${value.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })} PLN`;
+}
+function formatApy(value) {
+  if (value == null || Number.isNaN(value) || value === 0) return "N/A";
+  return `${value.toFixed(2)}%`;
+}
 function useAuth() {
   const ctx = useInternetIdentity();
   return ctx;
@@ -41520,7 +41621,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$m = [
+const __iconNode$r = [
   [
     "path",
     {
@@ -41529,37 +41630,37 @@ const __iconNode$m = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$m);
+const Activity = createLucideIcon("activity", __iconNode$r);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$l = [
+const __iconNode$q = [
   ["path", { d: "M12 17V3", key: "1cwfxf" }],
   ["path", { d: "m6 11 6 6 6-6", key: "12ii2o" }],
   ["path", { d: "M19 21H5", key: "150jfl" }]
 ];
-const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$l);
+const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$q);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$k = [
+const __iconNode$p = [
   ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
   ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$k);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$p);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$j = [
+const __iconNode$o = [
   [
     "path",
     {
@@ -41580,7 +41681,68 @@ const __iconNode$j = [
   ["circle", { cx: "20", cy: "21", r: ".5", key: "yhc1fs" }],
   ["circle", { cx: "20", cy: "8", r: ".5", key: "1e43v0" }]
 ];
-const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$j);
+const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$o);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$n = [
+  ["path", { d: "M8 2v4", key: "1cmpym" }],
+  ["path", { d: "M16 2v4", key: "4m81vk" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
+  ["path", { d: "M3 10h18", key: "8toen8" }]
+];
+const Calendar = createLucideIcon("calendar", __iconNode$n);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$m = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$m);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$l = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$l);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$k = [
+  ["path", { d: "M11 14h10", key: "1w8e9d" }],
+  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
+  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
+  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
+  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
+];
+const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$k);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$j = [
+  ["circle", { cx: "8", cy: "8", r: "6", key: "3yglwk" }],
+  ["path", { d: "M18.09 10.37A6 6 0 1 1 10.34 18", key: "t5s6rm" }],
+  ["path", { d: "M7 6h1v4", key: "1obek4" }],
+  ["path", { d: "m16.71 13.88.7.71-2.82 2.82", key: "1rbuyh" }]
+];
+const Coins = createLucideIcon("coins", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41588,34 +41750,30 @@ const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["path", { d: "M8 2v4", key: "1cmpym" }],
-  ["path", { d: "M16 2v4", key: "4m81vk" }],
-  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
-  ["path", { d: "M3 10h18", key: "8toen8" }]
+  ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
+  ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
 ];
-const Calendar = createLucideIcon("calendar", __iconNode$i);
+const DollarSign = createLucideIcon("dollar-sign", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$h = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$h);
+const __iconNode$h = [
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+];
+const Download = createLucideIcon("download", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$g = [
-  ["path", { d: "M11 14h10", key: "1w8e9d" }],
-  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
-  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
-  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
-  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
-];
-const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$g);
+const __iconNode$g = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
+const LoaderCircle = createLucideIcon("loader-circle", __iconNode$g);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41623,19 +41781,21 @@ const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$g);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$f = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
+  ["path", { d: "M21 12H9", key: "dn1m92" }],
+  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
 ];
-const Download = createLucideIcon("download", __iconNode$f);
+const LogOut = createLucideIcon("log-out", __iconNode$f);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$e = [["path", { d: "M21 12a9 9 0 1 1-6.219-8.56", key: "13zald" }]];
-const LoaderCircle = createLucideIcon("loader-circle", __iconNode$e);
+const __iconNode$e = [
+  ["path", { d: "M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z", key: "a7tn18" }]
+];
+const Moon = createLucideIcon("moon", __iconNode$e);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41643,18 +41803,6 @@ const LoaderCircle = createLucideIcon("loader-circle", __iconNode$e);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$d = [
-  ["path", { d: "m16 17 5-5-5-5", key: "1bji2h" }],
-  ["path", { d: "M21 12H9", key: "dn1m92" }],
-  ["path", { d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4", key: "1uf3rs" }]
-];
-const LogOut = createLucideIcon("log-out", __iconNode$d);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$c = [
   [
     "path",
     {
@@ -41664,7 +41812,18 @@ const __iconNode$c = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$c);
+const Pencil = createLucideIcon("pencil", __iconNode$d);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$c = [
+  ["path", { d: "M5 12h14", key: "1ays0h" }],
+  ["path", { d: "M12 5v14", key: "s699le" }]
+];
+const Plus = createLucideIcon("plus", __iconNode$c);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41672,10 +41831,12 @@ const Pencil = createLucideIcon("pencil", __iconNode$c);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$b = [
-  ["path", { d: "M5 12h14", key: "1ays0h" }],
-  ["path", { d: "M12 5v14", key: "s699le" }]
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-const Plus = createLucideIcon("plus", __iconNode$b);
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$b);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41683,19 +41844,6 @@ const Plus = createLucideIcon("plus", __iconNode$b);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$a = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
-];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$a);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$9 = [
   [
     "path",
     {
@@ -41705,14 +41853,14 @@ const __iconNode$9 = [
   ],
   ["path", { d: "m9 12 2 2 4-4", key: "dzmm74" }]
 ];
-const ShieldCheck = createLucideIcon("shield-check", __iconNode$9);
+const ShieldCheck = createLucideIcon("shield-check", __iconNode$a);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$8 = [
+const __iconNode$9 = [
   [
     "path",
     {
@@ -41725,7 +41873,25 @@ const __iconNode$8 = [
   ["path", { d: "M4 17v2", key: "vumght" }],
   ["path", { d: "M5 18H3", key: "zchphs" }]
 ];
-const Sparkles = createLucideIcon("sparkles", __iconNode$8);
+const Sparkles = createLucideIcon("sparkles", __iconNode$9);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$8 = [
+  ["circle", { cx: "12", cy: "12", r: "4", key: "4exip2" }],
+  ["path", { d: "M12 2v2", key: "tus03m" }],
+  ["path", { d: "M12 20v2", key: "1lh1kg" }],
+  ["path", { d: "m4.93 4.93 1.41 1.41", key: "149t6j" }],
+  ["path", { d: "m17.66 17.66 1.41 1.41", key: "ptbguv" }],
+  ["path", { d: "M2 12h2", key: "1t8f8n" }],
+  ["path", { d: "M20 12h2", key: "1q8mjw" }],
+  ["path", { d: "m6.34 17.66-1.41 1.41", key: "1m8zz5" }],
+  ["path", { d: "m19.07 4.93-1.41 1.41", key: "1shlcs" }]
+];
+const Sun = createLucideIcon("sun", __iconNode$8);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41844,6 +42010,8 @@ function AppHeader({ rightAction }) {
   const { isAuthenticated, clear, isLoggingIn, login } = useAuth();
   const principal = useShortPrincipal();
   const location2 = useLocation();
+  const { theme, setTheme } = z();
+  const isDark = theme === "dark";
   return /* @__PURE__ */ jsxRuntimeExports.jsx("header", { className: "bg-card/80 border-border/60 sticky top-0 z-40 w-full border-b shadow-subtle backdrop-blur-md", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
       Link,
@@ -41885,6 +42053,19 @@ function AppHeader({ rightAction }) {
     }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "ml-auto flex items-center gap-3", children: [
       rightAction,
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          variant: "ghost",
+          size: "icon",
+          onClick: () => setTheme(isDark ? "light" : "dark"),
+          "data-ocid": "header.theme_toggle",
+          "aria-label": isDark ? "Switch to light theme" : "Switch to dark theme",
+          title: isDark ? "Switch to light theme" : "Switch to dark theme",
+          className: "text-muted-foreground hover:text-foreground",
+          children: isDark ? /* @__PURE__ */ jsxRuntimeExports.jsx(Sun, { className: "size-4" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Moon, { className: "size-4" })
+        }
+      ),
       isAuthenticated ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "hidden items-center gap-2.5 md:flex", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(Avatar, { className: "border-border size-8 border", children: /* @__PURE__ */ jsxRuntimeExports.jsx(AvatarFallback, { className: "bg-primary/10 text-primary font-mono text-xs font-semibold", children: principal ? principal.slice(0, 2).toUpperCase() : "??" }) }),
@@ -41945,7 +42126,7 @@ function SignInPrompt() {
         "aria-hidden": true,
         className: "pointer-events-none absolute inset-0 opacity-60",
         style: {
-          background: "radial-gradient(60% 50% at 50% 0%, oklch(0.78 0.16 195 / 0.18) 0%, oklch(0.145 0.014 260 / 0) 70%), radial-gradient(40% 40% at 80% 80%, oklch(0.78 0.15 75 / 0.12) 0%, oklch(0.145 0.014 260 / 0) 70%)"
+          background: "radial-gradient(60% 50% at 50% 0%, oklch(var(--primary) / 0.18) 0%, oklch(var(--background) / 0) 70%), radial-gradient(40% 40% at 80% 80%, oklch(var(--accent) / 0.12) 0%, oklch(var(--background) / 0) 70%)"
         }
       }
     ),
@@ -42140,22 +42321,34 @@ const Result = Record({
   "hasMore": Bool,
   "rows": Vec(Vec(Cell$1))
 });
+const PriceSnapshot = Record({
+  "pln": Float64,
+  "usd": Float64,
+  "timestamp": Int,
+  "cached": Bool
+});
 const MonthlyBreakdown = Record({
   "month": Nat,
   "totalDeltaE8s": Int,
   "year": Nat,
-  "readingCount": Nat
+  "readingCount": Nat,
+  "momDeltaE8s": Int
 });
 const NeuronStats = Record({
   "averageDailyRewardE8s": Int,
   "totalRewardsE8s": Int,
+  "apy30d": Float64,
   "percentageReturn": Float64,
   "neuronId": NeuronId,
-  "monthly": Vec(MonthlyBreakdown)
+  "monthly": Vec(MonthlyBreakdown),
+  "overallReturnPct": Float64
 });
 const E8s = Nat64;
 const PortfolioStats = Record({
+  "totalMaturityE8s": Nat64,
+  "totalRewardsThisMonthE8s": Nat64,
   "totalRewardsE8s": Int,
+  "blendedApy": Float64,
   "totalStakedE8s": E8s,
   "percentageReturn": Float64,
   "neuronCount": Nat
@@ -42163,6 +42356,7 @@ const PortfolioStats = Record({
 const Timestamp = Int;
 const DeltaE8s = Int;
 const EventType$1 = Variant({
+  "mergedToStake": Null,
   "normalGrowth": Null,
   "firstReading": Null,
   "disburseOrSpawn": Null
@@ -42196,6 +42390,7 @@ const Neuron = Record({
   "initialStakeE8s": E8s,
   "startDate": Timestamp
 });
+const TimerId = Nat;
 const SyncResult = Record({
   "status": SyncStatus,
   "maturityE8s": Opt(Nat64),
@@ -42203,9 +42398,25 @@ const SyncResult = Record({
   "stakedE8s": Opt(Nat64),
   "neuronId": NeuronId
 });
+const HttpHeader = Record({ "value": Text$1, "name": Text$1 });
+const HttpRequestResult = Record({
+  "status": Nat,
+  "body": Vec(Nat8),
+  "headers": Vec(HttpHeader)
+});
+const TransformationInput = Record({
+  "context": Vec(Nat8),
+  "response": HttpRequestResult
+});
+const TransformationOutput = Record({
+  "status": Nat,
+  "body": Vec(Nat8),
+  "headers": Vec(HttpHeader)
+});
 Service({
   "__accessControlState": Func([], [Reserved], ["query"]),
   "__neurons": Func([], [Reserved], ["query"]),
+  "__priceCache": Func([], [Reserved], ["query"]),
   "__rewards": Func([], [Reserved], ["query"]),
   "__syncErrors": Func([], [Reserved], ["query"]),
   "__syncStatuses": Func([], [Reserved], ["query"]),
@@ -42222,6 +42433,8 @@ Service({
   "editSnapshot": Func([NeuronId, Int, Int, Nat64], [], []),
   "execute": Func([Text$1], [Result], ["query"]),
   "getCallerUserRole": Func([], [UserRole], ["query"]),
+  "getCurrentIcpPrice": Func([], [PriceSnapshot], []),
+  "getHistoricalIcpPrice": Func([Text$1], [PriceSnapshot], []),
   "getNeuronStats": Func([NeuronId], [NeuronStats], []),
   "getPortfolioStats": Func([], [PortfolioStats], []),
   "getRewardHistory": Func([NeuronId], [Vec(DailyReward)], []),
@@ -42240,9 +42453,16 @@ Service({
     []
   ),
   "removeNeuron": Func([NeuronId], [], []),
+  "scheduleNextSync": Func([], [TimerId], []),
   "schema": Func([], [Text$1], ["query"]),
+  "startDailySync": Func([], [], []),
   "syncAllMyNeurons": Func([], [Vec(SyncResult)], []),
   "syncNeuron": Func([NeuronId], [SyncResult], []),
+  "transform": Func(
+    [TransformationInput],
+    [TransformationOutput],
+    ["query"]
+  ),
   "updateNeuron": Func([Neuron], [], [])
 });
 const idlFactory = ({ IDL: IDL2 }) => {
@@ -42287,22 +42507,34 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "hasMore": IDL2.Bool,
     "rows": IDL2.Vec(IDL2.Vec(Cell3))
   });
+  const PriceSnapshot2 = IDL2.Record({
+    "pln": IDL2.Float64,
+    "usd": IDL2.Float64,
+    "timestamp": IDL2.Int,
+    "cached": IDL2.Bool
+  });
   const MonthlyBreakdown2 = IDL2.Record({
     "month": IDL2.Nat,
     "totalDeltaE8s": IDL2.Int,
     "year": IDL2.Nat,
-    "readingCount": IDL2.Nat
+    "readingCount": IDL2.Nat,
+    "momDeltaE8s": IDL2.Int
   });
   const NeuronStats2 = IDL2.Record({
     "averageDailyRewardE8s": IDL2.Int,
     "totalRewardsE8s": IDL2.Int,
+    "apy30d": IDL2.Float64,
     "percentageReturn": IDL2.Float64,
     "neuronId": NeuronId2,
-    "monthly": IDL2.Vec(MonthlyBreakdown2)
+    "monthly": IDL2.Vec(MonthlyBreakdown2),
+    "overallReturnPct": IDL2.Float64
   });
   const E8s2 = IDL2.Nat64;
   const PortfolioStats2 = IDL2.Record({
+    "totalMaturityE8s": IDL2.Nat64,
+    "totalRewardsThisMonthE8s": IDL2.Nat64,
     "totalRewardsE8s": IDL2.Int,
+    "blendedApy": IDL2.Float64,
     "totalStakedE8s": E8s2,
     "percentageReturn": IDL2.Float64,
     "neuronCount": IDL2.Nat
@@ -42310,6 +42542,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
   const Timestamp2 = IDL2.Int;
   const DeltaE8s2 = IDL2.Int;
   const EventType2 = IDL2.Variant({
+    "mergedToStake": IDL2.Null,
     "normalGrowth": IDL2.Null,
     "firstReading": IDL2.Null,
     "disburseOrSpawn": IDL2.Null
@@ -42343,6 +42576,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "initialStakeE8s": E8s2,
     "startDate": Timestamp2
   });
+  const TimerId2 = IDL2.Nat;
   const SyncResult2 = IDL2.Record({
     "status": SyncStatus2,
     "maturityE8s": IDL2.Opt(IDL2.Nat64),
@@ -42350,9 +42584,25 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "stakedE8s": IDL2.Opt(IDL2.Nat64),
     "neuronId": NeuronId2
   });
+  const HttpHeader2 = IDL2.Record({ "value": IDL2.Text, "name": IDL2.Text });
+  const HttpRequestResult2 = IDL2.Record({
+    "status": IDL2.Nat,
+    "body": IDL2.Vec(IDL2.Nat8),
+    "headers": IDL2.Vec(HttpHeader2)
+  });
+  const TransformationInput2 = IDL2.Record({
+    "context": IDL2.Vec(IDL2.Nat8),
+    "response": HttpRequestResult2
+  });
+  const TransformationOutput2 = IDL2.Record({
+    "status": IDL2.Nat,
+    "body": IDL2.Vec(IDL2.Nat8),
+    "headers": IDL2.Vec(HttpHeader2)
+  });
   return IDL2.Service({
     "__accessControlState": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__neurons": IDL2.Func([], [IDL2.Reserved], ["query"]),
+    "__priceCache": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__rewards": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__syncErrors": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__syncStatuses": IDL2.Func([], [IDL2.Reserved], ["query"]),
@@ -42369,6 +42619,8 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "editSnapshot": IDL2.Func([NeuronId2, IDL2.Int, IDL2.Int, IDL2.Nat64], [], []),
     "execute": IDL2.Func([IDL2.Text], [Result2], ["query"]),
     "getCallerUserRole": IDL2.Func([], [UserRole2], ["query"]),
+    "getCurrentIcpPrice": IDL2.Func([], [PriceSnapshot2], []),
+    "getHistoricalIcpPrice": IDL2.Func([IDL2.Text], [PriceSnapshot2], []),
     "getNeuronStats": IDL2.Func([NeuronId2], [NeuronStats2], []),
     "getPortfolioStats": IDL2.Func([], [PortfolioStats2], []),
     "getRewardHistory": IDL2.Func([NeuronId2], [IDL2.Vec(DailyReward2)], []),
@@ -42387,9 +42639,16 @@ const idlFactory = ({ IDL: IDL2 }) => {
       []
     ),
     "removeNeuron": IDL2.Func([NeuronId2], [], []),
+    "scheduleNextSync": IDL2.Func([], [TimerId2], []),
     "schema": IDL2.Func([], [IDL2.Text], ["query"]),
+    "startDailySync": IDL2.Func([], [], []),
     "syncAllMyNeurons": IDL2.Func([], [IDL2.Vec(SyncResult2)], []),
     "syncNeuron": IDL2.Func([NeuronId2], [SyncResult2], []),
+    "transform": IDL2.Func(
+      [TransformationInput2],
+      [TransformationOutput2],
+      ["query"]
+    ),
     "updateNeuron": IDL2.Func([Neuron2], [], [])
   });
 };
@@ -42397,6 +42656,7 @@ function record_opt_to_undefined(arg) {
   return arg == null ? void 0 : arg;
 }
 var EventType = /* @__PURE__ */ ((EventType2) => {
+  EventType2["mergedToStake"] = "mergedToStake";
   EventType2["normalGrowth"] = "normalGrowth";
   EventType2["firstReading"] = "firstReading";
   EventType2["disburseOrSpawn"] = "disburseOrSpawn";
@@ -42434,6 +42694,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.__neurons();
+      return result;
+    }
+  }
+  async __priceCache() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.__priceCache();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.__priceCache();
       return result;
     }
   }
@@ -42605,6 +42879,34 @@ class Backend {
       return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
     }
   }
+  async getCurrentIcpPrice() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getCurrentIcpPrice();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getCurrentIcpPrice();
+      return result;
+    }
+  }
+  async getHistoricalIcpPrice(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getHistoricalIcpPrice(arg0);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getHistoricalIcpPrice(arg0);
+      return result;
+    }
+  }
   async getNeuronStats(arg0) {
     if (this.processError) {
       try {
@@ -42745,6 +43047,20 @@ class Backend {
       return result;
     }
   }
+  async scheduleNextSync() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.scheduleNextSync();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.scheduleNextSync();
+      return result;
+    }
+  }
   async schema() {
     if (this.processError) {
       try {
@@ -42756,6 +43072,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.schema();
+      return result;
+    }
+  }
+  async startDailySync() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.startDailySync();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.startDailySync();
       return result;
     }
   }
@@ -42785,6 +43115,20 @@ class Backend {
     } else {
       const result = await this.actor.syncNeuron(arg0);
       return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async transform(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.transform(arg0);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.transform(arg0);
+      return result;
     }
   }
   async updateNeuron(arg0) {
@@ -42904,7 +43248,7 @@ function from_candid_variant_n2(_uploadFile, _downloadFile, value) {
   } : value;
 }
 function from_candid_variant_n21(_uploadFile, _downloadFile, value) {
-  return "normalGrowth" in value ? "normalGrowth" : "firstReading" in value ? "firstReading" : "disburseOrSpawn" in value ? "disburseOrSpawn" : value;
+  return "mergedToStake" in value ? "mergedToStake" : "normalGrowth" in value ? "normalGrowth" : "firstReading" in value ? "firstReading" : "disburseOrSpawn" in value ? "disburseOrSpawn" : value;
 }
 function from_candid_variant_n24(_uploadFile, _downloadFile, value) {
   return "hotkeyRequired" in value ? "hotkeyRequired" : "neverSynced" in value ? "neverSynced" : "failed" in value ? "failed" : "synced" in value ? "synced" : value;
@@ -51149,8 +51493,8 @@ var ve = (n2) => {
     var x3, Q2, q2, Z2;
     if (ct2 || !V2) return;
     K2.current = null;
-    let r2 = Number(((x3 = k2.current) == null ? void 0 : x3.style.getPropertyValue("--swipe-amount-x").replace("px", "")) || 0), m2 = Number(((Q2 = k2.current) == null ? void 0 : Q2.style.getPropertyValue("--swipe-amount-y").replace("px", "")) || 0), c2 = (/* @__PURE__ */ new Date()).getTime() - ((q2 = G2.current) == null ? void 0 : q2.getTime()), b2 = Y2 === "x" ? r2 : m2, I = Math.abs(b2) / c2;
-    if (Math.abs(b2) >= ye || I > 0.11) {
+    let r2 = Number(((x3 = k2.current) == null ? void 0 : x3.style.getPropertyValue("--swipe-amount-x").replace("px", "")) || 0), m2 = Number(((Q2 = k2.current) == null ? void 0 : Q2.style.getPropertyValue("--swipe-amount-y").replace("px", "")) || 0), c2 = (/* @__PURE__ */ new Date()).getTime() - ((q2 = G2.current) == null ? void 0 : q2.getTime()), b2 = Y2 === "x" ? r2 : m2, I2 = Math.abs(b2) / c2;
+    if (Math.abs(b2) >= ye || I2 > 0.11) {
       j2(U2.current), (Z2 = t2.onDismiss) == null || Z2.call(t2, t2), J2(Y2 === "x" ? r2 > 0 ? "right" : "left" : m2 > 0 ? "down" : "up"), $2(), d2(true), y2(false);
       return;
     }
@@ -51158,10 +51502,10 @@ var ve = (n2) => {
   }, onPointerMove: (r2) => {
     var Q2, q2, Z2, zt;
     if (!K2.current || !V2 || ((Q2 = window.getSelection()) == null ? void 0 : Q2.toString().length) > 0) return;
-    let c2 = r2.clientY - K2.current.y, b2 = r2.clientX - K2.current.x, I = (q2 = n2.swipeDirections) != null ? q2 : xe(st2);
+    let c2 = r2.clientY - K2.current.y, b2 = r2.clientX - K2.current.x, I2 = (q2 = n2.swipeDirections) != null ? q2 : xe(st2);
     !Y2 && (Math.abs(b2) > 1 || Math.abs(c2) > 1) && C2(Math.abs(b2) > Math.abs(c2) ? "x" : "y");
     let x3 = { x: 0, y: 0 };
-    Y2 === "y" ? (I.includes("top") || I.includes("bottom")) && (I.includes("top") && c2 < 0 || I.includes("bottom") && c2 > 0) && (x3.y = c2) : Y2 === "x" && (I.includes("left") || I.includes("right")) && (I.includes("left") && b2 < 0 || I.includes("right") && b2 > 0) && (x3.x = b2), (Math.abs(x3.x) > 0 || Math.abs(x3.y) > 0) && y2(true), (Z2 = k2.current) == null || Z2.style.setProperty("--swipe-amount-x", `${x3.x}px`), (zt = k2.current) == null || zt.style.setProperty("--swipe-amount-y", `${x3.y}px`);
+    Y2 === "y" ? (I2.includes("top") || I2.includes("bottom")) && (I2.includes("top") && c2 < 0 || I2.includes("bottom") && c2 > 0) && (x3.y = c2) : Y2 === "x" && (I2.includes("left") || I2.includes("right")) && (I2.includes("left") && b2 < 0 || I2.includes("right") && b2 > 0) && (x3.x = b2), (Math.abs(x3.x) > 0 || Math.abs(x3.y) > 0) && y2(true), (Z2 = k2.current) == null || Z2.style.setProperty("--swipe-amount-x", `${x3.x}px`), (zt = k2.current) == null || zt.style.setProperty("--swipe-amount-y", `${x3.y}px`);
   } }, Jt && !t2.jsx ? React$4.createElement("button", { "aria-label": nt2, "data-disabled": ht, "data-close-button": true, onClick: ht || !V2 ? () => {
   } : () => {
     var r2;
@@ -51345,7 +51689,7 @@ function AddNeuronPage() {
         "aria-hidden": true,
         className: "pointer-events-none absolute inset-x-0 top-0 h-48 opacity-30",
         style: {
-          background: "radial-gradient(50% 60% at 50% 0%, oklch(0.78 0.16 195 / 0.10) 0%, oklch(0.145 0.014 260 / 0) 70%)"
+          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.10) 0%, oklch(var(--background) / 0) 70%)"
         }
       }
     ),
@@ -54996,6 +55340,38 @@ function TooltipContent({
     }
   ) });
 }
+const CURRENT_PRICE_STALE_MS = 10 * 60 * 1e3;
+function useIcpPrice() {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["icp-price", "current"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.getCurrentIcpPrice();
+    },
+    enabled: !!actor && !isFetching,
+    refetchOnMount: true,
+    staleTime: CURRENT_PRICE_STALE_MS
+  });
+}
+function useHistoricalPrices(dates) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["icp-price", "historical", dates],
+    queryFn: async () => {
+      if (!actor) return /* @__PURE__ */ new Map();
+      const results = await Promise.all(
+        dates.map(async (date2) => {
+          const snapshot = await actor.getHistoricalIcpPrice(date2);
+          return [date2, snapshot];
+        })
+      );
+      return new Map(results);
+    },
+    enabled: !!actor && !isFetching && dates.length > 0,
+    staleTime: Number.POSITIVE_INFINITY
+  });
+}
 const PORTFOLIO_KEY = ["portfolio-stats"];
 const statsKey = (id2) => ["neuron-stats", id2];
 const rewardsKey = (id2) => ["rewards", id2];
@@ -55087,6 +55463,7 @@ function escapeCsvField(value) {
   return value;
 }
 function eventLabel(eventType) {
+  if (eventType === "mergedToStake") return "mergedToStake";
   switch (eventType) {
     case EventType.normalGrowth:
       return "normalGrowth";
@@ -55105,31 +55482,87 @@ function maturityBalance(reward) {
 function deltaIcp(reward) {
   return formatIcp(reward.deltaE8s, 8, false);
 }
-const HEADER = ["date", "maturity balance", "delta", "event type"];
-function rewardsToCsv(rewards) {
-  const rows = rewards.map(
-    (r2) => [
+function dateKeyFromTimestamp(ns) {
+  if (ns == null) return null;
+  const ms2 = typeof ns === "number" ? ns : Number(ns / 1000000n);
+  if (!Number.isFinite(ms2) || ms2 <= 0) return null;
+  const date2 = new Date(ms2);
+  if (Number.isNaN(date2.getTime())) return null;
+  const yyyy = date2.getUTCFullYear();
+  const mm = String(date2.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(date2.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function formatPriceValue(value) {
+  if (value == null || Number.isNaN(value)) return "";
+  return String(value);
+}
+function priceColumns(reward, priceMap) {
+  if (!priceMap) return ["", "", "", ""];
+  const key = dateKeyFromTimestamp(reward.timestamp);
+  if (!key) return ["", "", "", ""];
+  const price = priceMap.get(key);
+  if (!price) return ["", "", "", ""];
+  const icp = Number(reward.deltaE8s) / Number(E8S_PER_ICP);
+  const rewardValueUsd = icp * price.usd;
+  const rewardValuePln = icp * price.pln;
+  return [
+    formatPriceValue(price.usd),
+    formatPriceValue(price.pln),
+    formatPriceValue(rewardValueUsd),
+    formatPriceValue(rewardValuePln)
+  ];
+}
+const HEADER = [
+  "date",
+  "maturity balance",
+  "delta",
+  "event type",
+  "priceUsd",
+  "pricePln",
+  "rewardValueUsd",
+  "rewardValuePln"
+];
+function rewardsToCsv(rewards, priceMap) {
+  const rows = rewards.map((r2) => {
+    const [priceUsd, pricePln, rewardValueUsd, rewardValuePln] = priceColumns(
+      r2,
+      priceMap
+    );
+    return [
       formatTimestamp(r2.timestamp),
       maturityBalance(r2),
       deltaIcp(r2),
-      eventLabel(r2.eventType)
-    ].map(escapeCsvField).join(",")
-  );
+      eventLabel(r2.eventType),
+      priceUsd,
+      pricePln,
+      rewardValueUsd,
+      rewardValuePln
+    ].map(escapeCsvField).join(",");
+  });
   return [HEADER.join(","), ...rows].join("\n");
 }
-function rewardsToCombinedCsv(groups) {
+function rewardsToCombinedCsv(groups, priceMap) {
   const header = ["neuronId", ...HEADER].join(",");
   const rows = [];
   for (const group of groups) {
     const neuronId = group.neuronId.toString();
     for (const r2 of group.rewards) {
+      const [priceUsd, pricePln, rewardValueUsd, rewardValuePln] = priceColumns(
+        r2,
+        priceMap
+      );
       rows.push(
         [
           neuronId,
           formatTimestamp(r2.timestamp),
           maturityBalance(r2),
           deltaIcp(r2),
-          eventLabel(r2.eventType)
+          eventLabel(r2.eventType),
+          priceUsd,
+          pricePln,
+          rewardValueUsd,
+          rewardValuePln
         ].map(escapeCsvField).join(",")
       );
     }
@@ -55151,6 +55584,7 @@ function downloadCsv(filename, content) {
 function DashboardPage() {
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
+  const priceQuery = useIcpPrice();
   const syncAll = useSyncAllNeurons();
   const { actor } = useBackendActor();
   const navigate = useNavigate();
@@ -55178,6 +55612,9 @@ function DashboardPage() {
       onError: (err) => ue.error(err.message)
     });
   };
+  const handleRefreshPrice = () => {
+    priceQuery.refetch();
+  };
   const handleExportCsv = async () => {
     if (!actor || !neurons || neurons.length === 0) return;
     setIsExporting(true);
@@ -55195,7 +55632,32 @@ function DashboardPage() {
         ue.info("No reward snapshots to export yet");
         return;
       }
-      const csv = rewardsToCombinedCsv(groups);
+      const dateSet = /* @__PURE__ */ new Set();
+      for (const g2 of nonEmpty) {
+        for (const r2 of g2.rewards) {
+          const ms2 = Number(r2.timestamp / 1000000n);
+          if (!Number.isFinite(ms2) || ms2 <= 0) continue;
+          const d2 = new Date(ms2);
+          if (Number.isNaN(d2.getTime())) continue;
+          const pad2 = (n2) => String(n2).padStart(2, "0");
+          dateSet.add(
+            `${d2.getUTCFullYear()}-${pad2(d2.getUTCMonth() + 1)}-${pad2(d2.getUTCDate())}`
+          );
+        }
+      }
+      const priceMap = /* @__PURE__ */ new Map();
+      await Promise.all(
+        [...dateSet].map(async (date2) => {
+          try {
+            const snap = await actor.getHistoricalIcpPrice(date2);
+            if (snap && snap.usd > 0) {
+              priceMap.set(date2, { usd: snap.usd, pln: snap.pln });
+            }
+          } catch {
+          }
+        })
+      );
+      const csv = rewardsToCombinedCsv(groups, priceMap);
       downloadCsv("neuron-rewards-export.csv", csv);
       ue.success(
         `Exported ${nonEmpty.length} neuron${nonEmpty.length === 1 ? "" : "s"} to CSV`
@@ -55213,7 +55675,7 @@ function DashboardPage() {
         "aria-hidden": true,
         className: "pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40",
         style: {
-          background: "radial-gradient(50% 60% at 50% 0%, oklch(0.78 0.16 195 / 0.12) 0%, oklch(0.145 0.014 260 / 0) 70%)"
+          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.12) 0%, oklch(var(--background) / 0) 70%)"
         }
       }
     ),
@@ -55280,9 +55742,20 @@ function DashboardPage() {
         PortfolioSummary,
         {
           totalStaked: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
-          totalRewards: (portfolio == null ? void 0 : portfolio.totalRewardsE8s) ?? null,
-          overallReturn: (portfolio == null ? void 0 : portfolio.percentageReturn) ?? null,
+          totalMaturity: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
+          blendedApy: (portfolio == null ? void 0 : portfolio.blendedApy) ?? null,
+          rewardsThisMonth: (portfolio == null ? void 0 : portfolio.totalRewardsThisMonthE8s) ?? null,
           neuronCount: (portfolio == null ? void 0 : portfolio.neuronCount) ?? null,
+          loading: portfolioLoading
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-6", "data-ocid": "dashboard.portfolio_value", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        PortfolioValuation,
+        {
+          totalStakedE8s: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
+          totalMaturityE8s: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
+          priceQuery,
+          onRefreshPrice: handleRefreshPrice,
           loading: portfolioLoading
         }
       ) }),
@@ -55305,8 +55778,9 @@ function DashboardPage() {
 }
 function PortfolioSummary({
   totalStaked,
-  totalRewards,
-  overallReturn,
+  totalMaturity,
+  blendedApy,
+  rewardsThisMonth,
   neuronCount,
   loading
 }) {
@@ -55315,42 +55789,120 @@ function PortfolioSummary({
       label: "Total Staked",
       value: formatIcp(totalStaked, 2),
       icon: Wallet,
-      accent: "text-primary"
+      accent: "text-primary",
+      hint: !loading && neuronCount != null ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}` : null
     },
     {
-      label: "Total Rewards",
-      value: formatIcp(totalRewards, 2),
-      icon: Activity,
-      accent: "text-accent"
+      label: "Total Maturity",
+      value: formatIcp(totalMaturity, 2),
+      icon: Coins,
+      accent: "text-accent",
+      hint: "Withdrawable + staked"
     },
     {
-      label: "Overall Return",
-      value: formatPercent(overallReturn),
+      label: "Blended APY",
+      value: formatApy(blendedApy),
       icon: TrendingUp,
-      accent: overallReturn != null && overallReturn >= 0 ? "text-primary" : "text-destructive"
+      accent: blendedApy != null && blendedApy > 0 ? "text-primary" : "text-muted-foreground",
+      hint: blendedApy === 0 ? "Insufficient history" : null
+    },
+    {
+      label: "Earned This Month",
+      value: formatIcp(rewardsThisMonth, 2),
+      icon: Sparkles,
+      accent: "text-primary",
+      hint: "ICP rewards this month"
     }
   ];
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-3", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    Card,
-    {
-      className: "bg-card/60 border-border/60 overflow-hidden",
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: "pb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: stat.label }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(stat.icon, { className: cn("size-4", stat.accent) })
-        ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { children: [
-          loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-32" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-2xl font-semibold tracking-tight", children: stat.value }),
-          stat.label === "Total Staked" && !loading && neuronCount != null && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground mt-1 font-mono text-xs", children: [
-            neuronCount.toString(),
-            " neuron",
-            neuronCount === 1n ? "" : "s"
-          ] })
-        ] })
-      ]
-    },
-    stat.label
-  )) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: stat.label }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(stat.icon, { className: cn("size-4", stat.accent) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3", children: [
+      loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-32" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-2xl font-semibold tracking-tight", children: stat.value }),
+      stat.hint && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1 font-mono text-xs", children: stat.hint })
+    ] })
+  ] }, stat.label)) });
+}
+function PortfolioValuation({
+  totalStakedE8s,
+  totalMaturityE8s,
+  priceQuery,
+  onRefreshPrice,
+  loading
+}) {
+  const price = priceQuery.data ?? null;
+  const priceLoading = priceQuery.isLoading;
+  const priceStale = (price == null ? void 0 : price.cached) === true;
+  const totalE8s = totalStakedE8s != null && totalMaturityE8s != null ? totalStakedE8s + totalMaturityE8s : null;
+  const icpAmount = totalE8s != null ? Number(totalE8s / E8S_PER_ICP) + Number(totalE8s % E8S_PER_ICP) / Number(E8S_PER_ICP) : null;
+  const usdValue = icpAmount != null && (price == null ? void 0 : price.usd) != null ? icpAmount * price.usd : null;
+  const plnValue = icpAmount != null && (price == null ? void 0 : price.pln) != null ? icpAmount * price.pln : null;
+  const showValueLoading = loading || priceLoading;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "bg-card/60 border-border/60 overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: "Current Portfolio Value" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1", children: [
+        showValueLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-9 w-40" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-3xl font-semibold tracking-tight", children: formatUsd(usdValue) }),
+        !showValueLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value-pill", "data-ocid": "dashboard.value.pln", children: formatPln(plnValue) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1.5 font-mono text-xs", children: icpAmount != null ? `${formatIcpCompact(totalE8s)} total` : "—" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-start gap-2 lg:items-end", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "span",
+          {
+            className: cn(
+              priceStale ? "price-stale" : "price-badge",
+              priceLoading && "opacity-60"
+            ),
+            "data-ocid": "dashboard.price_badge",
+            title: (price == null ? void 0 : price.timestamp) != null ? `Last updated ${formatTimestampDateTime(price.timestamp)}` : void 0,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "span",
+                {
+                  className: cn(
+                    "size-1.5 rounded-full",
+                    priceStale ? "bg-warning" : "bg-success"
+                  ),
+                  style: { backgroundColor: "currentColor" }
+                }
+              ),
+              priceLoading ? "Loading price…" : price ? `ICP ${formatUsd(price.usd)} · ${formatPln(price.pln)}` : "Price unavailable"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            variant: "outline",
+            size: "sm",
+            onClick: onRefreshPrice,
+            disabled: priceQuery.isFetching,
+            "data-ocid": "dashboard.refresh_price",
+            "aria-label": "Refresh ICP price",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                RefreshCw,
+                {
+                  className: priceQuery.isFetching ? "size-4 animate-spin" : "size-4"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "Refresh price" })
+            ]
+          }
+        )
+      ] }),
+      (price == null ? void 0 : price.timestamp) != null && !priceLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px]", children: [
+        "Updated ",
+        formatTimestampDateTime(price.timestamp),
+        priceStale ? " · cached" : ""
+      ] })
+    ] })
+  ] }) }) });
 }
 function NeuronCard({ neuron, index: index2 }) {
   const idStr = neuron.id.toString();
@@ -64347,11 +64899,11 @@ function interpolateRound(a2, b2) {
 }
 function piecewise(interpolate$12, values) {
   if (values === void 0) values = interpolate$12, interpolate$12 = interpolate;
-  var i = 0, n2 = values.length - 1, v2 = values[0], I = new Array(n2 < 0 ? 0 : n2);
-  while (i < n2) I[i] = interpolate$12(v2, v2 = values[++i]);
+  var i = 0, n2 = values.length - 1, v2 = values[0], I2 = new Array(n2 < 0 ? 0 : n2);
+  while (i < n2) I2[i] = interpolate$12(v2, v2 = values[++i]);
   return function(t2) {
     var i2 = Math.max(0, Math.min(n2 - 1, Math.floor(t2 *= n2)));
-    return I[i2](t2 - i2);
+    return I2[i2](t2 - i2);
   };
 }
 function constants(x3) {
@@ -79262,6 +79814,20 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
   CategoricalChart.displayName = CategoricalChartWrapper.displayName;
   return CategoricalChart;
 };
+var BarChart = generateCategoricalChart({
+  chartName: "BarChart",
+  GraphicalChild: Bar,
+  defaultTooltipEventType: "axis",
+  validateTooltipEventTypes: ["axis", "item"],
+  axisComponents: [{
+    axisType: "xAxis",
+    AxisComp: XAxis
+  }, {
+    axisType: "yAxis",
+    AxisComp: YAxis
+  }],
+  formatAxisMap
+});
 var AreaChart = generateCategoricalChart({
   chartName: "AreaChart",
   GraphicalChild: Area,
@@ -79276,8 +79842,33 @@ var AreaChart = generateCategoricalChart({
 });
 const ACTIVITY_PAGE_SIZE = 25;
 const ACTIVITY_MAX_HEIGHT = "max-h-[400px]";
+function nsToDateKey(ns) {
+  const ms2 = Number(ns / 1000000n);
+  if (!Number.isFinite(ms2) || ms2 <= 0) return "";
+  const d2 = new Date(ms2);
+  if (Number.isNaN(d2.getTime())) return "";
+  const pad2 = (n2) => String(n2).padStart(2, "0");
+  return `${d2.getUTCFullYear()}-${pad2(d2.getUTCMonth() + 1)}-${pad2(d2.getUTCDate())}`;
+}
+function formatMonthLabel(year, month) {
+  const y2 = Number(year);
+  const m2 = Number(month);
+  if (!Number.isFinite(y2) || !Number.isFinite(m2) || m2 < 1 || m2 > 12) {
+    return "—";
+  }
+  const date2 = new Date(Date.UTC(y2, m2 - 1, 1));
+  return date2.toLocaleDateString(void 0, {
+    year: "numeric",
+    month: "short",
+    timeZone: "UTC"
+  });
+}
+function e8sToIcpNumber(e8s) {
+  return Number(e8s) / Number(E8S_PER_ICP);
+}
 function NeuronDetailPage() {
   const { neuronId } = useParams({ from: "/neuron-detail/$neuronId" });
+  const queryClient2 = useQueryClient();
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
   const { data: rewards, isLoading: rewardsLoading } = useRewardHistory(neuronId);
   const { data: stats } = useNeuronStats(neuronId);
@@ -79292,6 +79883,12 @@ function NeuronDetailPage() {
   const editSnapshot = useEditSnapshot();
   const deleteSnapshot = useDeleteSnapshot();
   const navigate = useNavigate();
+  const icpPriceQuery = useIcpPrice();
+  const icpPrice = icpPriceQuery.data ?? null;
+  const priceRefreshing = icpPriceQuery.isFetching;
+  const handleRefreshPrice = () => {
+    void queryClient2.invalidateQueries({ queryKey: ["icp-price", "current"] });
+  };
   const neuron = reactExports.useMemo(() => {
     if (!neurons) return void 0;
     const id2 = BigInt(neuronId);
@@ -79339,11 +79936,33 @@ function NeuronDetailPage() {
       ue.error("No reward history to export");
       return;
     }
-    const csv = rewardsToCsv(rewards);
+    const priceMap = summaryPrices ? new Map(
+      [...summaryPrices.entries()].map(([date2, snap]) => [
+        date2,
+        { usd: snap.usd, pln: snap.pln }
+      ])
+    ) : void 0;
+    const csv = rewardsToCsv(rewards, priceMap);
     const safeId = neuronId.replace(/[^a-zA-Z0-9_-]/g, "_");
     downloadCsv(`neuron-${safeId}-rewards.csv`, csv);
     ue.success("CSV downloaded");
   };
+  const sortedRewards = reactExports.useMemo(
+    () => [...rewards ?? []].sort((a2, b2) => Number(a2.timestamp - b2.timestamp)),
+    [rewards]
+  );
+  const summaryDateKeys = reactExports.useMemo(() => {
+    const set = /* @__PURE__ */ new Set();
+    for (const r2 of sortedRewards) {
+      if (r2.deltaE8s > 0n) {
+        const key = nsToDateKey(r2.timestamp);
+        if (key) set.add(key);
+      }
+    }
+    return [...set];
+  }, [sortedRewards]);
+  const summaryPricesQuery = useHistoricalPrices(summaryDateKeys);
+  const summaryPrices = summaryPricesQuery.data ?? null;
   if (loading) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(DetailSkeleton, {});
   }
@@ -79362,9 +79981,6 @@ function NeuronDetailPage() {
       )
     ] });
   }
-  const sortedRewards = [...rewards ?? []].sort(
-    (a2, b2) => Number(a2.timestamp - b2.timestamp)
-  );
   const lastReward = sortedRewards[sortedRewards.length - 1];
   const unstakedE8s = (lastReward == null ? void 0 : lastReward.unstakedMaturityE8s) ?? 0n;
   const stakedE8s = (lastReward == null ? void 0 : lastReward.stakedMaturityE8s) ?? 0n;
@@ -79387,7 +80003,7 @@ function NeuronDetailPage() {
         "aria-hidden": true,
         className: "pointer-events-none absolute inset-x-0 top-0 h-48 opacity-30",
         style: {
-          background: "radial-gradient(50% 60% at 50% 0%, oklch(0.78 0.16 195 / 0.10) 0%, oklch(0.145 0.014 260 / 0) 70%)"
+          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.10) 0%, oklch(var(--background) / 0) 70%)"
         }
       }
     ),
@@ -79424,7 +80040,10 @@ function NeuronDetailPage() {
           onDelete: handleDelete,
           deleting: removeNeuron.isPending,
           onExportCsv: handleExportCsv,
-          exportDisabled: !rewards || rewards.length === 0
+          exportDisabled: !rewards || rewards.length === 0,
+          icpPrice,
+          priceRefreshing,
+          onRefreshPrice: handleRefreshPrice
         }
       ),
       isFailed && /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -79446,7 +80065,9 @@ function NeuronDetailPage() {
         RewardsSummaryCard,
         {
           rewards: sortedRewards,
-          loading: rewardsLoading
+          loading: rewardsLoading,
+          summaryPrices,
+          summaryPricesLoading: summaryPricesQuery.isFetching
         }
       ) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5", children: [
@@ -79503,6 +80124,7 @@ function NeuronDetailPage() {
           }
         )
       ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(MonthlyBreakdownSection, { monthly: (stats == null ? void 0 : stats.monthly) ?? [] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         ImportHistoricalPanel,
         {
@@ -79529,20 +80151,45 @@ function NeuronHeader({
   onDelete,
   deleting,
   onExportCsv,
-  exportDisabled
+  exportDisabled,
+  icpPrice,
+  priceRefreshing,
+  onRefreshPrice
 }) {
+  const priceUsd = (icpPrice == null ? void 0 : icpPrice.usd) ?? null;
+  const pricePln = (icpPrice == null ? void 0 : icpPrice.pln) ?? null;
+  const priceHasValue = priceUsd != null && !Number.isNaN(priceUsd) && priceUsd > 0;
+  const priceAgeMs = (icpPrice == null ? void 0 : icpPrice.timestamp) ? Date.now() - Number(icpPrice.timestamp / 1000000n) : null;
+  const isStale2 = priceAgeMs != null && priceAgeMs > 10 * 60 * 1e3;
+  const withdrawableIcp = e8sToIcpNumber(unstakedE8s);
+  const withdrawableUsd = priceUsd != null && !Number.isNaN(priceUsd) && priceUsd > 0 ? withdrawableIcp * priceUsd : null;
+  const withdrawablePln = pricePln != null && !Number.isNaN(pricePln) && pricePln > 0 ? withdrawableIcp * pricePln : null;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 min-w-0", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-gradient-primary flex size-12 shrink-0 items-center justify-center rounded-xl shadow-md", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrainCircuit, { className: "size-6 text-primary-foreground" }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-xl font-semibold tracking-tight", children: neuron.name || `Neuron ${shortenNeuronId(neuron.id)}` }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
               SyncStatusBadge,
               {
                 status: syncStatus,
                 errorReason
+              }
+            ),
+            priceHasValue && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "span",
+              {
+                className: cn("price-badge", isStale2 && "price-stale"),
+                title: (icpPrice == null ? void 0 : icpPrice.timestamp) ? `Last updated ${formatTimestampDateTime(icpPrice.timestamp)}` : "ICP spot price",
+                "data-ocid": "neuron_detail.header.price_badge",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(DollarSign, { className: "size-3" }),
+                  formatUsd(priceUsd),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "opacity-60", children: "·" }),
+                  formatPln(pricePln)
+                ]
               }
             )
           ] }),
@@ -79553,6 +80200,26 @@ function NeuronHeader({
         ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            variant: "outline",
+            size: "sm",
+            onClick: onRefreshPrice,
+            disabled: priceRefreshing,
+            "aria-label": "Refresh ICP price",
+            "data-ocid": "neuron_detail.refresh_price",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                RefreshCw,
+                {
+                  className: priceRefreshing ? "size-4 animate-spin" : "size-4"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "hidden sm:inline", children: "Refresh price" })
+            ]
+          }
+        ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
           Button,
           {
@@ -79658,18 +80325,45 @@ function NeuronHeader({
           " ",
           formatIcp(stakedE8s, 4, false)
         ] }),
-        autoStakeMaturity && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Badge,
-          {
-            variant: "outline",
-            className: "border-accent/40 bg-accent/10 text-accent mt-1 gap-1 text-[10px]",
-            "data-ocid": "neuron_detail.header.auto_stake_badge",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "size-2.5" }),
-              "Auto-stake"
-            ]
-          }
-        )
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-1 pt-0.5", children: [
+          withdrawableUsd != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "value-pill",
+              title: "Withdrawable maturity value in USD at current ICP price",
+              "data-ocid": "neuron_detail.header.withdrawable_usd_pill",
+              children: formatUsd(withdrawableUsd)
+            }
+          ),
+          withdrawablePln != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "value-pill",
+              title: "Withdrawable maturity value in PLN at current ICP price",
+              "data-ocid": "neuron_detail.header.withdrawable_pln_pill",
+              children: formatPln(withdrawablePln)
+            }
+          ),
+          autoStakeMaturity && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Badge,
+            {
+              variant: "outline",
+              className: "border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]",
+              "data-ocid": "neuron_detail.header.auto_stake_badge",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "size-2.5" }),
+                "Auto-stake"
+              ]
+            }
+          )
+        ] }),
+        (icpPrice == null ? void 0 : icpPrice.timestamp) && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground/70 font-mono text-[10px]", children: [
+          "Price ",
+          isStale2 ? "stale" : "live",
+          " ·",
+          " ",
+          formatTimestampDateTime(icpPrice.timestamp)
+        ] })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         Stat,
@@ -79777,21 +80471,42 @@ function SyncStatusBadge({
 }
 function RewardsSummaryCard({
   rewards,
-  loading
+  loading,
+  summaryPrices,
+  summaryPricesLoading
 }) {
-  const { totalEarnedE8s, totalDisbursedE8s } = reactExports.useMemo(() => {
+  const { totalEarnedE8s, totalDisbursedE8s, totalUsd, totalPln, hasPrice } = reactExports.useMemo(() => {
     let earned = 0n;
     let disbursed = 0n;
+    let usd = 0;
+    let pln = 0;
+    let sawPrice = false;
     for (const r2 of rewards) {
       if (r2.deltaE8s > 0n) {
         earned += r2.deltaE8s;
+        if (summaryPrices) {
+          const key = nsToDateKey(r2.timestamp);
+          const snap = key ? summaryPrices.get(key) : void 0;
+          if (snap && snap.usd > 0) {
+            const icp = e8sToIcpNumber(r2.deltaE8s);
+            usd += icp * snap.usd;
+            pln += icp * snap.pln;
+            sawPrice = true;
+          }
+        }
       }
       if (r2.eventType === EventType.disburseOrSpawn) {
         disbursed += r2.deltaE8s < 0n ? -r2.deltaE8s : r2.deltaE8s;
       }
     }
-    return { totalEarnedE8s: earned, totalDisbursedE8s: disbursed };
-  }, [rewards]);
+    return {
+      totalEarnedE8s: earned,
+      totalDisbursedE8s: disbursed,
+      totalUsd: usd,
+      totalPln: pln,
+      hasPrice: sawPrice
+    };
+  }, [rewards, summaryPrices]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Rewards summary" }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2", children: [
@@ -79804,7 +80519,27 @@ function RewardsSummaryCard({
           "Total earned"
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-2xl font-semibold mt-2", children: formatIcp(totalEarnedE8s) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs mt-1", children: "Sum of all positive maturity deltas across history." })
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs mt-1", children: "Sum of all positive maturity deltas across history." }),
+        hasPrice ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 flex flex-wrap items-center gap-1.5", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "value-pill",
+              title: "All-time earned value in USD at historical ICP prices",
+              "data-ocid": "neuron_detail.summary.earned_usd_pill",
+              children: formatUsd(totalUsd)
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "span",
+            {
+              className: "value-pill",
+              title: "All-time earned value in PLN at historical ICP prices",
+              "data-ocid": "neuron_detail.summary.earned_pln_pill",
+              children: formatPln(totalPln)
+            }
+          )
+        ] }) : summaryPricesLoading && summaryPrices === null ? /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground/70 mt-2 font-mono text-[11px]", children: "Fetching historical prices…" }) : rewards.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground/70 mt-2 font-mono text-[11px]", children: "Historical price unavailable" })
       ] }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-accent/30 bg-accent/5 rounded-xl border p-4", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-accent flex items-center gap-1.5 text-[11px] tracking-wider uppercase", children: [
@@ -79830,7 +80565,7 @@ function MaturityChart({
             "span",
             {
               className: "inline-block size-2 rounded-full",
-              style: { background: "oklch(0.78 0.16 195)" },
+              style: { background: "oklch(var(--chart-1))" },
               "aria-hidden": true
             }
           ),
@@ -79839,7 +80574,7 @@ function MaturityChart({
             "span",
             {
               className: "ml-2 inline-block size-2 rounded-full",
-              style: { background: "oklch(0.72 0.14 145)" },
+              style: { background: "oklch(var(--chart-4))" },
               "aria-hidden": true
             }
           ),
@@ -79860,7 +80595,7 @@ function MaturityChart({
                 "stop",
                 {
                   offset: "0%",
-                  stopColor: "oklch(0.78 0.16 195)",
+                  stopColor: "oklch(var(--chart-1))",
                   stopOpacity: 0.35
                 }
               ),
@@ -79868,7 +80603,7 @@ function MaturityChart({
                 "stop",
                 {
                   offset: "100%",
-                  stopColor: "oklch(0.78 0.16 195)",
+                  stopColor: "oklch(var(--chart-1))",
                   stopOpacity: 0
                 }
               )
@@ -79878,7 +80613,7 @@ function MaturityChart({
                 "stop",
                 {
                   offset: "0%",
-                  stopColor: "oklch(0.72 0.14 145)",
+                  stopColor: "oklch(var(--chart-4))",
                   stopOpacity: 0.3
                 }
               ),
@@ -79886,7 +80621,7 @@ function MaturityChart({
                 "stop",
                 {
                   offset: "100%",
-                  stopColor: "oklch(0.72 0.14 145)",
+                  stopColor: "oklch(var(--chart-4))",
                   stopOpacity: 0
                 }
               )
@@ -79896,7 +80631,7 @@ function MaturityChart({
             CartesianGrid,
             {
               strokeDasharray: "3 3",
-              stroke: "oklch(0.3 0.02 260)",
+              stroke: "oklch(var(--border))",
               vertical: false
             }
           ),
@@ -79905,11 +80640,11 @@ function MaturityChart({
             {
               dataKey: "date",
               tick: {
-                fill: "oklch(0.62 0.012 260)",
+                fill: "oklch(var(--muted-foreground))",
                 fontSize: 11,
                 fontFamily: "var(--font-mono)"
               },
-              axisLine: { stroke: "oklch(0.3 0.02 260)" },
+              axisLine: { stroke: "oklch(var(--border))" },
               tickLine: false,
               minTickGap: 24
             }
@@ -79918,7 +80653,7 @@ function MaturityChart({
             YAxis,
             {
               tick: {
-                fill: "oklch(0.62 0.012 260)",
+                fill: "oklch(var(--muted-foreground))",
                 fontSize: 11,
                 fontFamily: "var(--font-mono)"
               },
@@ -79931,14 +80666,14 @@ function MaturityChart({
             Tooltip,
             {
               contentStyle: {
-                backgroundColor: "oklch(0.22 0.018 260)",
-                border: "1px solid oklch(0.3 0.02 260)",
+                backgroundColor: "oklch(var(--popover))",
+                border: "1px solid oklch(var(--border))",
                 borderRadius: "0.5rem",
                 fontSize: "12px",
                 fontFamily: "var(--font-mono)"
               },
-              labelStyle: { color: "oklch(0.62 0.012 260)" },
-              itemStyle: { color: "oklch(0.95 0.005 260)" },
+              labelStyle: { color: "oklch(var(--muted-foreground))" },
+              itemStyle: { color: "oklch(var(--foreground))" },
               formatter: (v2, name) => {
                 if (name === "staked") {
                   return [`${v2.toFixed(4)} ICP`, "Staked"];
@@ -79952,11 +80687,11 @@ function MaturityChart({
             {
               type: "monotone",
               dataKey: "maturity",
-              stroke: "oklch(0.78 0.16 195)",
+              stroke: "oklch(var(--chart-1))",
               strokeWidth: 2,
               fill: "url(#maturityFill)",
               dot: false,
-              activeDot: { r: 4, fill: "oklch(0.78 0.16 195)" }
+              activeDot: { r: 4, fill: "oklch(var(--chart-1))" }
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -79964,11 +80699,11 @@ function MaturityChart({
             {
               type: "monotone",
               dataKey: "staked",
-              stroke: "oklch(0.72 0.14 145)",
+              stroke: "oklch(var(--chart-4))",
               strokeWidth: 1.5,
               fill: "url(#stakedFill)",
               dot: false,
-              activeDot: { r: 3, fill: "oklch(0.72 0.14 145)" }
+              activeDot: { r: 3, fill: "oklch(var(--chart-4))" }
             }
           )
         ]
@@ -79993,6 +80728,16 @@ function ActivityFeed({
   const reversed = reactExports.useMemo(() => [...rewards].reverse(), [rewards]);
   const visible = reversed.slice(0, visibleCount);
   const hasMore = reversed.length > visibleCount;
+  const visibleDateKeys = reactExports.useMemo(() => {
+    const set = /* @__PURE__ */ new Set();
+    for (const r2 of visible) {
+      const key = nsToDateKey(r2.timestamp);
+      if (key) set.add(key);
+    }
+    return [...set];
+  }, [visible]);
+  const visiblePricesQuery = useHistoricalPrices(visibleDateKeys);
+  const visiblePrices = visiblePricesQuery.data ?? null;
   const handleLoadMore = () => {
     setVisibleCount((c2) => c2 + ACTIVITY_PAGE_SIZE);
   };
@@ -80034,6 +80779,7 @@ function ActivityFeed({
             {
               event: r2,
               index: i,
+              price: (visiblePrices == null ? void 0 : visiblePrices.get(nsToDateKey(r2.timestamp))) ?? null,
               onEdit: () => setEditing(r2),
               onDelete: () => setDeleting(r2)
             },
@@ -80103,22 +80849,30 @@ function ActivityFeed({
 const EVENT_TYPE_LABEL = {
   normalGrowth: "Maturity growth",
   firstReading: "First reading",
-  disburseOrSpawn: "Disburse / spawn"
+  disburseOrSpawn: "Disburse / spawn",
+  mergedToStake: "Merged to stake"
 };
 function ActivityItem({
   event,
   index: index2,
+  price,
   onEdit,
   onDelete
 }) {
   const isDisburse = event.eventType === EventType.disburseOrSpawn;
   const isFirst = event.eventType === EventType.firstReading;
-  const Icon2 = isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
-  const accent = isDisburse ? "text-primary bg-primary/10" : isFirst ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
+  const isMergedToStake = event.eventType === "mergedToStake";
+  const Icon2 = isMergedToStake ? ArrowDownToLine : isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
+  const accent = isMergedToStake ? "text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/15" : isDisburse ? "text-primary bg-primary/10" : isFirst ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
   const combinedE8s = event.unstakedMaturityE8s + event.stakedMaturityE8s;
   const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
   const deltaNegative = event.deltaE8s < 0n;
+  const showValuePills = !deltaNegative && price != null && price.usd > 0;
+  const deltaIcp2 = e8sToIcpNumber(event.deltaE8s);
+  const deltaUsd = showValuePills ? deltaIcp2 * price.usd : null;
+  const deltaPln = showValuePills ? deltaIcp2 * price.pln : null;
+  const priceUnavailable = !deltaNegative && price == null;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     motion.li,
     {
@@ -80181,7 +80935,35 @@ function ActivityItem({
               }
             )
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px]", children: formatTimestampDateTime(event.timestamp) })
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-1.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px]", children: formatTimestampDateTime(event.timestamp) }),
+            deltaUsd != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "value-pill",
+                title: "Delta value in USD at historical ICP price",
+                "data-ocid": `neuron_detail.activity.usd_pill.${index2 + 1}`,
+                children: formatUsd(deltaUsd)
+              }
+            ),
+            deltaPln != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "value-pill",
+                title: "Delta value in PLN at historical ICP price",
+                "data-ocid": `neuron_detail.activity.pln_pill.${index2 + 1}`,
+                children: formatPln(deltaPln)
+              }
+            ),
+            priceUnavailable && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "text-muted-foreground/60 font-mono text-[10px]",
+                "data-ocid": `neuron_detail.activity.price_unavailable.${index2 + 1}`,
+                children: "price unavailable"
+              }
+            )
+          ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -80424,6 +81206,24 @@ function NeuronStatsCard({
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         StatRow,
         {
+          label: "APY (30-day)",
+          value: formatApy(stats.apy30d),
+          dataOcid: "neuron_detail.stats.apy30d"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow,
+        {
+          label: "Overall return",
+          value: formatPercent(stats.overallReturnPct),
+          dataOcid: "neuron_detail.stats.overall_return"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow,
+        {
           label: "Monthly readings",
           value: stats.monthly.length.toString()
         }
@@ -80431,10 +81231,156 @@ function NeuronStatsCard({
     ] }) })
   ] });
 }
-function StatRow({ label, value }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+function StatRow({
+  label,
+  value,
+  dataOcid
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", "data-ocid": dataOcid, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-sm", children: label }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-sm font-semibold", children: value })
+  ] });
+}
+function MonthlyBreakdownSection({
+  monthly
+}) {
+  const sorted = reactExports.useMemo(
+    () => [...monthly].sort((a2, b2) => {
+      const y2 = Number(a2.year - b2.year);
+      if (y2 !== 0) return y2;
+      return Number(a2.month - b2.month);
+    }),
+    [monthly]
+  );
+  const chartData = reactExports.useMemo(
+    () => sorted.map((m2) => ({
+      label: formatMonthLabel(m2.year, m2.month),
+      icp: e8sToIcpNumber(m2.totalDeltaE8s),
+      raw: m2.totalDeltaE8s
+    })),
+    [sorted]
+  );
+  const hasData = sorted.length > 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 mt-6", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Monthly breakdown" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Badge, { variant: "secondary", className: "font-mono text-[10px]", children: [
+        sorted.length,
+        " ",
+        sorted.length === 1 ? "month" : "months"
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: !hasData ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-48 flex-col items-center justify-center text-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ChartColumn, { className: "text-muted-foreground/50 size-7" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-3 text-sm", children: "No monthly breakdown available yet. Record more snapshots to see per-month totals." })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-6 lg:grid-cols-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-72 w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        BarChart,
+        {
+          data: chartData,
+          margin: { top: 8, right: 8, bottom: 0, left: -16 },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              CartesianGrid,
+              {
+                strokeDasharray: "3 3",
+                stroke: "oklch(var(--border))",
+                vertical: false
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              XAxis,
+              {
+                dataKey: "label",
+                tick: {
+                  fill: "oklch(var(--muted-foreground))",
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono)"
+                },
+                axisLine: { stroke: "oklch(var(--border))" },
+                tickLine: false,
+                minTickGap: 20
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              YAxis,
+              {
+                tick: {
+                  fill: "oklch(var(--muted-foreground))",
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono)"
+                },
+                axisLine: false,
+                tickLine: false,
+                width: 56,
+                tickFormatter: (v2) => formatIcpCompact(BigInt(Math.round(v2 * 1e8)))
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Tooltip,
+              {
+                cursor: { fill: "oklch(var(--chart-1) / 0.08)" },
+                contentStyle: {
+                  backgroundColor: "oklch(var(--popover))",
+                  border: "1px solid oklch(var(--border))",
+                  borderRadius: "0.5rem",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-mono)"
+                },
+                labelStyle: { color: "oklch(var(--muted-foreground))" },
+                itemStyle: { color: "oklch(var(--foreground))" },
+                formatter: (v2) => [`${v2.toFixed(4)} ICP`, "Earned"]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Bar,
+              {
+                dataKey: "icp",
+                fill: "oklch(var(--chart-1))",
+                radius: [3, 3, 0, 0],
+                maxBarSize: 48
+              }
+            )
+          ]
+        }
+      ) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto rounded-lg border border-border/60", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { "data-ocid": "neuron_detail.monthly.table", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Month" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Total earned" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "MoM delta" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Readings" })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: sorted.map((m2, i) => {
+          const momNegative = m2.momDeltaE8s < 0n;
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            TableRow,
+            {
+              "data-ocid": `neuron_detail.monthly.row.${i + 1}`,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-xs", children: formatMonthLabel(m2.year, m2.month) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-right text-xs", children: formatIcp(m2.totalDeltaE8s, 4, false) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  TableCell,
+                  {
+                    className: cn(
+                      "font-mono text-right text-xs",
+                      momNegative ? "text-destructive" : "text-primary"
+                    ),
+                    children: [
+                      momNegative ? "" : "+",
+                      formatIcp(m2.momDeltaE8s, 4, false)
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-muted-foreground font-mono text-right text-xs", children: Number(m2.readingCount) })
+              ]
+            },
+            `monthly-${m2.year}-${m2.month}`
+          );
+        }) })
+      ] }) })
+    ] }) })
   ] });
 }
 function SnapshotEntryForm({
@@ -80562,7 +81508,7 @@ function ImportHistoricalPanel({
   const handleConfirm = () => {
     if (!canConfirm) return;
     const entries = rows.map((r2) => ({
-      timestamp: BigInt(Math.floor(r2.dateMs / 1e3)),
+      timestamp: BigInt(Math.floor(r2.dateMs)) * 1000000n,
       unstakedMaturityE8s: r2.amountE8s,
       stakedMaturityE8s: 0n
     }));
@@ -80796,11 +81742,25 @@ function parsePaste(input) {
     const day = Number(dateMatch[1]);
     const month = Number(dateMatch[2]);
     const year = Number(dateMatch[3]);
+    if (month < 1 || month > 12) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid month "${dateStr}" (month must be 01-12)`
+      });
+      continue;
+    }
+    if (day < 1 || day > 31) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid day "${dateStr}" (day must be 01-31)`
+      });
+      continue;
+    }
     const dateObj = new Date(Date.UTC(year, month - 1, day));
     if (dateObj.getUTCFullYear() !== year || dateObj.getUTCMonth() !== month - 1 || dateObj.getUTCDate() !== day) {
       errors.push({
         rowIndex: dataRowIndex,
-        message: `invalid date "${dateStr}"`
+        message: `invalid date "${dateStr}" (no such calendar day, e.g. 29/02 on a non-leap year)`
       });
       continue;
     }
@@ -80844,7 +81804,7 @@ const rootRoute = createRootRoute({
   component: RootComponent
 });
 function RootComponent() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "dark bg-background text-foreground flex min-h-screen flex-col", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background text-foreground flex min-h-screen flex-col", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(AppHeader, {}),
     /* @__PURE__ */ jsxRuntimeExports.jsx(ProtectedRoute, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "flex-1", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("footer", { className: "bg-muted/40 border-border/60 border-t", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs sm:flex-row sm:px-6 lg:px-8", children: [
@@ -80899,5 +81859,5 @@ BigInt.prototype.toJSON = function() {
 };
 const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById("root")).render(
-  /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(InternetIdentityProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) })
+  /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientProvider, { client: queryClient, children: /* @__PURE__ */ jsxRuntimeExports.jsx(J, { attribute: "class", defaultTheme: "dark", enableSystem: false, children: /* @__PURE__ */ jsxRuntimeExports.jsx(InternetIdentityProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) }) }) })
 );

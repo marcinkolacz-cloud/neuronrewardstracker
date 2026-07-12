@@ -23,7 +23,7 @@ export function SignInPrompt() {
         className="pointer-events-none absolute inset-0 opacity-60"
         style={{
           background:
-            "radial-gradient(60% 50% at 50% 0%, oklch(0.78 0.16 195 / 0.18) 0%, oklch(0.145 0.014 260 / 0) 70%), radial-gradient(40% 40% at 80% 80%, oklch(0.78 0.15 75 / 0.12) 0%, oklch(0.145 0.014 260 / 0) 70%)",
+            "radial-gradient(60% 50% at 50% 0%, oklch(var(--primary) / 0.18) 0%, oklch(var(--background) / 0) 70%), radial-gradient(40% 40% at 80% 80%, oklch(var(--accent) / 0.12) 0%, oklch(var(--background) / 0) 70%)",
         }}
       />
       <div className="relative z-10 mx-auto flex max-w-md flex-col items-center text-center">
