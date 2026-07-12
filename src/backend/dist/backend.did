@@ -163,6 +163,18 @@ type MonthlyBreakdown =
    totalDeltaE8s: int;
    year: nat;
  };
+type InviteCodeStatus = 
+ variant {
+   revoked;
+   unused;
+   used;
+ };
+type InviteCode = 
+ record {
+   code: text;
+   createdAt: Timestamp;
+   status: InviteCodeStatus;
+ };
 type HttpRequestResult = 
  record {
    body: blob;
@@ -231,6 +243,10 @@ type Cell =
 service : {
   ___dailySyncInstalled: () -> (bool) query;
   __accessControlState: () -> (reserved) query;
+  __adminPrincipal: () -> (reserved) query;
+  __grantedPrincipals: (ko: opt principal, count: opt nat) ->
+   (vec principal) query;
+  __inviteCodes: () -> (reserved) query;
   __neurons: () -> (reserved) query;
   __nextWtnPositionId: () -> (reserved) query;
   __priceCache: () -> (reserved) query;
@@ -250,6 +266,7 @@ service : {
    nat64, initialStakeE8s: nat64) -> ();
   addWtnPosition: (name: text, startDate: int) -> (WtnPosition);
   assignCallerUserRole: (user: principal, role: UserRole) -> ();
+  checkAccess: (code: text) -> (bool);
   deleteSnapshot: (neuronId: NeuronId, timestamp: int) -> ();
   deleteWtnSnapshot: (positionId: WtnPositionId, date: int) -> ();
   editSnapshot: (neuronId: NeuronId, timestamp: int, newTimestamp: int,
@@ -258,6 +275,7 @@ service : {
    newNicpHeld: float64, newTotalIcpPaid: float64, newRedeemableIcpValue:
    float64) -> ();
   execute: (qJson: text) -> (Result) query;
+  generateInviteCode: () -> (text);
   getCallerUserRole: () -> (UserRole) query;
   getCurrentIcpPrice: () -> (PriceSnapshot);
   getHistoricalIcpPrice: (date: text) -> (PriceSnapshot);
@@ -274,7 +292,12 @@ service : {
    ();
   importWtnHistoricalData: (positionId: WtnPositionId, entries:
    vec WtnHistoricalEntry) -> ();
+  isAdminBootstrapped: () -> (bool) query;
   isCallerAdmin: () -> (bool) query;
+  isCallerAdminPrincipal: () -> (bool) query;
+  isCallerGranted: () -> (bool) query;
+  isPrincipalGranted: ("principal": principal) -> (bool) query;
+  listInviteCodes: () -> (vec InviteCode);
   listMyNeurons: () -> (vec Neuron);
   listMyWtnPositions: () -> (vec WtnPosition);
   recordSnapshot: (neuronId: NeuronId, unstakedMaturityE8s: nat64,
@@ -284,6 +307,7 @@ service : {
    (WtnSnapshot);
   removeNeuron: (neuronId: NeuronId) -> ();
   removeWtnPosition: (positionId: WtnPositionId) -> ();
+  revokeInviteCode: (code: text) -> ();
   /// Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
   /// target on every call so DST transitions do not cause drift. After the
   /// sync runs, reschedules for the following 18:01 Warsaw.
@@ -298,6 +322,7 @@ service : {
   /// transient let or a non-shared private func.
   scheduleNextSync: () -> (TimerId);
   schema: () -> (text) query;
+  setAdminPrincipal: () -> ();
   /// Install the daily sync timer on first call. Public shared functions run
   /// in an async context that has the `<system>` capability, so
   /// `scheduleNextSync()` (which calls `Timer.setTimer<system>`) is valid

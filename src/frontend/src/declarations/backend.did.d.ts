@@ -54,6 +54,14 @@ export interface HttpRequestResult {
   'body' : Uint8Array,
   'headers' : Array<HttpHeader>,
 }
+export interface InviteCode {
+  'status' : InviteCodeStatus,
+  'code' : string,
+  'createdAt' : Timestamp,
+}
+export type InviteCodeStatus = { 'revoked' : null } |
+  { 'used' : null } |
+  { 'unused' : null };
 export interface MonthlyBreakdown {
   'month' : bigint,
   'totalDeltaE8s' : bigint,
@@ -190,6 +198,12 @@ export interface WtnStats {
 export interface _SERVICE {
   '___dailySyncInstalled' : ActorMethod<[], boolean>,
   '__accessControlState' : ActorMethod<[], any>,
+  '__adminPrincipal' : ActorMethod<[], any>,
+  '__grantedPrincipals' : ActorMethod<
+    [[] | [Principal], [] | [bigint]],
+    Array<Principal>
+  >,
+  '__inviteCodes' : ActorMethod<[], any>,
   '__neurons' : ActorMethod<[], any>,
   '__nextWtnPositionId' : ActorMethod<[], any>,
   '__priceCache' : ActorMethod<[], any>,
@@ -210,6 +224,7 @@ export interface _SERVICE {
   >,
   'addWtnPosition' : ActorMethod<[string, bigint], WtnPosition>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkAccess' : ActorMethod<[string], boolean>,
   'deleteSnapshot' : ActorMethod<[NeuronId, bigint], undefined>,
   'deleteWtnSnapshot' : ActorMethod<[WtnPositionId, bigint], undefined>,
   'editSnapshot' : ActorMethod<[NeuronId, bigint, bigint, bigint], undefined>,
@@ -218,6 +233,7 @@ export interface _SERVICE {
     undefined
   >,
   'execute' : ActorMethod<[string], Result>,
+  'generateInviteCode' : ActorMethod<[], string>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCurrentIcpPrice' : ActorMethod<[], PriceSnapshot>,
   'getHistoricalIcpPrice' : ActorMethod<[string], PriceSnapshot>,
@@ -238,7 +254,12 @@ export interface _SERVICE {
     [WtnPositionId, Array<WtnHistoricalEntry>],
     undefined
   >,
+  'isAdminBootstrapped' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isCallerAdminPrincipal' : ActorMethod<[], boolean>,
+  'isCallerGranted' : ActorMethod<[], boolean>,
+  'isPrincipalGranted' : ActorMethod<[Principal], boolean>,
+  'listInviteCodes' : ActorMethod<[], Array<InviteCode>>,
   'listMyNeurons' : ActorMethod<[], Array<Neuron>>,
   'listMyWtnPositions' : ActorMethod<[], Array<WtnPosition>>,
   'recordSnapshot' : ActorMethod<
@@ -251,6 +272,7 @@ export interface _SERVICE {
   >,
   'removeNeuron' : ActorMethod<[NeuronId], undefined>,
   'removeWtnPosition' : ActorMethod<[WtnPositionId], undefined>,
+  'revokeInviteCode' : ActorMethod<[string], undefined>,
   /**
    * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
    * / target on every call so DST transitions do not cause drift. After the
@@ -267,6 +289,7 @@ export interface _SERVICE {
    */
   'scheduleNextSync' : ActorMethod<[], TimerId>,
   'schema' : ActorMethod<[], string>,
+  'setAdminPrincipal' : ActorMethod<[], undefined>,
   /**
    * / Install the daily sync timer on first call. Public shared functions run
    * / in an async context that has the `<system>` capability, so

@@ -7,15 +7,19 @@
  *   /neuron-detail/:neuronId  Neuron detail (chart, activity feed, snapshot)
  *   /add-wtn                   Add WTN position form
  *   /wtn-detail/:positionId    WTN detail (stats, activity feed, snapshot)
+ *   /admin                     Admin panel (invite-code access control)
  *
  * The root route renders the app shell (AppHeader + ProtectedRoute +
- * branding footer). All child routes render inside <Outlet />.
+ * branding footer). All child routes render inside <Outlet />. The /admin
+ * route is protected by ProtectedRoute (II auth) and additionally checks
+ * admin status inside the page — non-admins see a not-authorized message.
  */
 
 import { AppHeader } from "@/components/AppHeader";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AddNeuronPage } from "@/routes/add-neuron";
 import { AddWtnPage } from "@/routes/add-wtn";
+import { AdminPage } from "@/routes/admin";
 import { DashboardPage } from "@/routes/index";
 import { NeuronDetailPage } from "@/routes/neuron-detail.$neuronId";
 import { WtnDetailPage } from "@/routes/wtn-detail.$positionId";
@@ -95,12 +99,19 @@ const wtnDetailRoute = createRoute({
   component: WtnDetailPage,
 });
 
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: AdminPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addNeuronRoute,
   neuronDetailRoute,
   addWtnRoute,
   wtnDetailRoute,
+  adminRoute,
 ]);
 
 export const router = createRouter({ routeTree });

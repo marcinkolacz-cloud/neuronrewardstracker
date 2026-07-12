@@ -171,6 +171,16 @@ export const WtnHistoricalEntry = IDL.Record({
   'nicpHeld' : IDL.Float64,
   'totalIcpPaid' : IDL.Float64,
 });
+export const InviteCodeStatus = IDL.Variant({
+  'revoked' : IDL.Null,
+  'used' : IDL.Null,
+  'unused' : IDL.Null,
+});
+export const InviteCode = IDL.Record({
+  'status' : InviteCodeStatus,
+  'code' : IDL.Text,
+  'createdAt' : Timestamp,
+});
 export const Neuron = IDL.Record({
   'id' : NeuronId,
   'dissolveDelaySeconds' : IDL.Nat64,
@@ -207,6 +217,13 @@ export const TransformationOutput = IDL.Record({
 export const idlService = IDL.Service({
   '___dailySyncInstalled' : IDL.Func([], [IDL.Bool], ['query']),
   '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
+  '__adminPrincipal' : IDL.Func([], [IDL.Reserved], ['query']),
+  '__grantedPrincipals' : IDL.Func(
+      [IDL.Opt(IDL.Principal), IDL.Opt(IDL.Nat)],
+      [IDL.Vec(IDL.Principal)],
+      ['query'],
+    ),
+  '__inviteCodes' : IDL.Func([], [IDL.Reserved], ['query']),
   '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
   '__nextWtnPositionId' : IDL.Func([], [IDL.Reserved], ['query']),
   '__priceCache' : IDL.Func([], [IDL.Reserved], ['query']),
@@ -229,6 +246,7 @@ export const idlService = IDL.Service({
     ),
   'addWtnPosition' : IDL.Func([IDL.Text, IDL.Int], [WtnPosition], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'checkAccess' : IDL.Func([IDL.Text], [IDL.Bool], []),
   'deleteSnapshot' : IDL.Func([NeuronId, IDL.Int], [], []),
   'deleteWtnSnapshot' : IDL.Func([WtnPositionId, IDL.Int], [], []),
   'editSnapshot' : IDL.Func([NeuronId, IDL.Int, IDL.Int, IDL.Nat64], [], []),
@@ -238,6 +256,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'execute' : IDL.Func([IDL.Text], [Result], ['query']),
+  'generateInviteCode' : IDL.Func([], [IDL.Text], []),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCurrentIcpPrice' : IDL.Func([], [PriceSnapshot], []),
   'getHistoricalIcpPrice' : IDL.Func([IDL.Text], [PriceSnapshot], []),
@@ -260,7 +279,12 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'isAdminBootstrapped' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCallerAdminPrincipal' : IDL.Func([], [IDL.Bool], ['query']),
+  'isCallerGranted' : IDL.Func([], [IDL.Bool], ['query']),
+  'isPrincipalGranted' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
+  'listInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], []),
   'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], []),
   'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], []),
   'recordSnapshot' : IDL.Func(
@@ -275,8 +299,10 @@ export const idlService = IDL.Service({
     ),
   'removeNeuron' : IDL.Func([NeuronId], [], []),
   'removeWtnPosition' : IDL.Func([WtnPositionId], [], []),
+  'revokeInviteCode' : IDL.Func([IDL.Text], [], []),
   'scheduleNextSync' : IDL.Func([], [TimerId], []),
   'schema' : IDL.Func([], [IDL.Text], ['query']),
+  'setAdminPrincipal' : IDL.Func([], [], []),
   'startDailySync' : IDL.Func([], [], []),
   'syncAllMyNeurons' : IDL.Func([], [IDL.Vec(SyncResult)], []),
   'syncNeuron' : IDL.Func([NeuronId], [SyncResult], []),
@@ -455,6 +481,16 @@ export const idlFactory = ({ IDL }) => {
     'nicpHeld' : IDL.Float64,
     'totalIcpPaid' : IDL.Float64,
   });
+  const InviteCodeStatus = IDL.Variant({
+    'revoked' : IDL.Null,
+    'used' : IDL.Null,
+    'unused' : IDL.Null,
+  });
+  const InviteCode = IDL.Record({
+    'status' : InviteCodeStatus,
+    'code' : IDL.Text,
+    'createdAt' : Timestamp,
+  });
   const Neuron = IDL.Record({
     'id' : NeuronId,
     'dissolveDelaySeconds' : IDL.Nat64,
@@ -491,6 +527,13 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '___dailySyncInstalled' : IDL.Func([], [IDL.Bool], ['query']),
     '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
+    '__adminPrincipal' : IDL.Func([], [IDL.Reserved], ['query']),
+    '__grantedPrincipals' : IDL.Func(
+        [IDL.Opt(IDL.Principal), IDL.Opt(IDL.Nat)],
+        [IDL.Vec(IDL.Principal)],
+        ['query'],
+      ),
+    '__inviteCodes' : IDL.Func([], [IDL.Reserved], ['query']),
     '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
     '__nextWtnPositionId' : IDL.Func([], [IDL.Reserved], ['query']),
     '__priceCache' : IDL.Func([], [IDL.Reserved], ['query']),
@@ -513,6 +556,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'addWtnPosition' : IDL.Func([IDL.Text, IDL.Int], [WtnPosition], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'checkAccess' : IDL.Func([IDL.Text], [IDL.Bool], []),
     'deleteSnapshot' : IDL.Func([NeuronId, IDL.Int], [], []),
     'deleteWtnSnapshot' : IDL.Func([WtnPositionId, IDL.Int], [], []),
     'editSnapshot' : IDL.Func([NeuronId, IDL.Int, IDL.Int, IDL.Nat64], [], []),
@@ -529,6 +573,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'execute' : IDL.Func([IDL.Text], [Result], ['query']),
+    'generateInviteCode' : IDL.Func([], [IDL.Text], []),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCurrentIcpPrice' : IDL.Func([], [PriceSnapshot], []),
     'getHistoricalIcpPrice' : IDL.Func([IDL.Text], [PriceSnapshot], []),
@@ -551,7 +596,12 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'isAdminBootstrapped' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCallerAdminPrincipal' : IDL.Func([], [IDL.Bool], ['query']),
+    'isCallerGranted' : IDL.Func([], [IDL.Bool], ['query']),
+    'isPrincipalGranted' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
+    'listInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], []),
     'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], []),
     'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], []),
     'recordSnapshot' : IDL.Func(
@@ -566,8 +616,10 @@ export const idlFactory = ({ IDL }) => {
       ),
     'removeNeuron' : IDL.Func([NeuronId], [], []),
     'removeWtnPosition' : IDL.Func([WtnPositionId], [], []),
+    'revokeInviteCode' : IDL.Func([IDL.Text], [], []),
     'scheduleNextSync' : IDL.Func([], [TimerId], []),
     'schema' : IDL.Func([], [IDL.Text], ['query']),
+    'setAdminPrincipal' : IDL.Func([], [], []),
     'startDailySync' : IDL.Func([], [], []),
     'syncAllMyNeurons' : IDL.Func([], [IDL.Vec(SyncResult)], []),
     'syncNeuron' : IDL.Func([NeuronId], [SyncResult], []),

@@ -41,6 +41,9 @@ export type {
   WtnStats,
   WtnEventType,
   WtnHistoricalEntry,
+  InviteCode,
+  InviteCodeStatus,
+  UserRole,
 } from "@/backend";
 
 /**

@@ -1,16 +1,20 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
+import Principal "mo:core/Principal";
 import Types "../types/rewards";
 import Common "../types/common";
 import NeuronTypes "../types/neurons";
 import RewardsLib "../lib/rewards";
 import NeuronsLib "../lib/neurons";
+import InvitesLib "../lib/invites";
 
 mixin (
   rewards : Map.Map<Common.NeuronId, List.List<Types.DailyReward>>,
   neurons : Map.Map<Common.NeuronId, NeuronTypes.Neuron>,
+  grantedPrincipals : Set.Set<Principal>,
 ) {
   /// Record a manual maturity snapshot for a neuron. Computes the delta vs the
   /// previous snapshot's combined maturity total. Serves as the fallback when
@@ -25,8 +29,11 @@ mixin (
     stakedMaturityE8s : Nat64,
     autoStakeMaturity : Bool,
   ) : async Types.DailyReward {
-    if (Principal.isAnonymous(caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
@@ -46,7 +53,7 @@ mixin (
   public shared ({ caller }) func getRewardHistory(
     neuronId : Common.NeuronId,
   ) : async [Types.DailyReward] {
-    if (Principal.isAnonymous(caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
     };
     // Verify the caller owns the neuron.
@@ -60,8 +67,11 @@ mixin (
     neuronId : Common.NeuronId,
     entries : [Types.HistoricalEntry],
   ) : async () {
-    if (Principal.isAnonymous(caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
@@ -81,8 +91,11 @@ mixin (
     newTimestamp : Int,
     newMaturityE8s : Nat64,
   ) : async () {
-    if (Principal.isAnonymous(caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
@@ -97,8 +110,11 @@ mixin (
     neuronId : Common.NeuronId,
     timestamp : Int,
   ) : async () {
-    if (Principal.isAnonymous(caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);

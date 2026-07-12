@@ -38,6 +38,11 @@ export interface MonthlyBreakdown {
     readingCount: bigint;
     momDeltaE8s: bigint;
 }
+export interface InviteCode {
+    status: InviteCodeStatus;
+    code: string;
+    createdAt: Timestamp;
+}
 export interface WtnStats {
     percentReturn: number;
     totalCapitalContributed: number;
@@ -231,6 +236,11 @@ export enum EventType {
     externalTopUp = "externalTopUp",
     disburseOrSpawn = "disburseOrSpawn"
 }
+export enum InviteCodeStatus {
+    revoked = "revoked",
+    used = "used",
+    unused = "unused"
+}
 export enum SyncStatus {
     hotkeyRequired = "hotkeyRequired",
     neverSynced = "neverSynced",
@@ -252,11 +262,13 @@ export interface backendInterface {
     addNeuron(id: NeuronId, name: string, startDate: bigint, dissolveDelaySeconds: bigint, initialStakeE8s: bigint): Promise<void>;
     addWtnPosition(name: string, startDate: bigint): Promise<WtnPosition>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkAccess(code: string): Promise<boolean>;
     deleteSnapshot(neuronId: NeuronId, timestamp: bigint): Promise<void>;
     deleteWtnSnapshot(positionId: WtnPositionId, date: bigint): Promise<void>;
     editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
     editWtnSnapshot(positionId: WtnPositionId, date: bigint, newDate: bigint, newNicpHeld: number, newTotalIcpPaid: number, newRedeemableIcpValue: number): Promise<void>;
     execute(qJson: string): Promise<Result>;
+    generateInviteCode(): Promise<string>;
     getCallerUserRole(): Promise<UserRole>;
     getCurrentIcpPrice(): Promise<PriceSnapshot>;
     getHistoricalIcpPrice(date: string): Promise<PriceSnapshot>;
@@ -271,13 +283,19 @@ export interface backendInterface {
     getWtnStats(positionId: WtnPositionId): Promise<WtnStats>;
     importHistoricalData(neuronId: NeuronId, entries: Array<HistoricalEntry>): Promise<void>;
     importWtnHistoricalData(positionId: WtnPositionId, entries: Array<WtnHistoricalEntry>): Promise<void>;
+    isAdminBootstrapped(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    isCallerAdminPrincipal(): Promise<boolean>;
+    isCallerGranted(): Promise<boolean>;
+    isPrincipalGranted(principal: Principal): Promise<boolean>;
+    listInviteCodes(): Promise<Array<InviteCode>>;
     listMyNeurons(): Promise<Array<Neuron>>;
     listMyWtnPositions(): Promise<Array<WtnPosition>>;
     recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
     recordWtnSnapshot(positionId: WtnPositionId, date: bigint, nicpHeld: number, totalIcpPaid: number, redeemableIcpValue: number): Promise<WtnSnapshot>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
     removeWtnPosition(positionId: WtnPositionId): Promise<void>;
+    revokeInviteCode(code: string): Promise<void>;
     /**
      * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
      * / target on every call so DST transitions do not cause drift. After the
@@ -294,6 +312,7 @@ export interface backendInterface {
      */
     scheduleNextSync(): Promise<TimerId>;
     schema(): Promise<string>;
+    setAdminPrincipal(): Promise<void>;
     /**
      * / Install the daily sync timer on first call. Public shared functions run
      * / in an async context that has the `<system>` capability, so

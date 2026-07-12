@@ -1,5 +1,6 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Types "../types/governance-sync";
@@ -8,12 +9,14 @@ import NeuronTypes "../types/neurons";
 import RewardTypes "../types/rewards";
 import NeuronsLib "../lib/neurons";
 import GovernanceSyncLib "../lib/governance-sync";
+import InvitesLib "../lib/invites";
 
 mixin (
   neurons : Map.Map<Common.NeuronId, NeuronTypes.Neuron>,
   rewards : Map.Map<Common.NeuronId, List.List<RewardTypes.DailyReward>>,
   syncStatuses : Map.Map<Common.NeuronId, Types.SyncStatus>,
   syncErrors : Map.Map<Common.NeuronId, Text>,
+  grantedPrincipals : Set.Set<Principal>,
 ) {
   transient let governanceCanisterId = Principal.fromText("rrkah-fqaaa-aaaaa-aaaaq-cai");
   transient let governance : Types.Governance = actor (governanceCanisterId.toText());
@@ -27,6 +30,9 @@ mixin (
   ) : async Types.SyncResult {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
@@ -47,6 +53,9 @@ mixin (
   public shared ({ caller }) func syncAllMyNeurons() : async [Types.SyncResult] {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     let mine = NeuronsLib.listMyNeurons(neurons, caller);
     let results = List.empty<Types.SyncResult>();

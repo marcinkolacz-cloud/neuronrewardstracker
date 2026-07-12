@@ -11,10 +11,18 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useIsCallerAdmin } from "@/hooks/use-access";
 import { useAuth, useShortPrincipal } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BrainCircuit, LogOut, Moon, RefreshCw, Sun } from "lucide-react";
+import {
+  BrainCircuit,
+  LogOut,
+  Moon,
+  RefreshCw,
+  Shield,
+  Sun,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 
 interface NavItem {
@@ -40,6 +48,11 @@ export function AppHeader({ rightAction }: AppHeaderProps) {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
+  const isAdmin = useIsCallerAdmin();
+
+  const navItems = isAdmin?.data
+    ? [...NAV_ITEMS, { label: "Admin", to: "/admin", marker: "nav.admin" }]
+    : NAV_ITEMS;
 
   return (
     <header className="bg-card/80 border-border/60 sticky top-0 z-40 w-full border-b shadow-subtle backdrop-blur-md">
@@ -70,7 +83,7 @@ export function AppHeader({ rightAction }: AppHeaderProps) {
 
         {/* Primary nav */}
         <nav className="hidden items-center gap-1 sm:flex" aria-label="Primary">
-          {NAV_ITEMS.map((item) => {
+          {navItems.map((item) => {
             const active =
               item.to === "/"
                 ? location.pathname === "/"

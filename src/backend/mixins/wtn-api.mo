@@ -1,15 +1,18 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
+import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 
 import Types "../types/wtn";
 import WtnLib "../lib/wtn";
+import InvitesLib "../lib/invites";
 
 mixin (
   wtnPositions : Map.Map<Types.WtnPositionId, Types.WtnPosition>,
   wtnSnapshots : Map.Map<Types.WtnPositionId, List.List<Types.WtnSnapshot>>,
   nextWtnPositionId : { var next : Nat },
+  grantedPrincipals : Set.Set<Principal>,
 ) {
   /// Add a WTN position to track. Scoped to the caller's principal via
   /// ownerId. The canister assigns the position id. No governance sync, no
@@ -20,6 +23,9 @@ mixin (
   ) : async Types.WtnPosition {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     WtnLib.createWtnPosition(wtnPositions, nextWtnPositionId, caller, name, startDate);
   };
@@ -52,6 +58,9 @@ mixin (
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
     };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
+    };
     WtnLib.updateWtnPosition(wtnPositions, caller, position);
   };
 
@@ -62,6 +71,9 @@ mixin (
   ) : async () {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     WtnLib.deleteWtnPosition(wtnPositions, wtnSnapshots, caller, positionId);
   };
@@ -79,6 +91,9 @@ mixin (
   ) : async Types.WtnSnapshot {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     // Verify ownership before recording (traps if not owned / not found).
     switch (WtnLib.getWtnPosition(wtnPositions, caller, positionId)) {
@@ -125,6 +140,9 @@ mixin (
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
     };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
+    };
     switch (WtnLib.getWtnPosition(wtnPositions, caller, positionId)) {
       case (?_position) {
         WtnLib.editWtnSnapshot(wtnSnapshots, positionId, date, newDate, newNicpHeld, newTotalIcpPaid, newRedeemableIcpValue);
@@ -145,6 +163,9 @@ mixin (
   ) : async () {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     switch (WtnLib.getWtnPosition(wtnPositions, caller, positionId)) {
       case (?_position) {
@@ -167,6 +188,9 @@ mixin (
   ) : async () {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     switch (WtnLib.getWtnPosition(wtnPositions, caller, positionId)) {
       case (?_position) {

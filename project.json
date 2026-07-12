@@ -1,22 +1,21 @@
 {
-  "overview": "Track ICP neuron staking rewards across NNS neurons and WaterNeuron nICP positions with daily sync, CSV export, and portfolio-wide statistics.",
+  "overview": "Track ICP neuron and WTN position rewards with snapshots, portfolio stats, and NNS governance sync, protected by an invitation-code access control system.",
   "features": [
-    "Dashboard with NNS and WTN portfolio breakdowns",
-    "Daily sync of neuron rewards from governance",
-    "Combined CSV export with precise event types",
-    "Portfolio-wide reward statistics and monthly breakdown",
-    "Light and dark theme toggle",
-    "Per-neuron and per-position detail pages"
+    "Dashboard with portfolio summary and reward stats",
+    "Add and manage ICP neurons with NNS governance sync",
+    "Add and manage WTN (WaterNeuron nICP) positions",
+    "Daily reward snapshots with event classification",
+    "Invitation-code access control with admin bootstrap",
+    "Admin panel to generate, list, and revoke invite codes",
+    "Owner-only bootstrap to establish admin and self-access"
   ],
-  "category": "finance-tracker",
+  "category": "productivity",
   "tags": [
     "icp",
     "neuron",
-    "staking",
     "rewards",
-    "nns",
-    "wtn",
-    "portfolio"
+    "access-control",
+    "portfolio-tracker"
   ],
-  "last_updated": "2026-07-12T19:36:33.167Z"
+  "last_updated": "2026-07-12T22:01:14.047Z"
 }

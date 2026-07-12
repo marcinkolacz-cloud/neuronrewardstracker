@@ -1,5 +1,6 @@
 import List "mo:core/List";
 import Map "mo:core/Map";
+import Set "mo:core/Set";
 import Principal "mo:core/Principal";
 import Timer "mo:core/Timer";
 import Int "mo:core/Int";
@@ -20,6 +21,7 @@ import GovernanceSyncTypes "types/governance-sync";
 import _StatsTypes "types/stats";
 import PriceTypes "types/prices";
 import WtnTypes "types/wtn";
+import InviteTypes "types/invites";
 
 // OQL row converters — imported top-level so the entity resolver picks them up
 // for auto-derived fields whose types are non-primitive (variants).
@@ -31,8 +33,10 @@ import GovernanceSyncApi "mixins/governance-sync-api";
 import StatsApi "mixins/stats-api";
 import PricesApi "mixins/prices-api";
 import WtnApi "mixins/wtn-api";
+import InvitesApi "mixins/invites-api";
 
 import GovernanceSyncLib "lib/governance-sync";
+import InvitesLib "lib/invites";
 
 actor {
   // Existing platform mixins
@@ -70,12 +74,29 @@ actor {
   // it by reference — a bare `var` would be passed by value to the mixin.
   let nextWtnPositionId : { var next : Nat };
 
+  // --- Stable state for the invite-code access control system ---
+  // The bootstrapped admin principal. Null until the owner calls
+  // setAdminPrincipal (one-time bootstrap). Once set, only this principal
+  // can generate/revoke invite codes. Stored as a record with a mutable
+  // `value` field so the InvitesApi mixin can mutate it by reference.
+  let adminPrincipal : { var value : ?Principal };
+  // Single-use invite codes keyed by the code text. Each code carries a
+  // status (#unused / #used / #revoked) and a creation timestamp. Per the
+  // doNotBuild contract, codes have NO expiry date and NO usage limit beyond
+  // single-use.
+  let inviteCodes : Map.Map<Text, InviteTypes.InviteCode>;
+  // The set of principals granted access (either by redeeming an invite code
+  // or by the bootstrap auto-grant). This is the real security boundary: all
+  // mutating entry points across every domain gate on membership here.
+  let grantedPrincipals : Set.Set<Principal>;
+
   // --- Domain mixins ---
-  include NeuronsApi(neurons, rewards, syncStatuses, syncErrors);
-  include RewardsApi(rewards, neurons);
-  include GovernanceSyncApi(neurons, rewards, syncStatuses, syncErrors);
+  include NeuronsApi(neurons, rewards, syncStatuses, syncErrors, grantedPrincipals);
+  include RewardsApi(rewards, neurons, grantedPrincipals);
+  include GovernanceSyncApi(neurons, rewards, syncStatuses, syncErrors, grantedPrincipals);
   include StatsApi(neurons, rewards, wtnPositions, wtnSnapshots);
-  include WtnApi(wtnPositions, wtnSnapshots, nextWtnPositionId);
+  include WtnApi(wtnPositions, wtnSnapshots, nextWtnPositionId, grantedPrincipals);
+  include InvitesApi(adminPrincipal, inviteCodes, grantedPrincipals);
 
   /// IC HTTP outcall transform callback. Required by the IC HTTP outcall
   /// protocol: it must be a public `query` function on the actor and strips
