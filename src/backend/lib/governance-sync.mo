@@ -208,6 +208,41 @@ module {
             };
           };
 
+          // --- One-time capital-baseline backfill ---
+          // "Total capital contributed" in the stats layer is seeded from
+          // neuron.initialStakeE8s, a SEPARATE manual field from stakedE8s.
+          // The Add Neuron form never sets initialStakeE8s, so it defaults to
+          // 0 for existing neurons while stakedE8s is correctly synced from
+          // governance — leaving totalCapitalContributed = 0 and breaking
+          // percentageReturn / apy30d / blendedApy.
+          //
+          // Backfill ONCE: if initialStakeE8s is still at its default 0 AND
+          // governance reports a positive synced stake (the v from
+          // newStakedE8s == ?v that is about to be passed to
+          // updateStakedE8s), seed initialStakeE8s := v so the capital
+          // baseline reflects the first real synced stake. This must run
+          // BEFORE recordSnapshot so the snapshot reflects the backfilled
+          // baseline. Once initialStakeE8s has a real non-zero value, never
+          // overwrite it — later stake changes flow through as
+          // #externalTopUp events per the existing capital-vs-rewards design.
+          // This only mutates initialStakeE8s on the neuron record; it does
+          // not synthesize a snapshot event or alter the override/delta logic.
+          switch (newStakedE8s) {
+            case (?v) {
+              if (v > 0) {
+                switch (neurons.get(neuronId)) {
+                  case (?existing) {
+                    if (existing.initialStakeE8s == (0 : Common.E8s)) {
+                      neurons.add(neuronId, { existing with initialStakeE8s = v });
+                    };
+                  };
+                  case null {};
+                };
+              };
+            };
+            case null {};
+          };
+
           // Record the maturity snapshot (delta computed from combined total).
           // Pass the override so a Merge Maturity event is tagged
           // #mergedToStake and an external top-up is tagged #externalTopUp
