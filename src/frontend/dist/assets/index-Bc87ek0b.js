@@ -56178,16 +56178,7 @@ function TooltipContent({
   ) });
 }
 const CURRENT_PRICE_STALE_MS = 10 * 60 * 1e3;
-const HISTORICAL_PRICE_TIMEOUT_MS = 18e3;
-function withTimeout(promise, ms2) {
-  let timer;
-  const timeout2 = new Promise((resolve) => {
-    timer = setTimeout(() => resolve(null), ms2);
-  });
-  return Promise.race([promise, timeout2]).finally(() => {
-    if (timer) clearTimeout(timer);
-  });
-}
+const HISTORICAL_PRICES_ENABLED = false;
 function useIcpPrice() {
   const { actor, isFetching } = useBackendActor();
   return useQuery({
@@ -56202,37 +56193,18 @@ function useIcpPrice() {
   });
 }
 function useHistoricalPrices(dates) {
-  const { actor, isFetching } = useBackendActor();
+  useBackendActor();
   return useQuery({
     queryKey: ["icp-price", "historical", dates],
     queryFn: async () => {
-      if (!actor) return /* @__PURE__ */ new Map();
-      const settled = await Promise.allSettled(
-        dates.map(async (date2) => {
-          const snapshot = await withTimeout(
-            actor.getHistoricalIcpPrice(date2),
-            HISTORICAL_PRICE_TIMEOUT_MS
-          );
-          return [date2, snapshot];
-        })
-      );
-      const map2 = /* @__PURE__ */ new Map();
-      for (const result of settled) {
-        if (result.status === "fulfilled") {
-          const [date2, snapshot] = result.value;
-          if (snapshot == null) continue;
-          if (isPriceUnavailable(snapshot)) continue;
-          map2.set(date2, snapshot);
-        }
-      }
-      return map2;
+      return /* @__PURE__ */ new Map();
     },
-    enabled: !!actor && !isFetching && dates.length > 0,
+    // When the flag is off, disable the query entirely so it never
+    // fetches and `isFetching` stays false (consumers treat that as
+    // "settled"). The queryFn guard above is a belt-and-suspenders.
+    enabled: HISTORICAL_PRICES_ENABLED,
     staleTime: Number.POSITIVE_INFINITY
   });
-}
-function isPriceUnavailable(snap) {
-  return snap.unavailable === true;
 }
 const PORTFOLIO_KEY = ["portfolio-stats"];
 const statsKey = (id2) => ["neuron-stats", id2];
@@ -56630,17 +56602,7 @@ function DashboardPage() {
         }
       }
       const priceMap = /* @__PURE__ */ new Map();
-      await Promise.all(
-        [...dateSet].map(async (date2) => {
-          try {
-            const snap = await actor.getHistoricalIcpPrice(date2);
-            if (snap && snap.usd > 0) {
-              priceMap.set(date2, { usd: snap.usd, pln: snap.pln });
-            }
-          } catch {
-          }
-        })
-      );
+      if (HISTORICAL_PRICES_ENABLED) ;
       const nnsCsv = rewardsToCombinedCsv(groups, priceMap);
       const wtnCsv = wtnSnapshotsToCombinedCsv(wtnNonEmpty);
       let csv;

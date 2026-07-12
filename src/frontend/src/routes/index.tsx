@@ -44,7 +44,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useNeurons } from "@/hooks/use-neurons";
-import { useIcpPrice } from "@/hooks/use-prices";
+import { HISTORICAL_PRICES_ENABLED, useIcpPrice } from "@/hooks/use-prices";
 import { useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats, usePortfolioStats } from "@/hooks/use-stats";
 import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
@@ -190,19 +190,26 @@ export function DashboardPage() {
           );
         }
       }
+      // EMERGENCY MITIGATION: when HISTORICAL_PRICES_ENABLED is false,
+      // skip the per-date getHistoricalIcpPrice outcalls entirely. The
+      // priceMap stays empty, so rewardsToCombinedCsv emits rows with
+      // empty USD/PLN price columns instead of triggering CoinGecko
+      // outcalls. The fetch logic is preserved for re-enablement.
       const priceMap: PriceMap = new Map();
-      await Promise.all(
-        [...dateSet].map(async (date) => {
-          try {
-            const snap = await actor.getHistoricalIcpPrice(date);
-            if (snap && snap.usd > 0) {
-              priceMap.set(date, { usd: snap.usd, pln: snap.pln });
+      if (HISTORICAL_PRICES_ENABLED) {
+        await Promise.all(
+          [...dateSet].map(async (date) => {
+            try {
+              const snap = await actor.getHistoricalIcpPrice(date);
+              if (snap && snap.usd > 0) {
+                priceMap.set(date, { usd: snap.usd, pln: snap.pln });
+              }
+            } catch {
+              // skip this date — row will have empty price columns
             }
-          } catch {
-            // skip this date — row will have empty price columns
-          }
-        }),
-      );
+          }),
+        );
+      }
 
       // Build a single combined CSV with a type-identifier column ("NNS" vs
       // "WTN"). NNS rows reuse the rich rewardsToCombinedCsv schema (with

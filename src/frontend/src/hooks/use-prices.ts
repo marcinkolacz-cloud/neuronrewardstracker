@@ -17,6 +17,26 @@ import { useQuery } from "@tanstack/react-query";
 const CURRENT_PRICE_STALE_MS = 10 * 60 * 1000;
 
 /**
+ * EMERGENCY MITIGATION FLAG — historical ICP price fetching.
+ *
+ * The neuron detail page fires one backend CoinGecko HTTP outcall PER
+ * distinct reward date on every page mount (potentially hundreds of
+ * concurrent outcalls for a long-running neuron). The 18s frontend
+ * per-call timeout does NOT cancel the underlying backend outcall (JS
+ * promises are not cancellable), so cycles are still burned even after
+ * the frontend stops waiting.
+ *
+ * Set this to `false` to disable ALL historical price fetching: the
+ * `useHistoricalPrices` hook returns an empty settled Map immediately
+ * (no backend calls), the "Fetching historical prices…" loading text
+ * never appears, and the CSV export skips per-date price lookups.
+ *
+ * Flip back to `true` to re-enable once the backend batching / caching
+ * is fixed. The code paths below remain intact and compile either way.
+ */
+export const HISTORICAL_PRICES_ENABLED = false;
+
+/**
  * Per-date historical price fetch timeout. If a single
  * `getHistoricalIcpPrice` call has not resolved within this bound, it is
  * treated as a failure for that date (resolved to `null`) so the overall
@@ -94,6 +114,12 @@ export function useHistoricalPrices(dates: string[]) {
   return useQuery<Map<string, PriceSnapshot>>({
     queryKey: ["icp-price", "historical", dates] as const,
     queryFn: async () => {
+      // EMERGENCY MITIGATION: when the flag is off, never call the
+      // backend. Return an empty Map so consumers see "no prices"
+      // (a settled, non-fetching state) rather than hanging on the
+      // "Fetching historical prices…" loading text. The full fetch
+      // logic below is preserved for re-enablement.
+      if (!HISTORICAL_PRICES_ENABLED) return new Map();
       if (!actor) return new Map();
       const settled = await Promise.allSettled(
         dates.map(async (date) => {
@@ -125,7 +151,11 @@ export function useHistoricalPrices(dates: string[]) {
       }
       return map;
     },
-    enabled: !!actor && !isFetching && dates.length > 0,
+    // When the flag is off, disable the query entirely so it never
+    // fetches and `isFetching` stays false (consumers treat that as
+    // "settled"). The queryFn guard above is a belt-and-suspenders.
+    enabled:
+      HISTORICAL_PRICES_ENABLED && !!actor && !isFetching && dates.length > 0,
     staleTime: Number.POSITIVE_INFINITY,
   });
 }
