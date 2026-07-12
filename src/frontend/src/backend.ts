@@ -64,6 +64,12 @@ export interface HttpRequestResult {
     body: Uint8Array;
     headers: Array<HttpHeader>;
 }
+export interface WtnPosition {
+    id: WtnPositionId;
+    ownerId: Principal;
+    name: string;
+    startDate: Timestamp;
+}
 export type Result__1 = {
     __kind__: "ok";
     ok: null;
@@ -71,6 +77,82 @@ export type Result__1 = {
     __kind__: "err";
     err: Error_;
 };
+export interface MonthlyBreakdown {
+    month: bigint;
+    totalDeltaE8s: bigint;
+    year: bigint;
+    readingCount: bigint;
+    momDeltaE8s: bigint;
+}
+export interface WtnStats {
+    percentReturn: number;
+    totalCapitalContributed: number;
+    totalEarned: number;
+    positionId: WtnPositionId;
+    redeemableIcpValue: number;
+    totalWithdrawn: number;
+}
+export type TimerId = bigint;
+export interface WtnSnapshot {
+    date: Timestamp;
+    positionId: WtnPositionId;
+    redeemableIcpValue: number;
+    nicpHeld: number;
+    eventType: WtnEventType;
+    totalIcpPaid: number;
+}
+export type E8s = bigint;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: HttpRequestResult;
+}
+export interface PriceSnapshot {
+    pln: number;
+    usd: number;
+    timestamp: bigint;
+    cached: boolean;
+}
+export interface SyncResult {
+    status: SyncStatus;
+    maturityE8s?: bigint;
+    lastSyncError?: string;
+    stakedE8s?: bigint;
+    neuronId: NeuronId;
+}
+export interface Cell {
+    value: Value;
+    name: string;
+}
+export type Value = {
+    __kind__: "int";
+    int: bigint;
+} | {
+    __kind__: "nat";
+    nat: bigint;
+} | {
+    __kind__: "float";
+    float: number;
+} | {
+    __kind__: "bool";
+    bool: boolean;
+} | {
+    __kind__: "null";
+    null: null;
+} | {
+    __kind__: "text";
+    text: string;
+};
+export interface NeuronStats {
+    averageDailyRewardE8s: bigint;
+    totalRewardsE8s: bigint;
+    totalCapitalContributedE8s: E8s;
+    apy30d: number;
+    percentageReturn: number;
+    neuronId: NeuronId;
+    monthly: Array<MonthlyBreakdown>;
+    overallReturnPct: number;
+}
+export type DeltaE8s = bigint;
 export type Error_ = {
     __kind__: "FrontendOriginsNotConfigured";
     FrontendOriginsNotConfigured: null;
@@ -115,33 +197,31 @@ export type Error_ = {
         expected: Array<string>;
     };
 };
-export type DeltaE8s = bigint;
+export interface WtnHistoricalEntry {
+    date: Timestamp;
+    redeemableIcpValue: number;
+    nicpHeld: number;
+    totalIcpPaid: number;
+}
 export interface HistoricalEntry {
     stakedMaturityE8s: E8s;
     unstakedMaturityE8s: E8s;
     timestamp: Timestamp;
 }
-export interface MonthlyBreakdown {
-    month: bigint;
-    totalDeltaE8s: bigint;
-    year: bigint;
-    readingCount: bigint;
-    momDeltaE8s: bigint;
-}
-export interface HttpHeader {
-    value: string;
-    name: string;
-}
 export interface DailyReward {
     stakedMaturityE8s: E8s;
     unstakedMaturityE8s: E8s;
+    stakeDeltaE8s: E8s;
     autoStakeMaturity: boolean;
     timestamp: Timestamp;
     neuronId: NeuronId;
     deltaE8s: DeltaE8s;
     eventType: EventType;
 }
-export type TimerId = bigint;
+export interface HttpHeader {
+    value: string;
+    name: string;
+}
 export interface Result {
     hasMore: boolean;
     rows: Array<Array<Cell>>;
@@ -152,6 +232,7 @@ export interface PortfolioStats {
     totalRewardsE8s: bigint;
     blendedApy: number;
     totalStakedE8s: E8s;
+    totalCapitalContributedE8s: E8s;
     percentageReturn: number;
     neuronCount: bigint;
 }
@@ -164,61 +245,13 @@ export interface Neuron {
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
-export interface TransformationInput {
-    context: Uint8Array;
-    response: HttpRequestResult;
-}
-export interface PriceSnapshot {
-    pln: number;
-    usd: number;
-    timestamp: bigint;
-    cached: boolean;
-}
-export interface SyncResult {
-    status: SyncStatus;
-    maturityE8s?: bigint;
-    lastSyncError?: string;
-    stakedE8s?: bigint;
-    neuronId: NeuronId;
-}
 export type NeuronId = bigint;
-export type Value = {
-    __kind__: "int";
-    int: bigint;
-} | {
-    __kind__: "nat";
-    nat: bigint;
-} | {
-    __kind__: "float";
-    float: number;
-} | {
-    __kind__: "bool";
-    bool: boolean;
-} | {
-    __kind__: "null";
-    null: null;
-} | {
-    __kind__: "text";
-    text: string;
-};
-export interface NeuronStats {
-    averageDailyRewardE8s: bigint;
-    totalRewardsE8s: bigint;
-    apy30d: number;
-    percentageReturn: number;
-    neuronId: NeuronId;
-    monthly: Array<MonthlyBreakdown>;
-    overallReturnPct: number;
-}
-export type E8s = bigint;
-export interface Cell {
-    value: Value;
-    name: string;
-}
+export type WtnPositionId = bigint;
 export enum EventType {
     mergedToStake = "mergedToStake",
     normalGrowth = "normalGrowth",
     firstReading = "firstReading",
+    externalTopUp = "externalTopUp",
     disburseOrSpawn = "disburseOrSpawn"
 }
 export enum SyncStatus {
@@ -232,20 +265,31 @@ export enum UserRole {
     user = "user",
     guest = "guest"
 }
+export enum WtnEventType {
+    capitalAdded = "capitalAdded",
+    withdrawal = "withdrawal",
+    organicGrowth = "organicGrowth"
+}
 export interface backendInterface {
     __accessControlState(): Promise<any>;
     __neurons(): Promise<any>;
+    __nextWtnPositionId(): Promise<any>;
     __priceCache(): Promise<any>;
     __rewards(): Promise<any>;
     __syncErrors(): Promise<any>;
     __syncStatuses(): Promise<any>;
+    __wtnPositions(ko: WtnPositionId | null, count: bigint | null): Promise<Array<[WtnPositionId, WtnPosition]>>;
+    __wtnSnapshots(): Promise<any>;
     _initialize_access_control(): Promise<void>;
     _internet_identity_sign_in_finish(): Promise<Result__1>;
     _internet_identity_sign_in_start(): Promise<Uint8Array>;
     addNeuron(id: NeuronId, name: string, startDate: bigint, dissolveDelaySeconds: bigint, initialStakeE8s: bigint): Promise<void>;
+    addWtnPosition(name: string, startDate: bigint): Promise<WtnPosition>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     deleteSnapshot(neuronId: NeuronId, timestamp: bigint): Promise<void>;
+    deleteWtnSnapshot(positionId: WtnPositionId, date: bigint): Promise<void>;
     editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
+    editWtnSnapshot(positionId: WtnPositionId, date: bigint, newDate: bigint, newNicpHeld: number, newTotalIcpPaid: number, newRedeemableIcpValue: number): Promise<void>;
     execute(qJson: string): Promise<Result>;
     getCallerUserRole(): Promise<UserRole>;
     getCurrentIcpPrice(): Promise<PriceSnapshot>;
@@ -255,11 +299,18 @@ export interface backendInterface {
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
     getSyncError(neuronId: NeuronId): Promise<string | null>;
     getSyncStatus(neuronId: NeuronId): Promise<SyncStatus>;
+    getWtnPosition(positionId: WtnPositionId): Promise<WtnPosition | null>;
+    getWtnSnapshots(positionId: WtnPositionId): Promise<Array<WtnSnapshot>>;
+    getWtnStats(positionId: WtnPositionId): Promise<WtnStats>;
     importHistoricalData(neuronId: NeuronId, entries: Array<HistoricalEntry>): Promise<void>;
+    importWtnHistoricalData(positionId: WtnPositionId, entries: Array<WtnHistoricalEntry>): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     listMyNeurons(): Promise<Array<Neuron>>;
+    listMyWtnPositions(): Promise<Array<WtnPosition>>;
     recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
+    recordWtnSnapshot(positionId: WtnPositionId, date: bigint, nicpHeld: number, totalIcpPaid: number, redeemableIcpValue: number): Promise<WtnSnapshot>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
+    removeWtnPosition(positionId: WtnPositionId): Promise<void>;
     /**
      * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
      * / target on every call so DST transitions do not cause drift. After the
@@ -295,8 +346,9 @@ export interface backendInterface {
      */
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateNeuron(neuron: Neuron): Promise<void>;
+    updateWtnPosition(position: WtnPosition): Promise<void>;
 }
-import type { Cell as _Cell, DailyReward as _DailyReward, DeltaE8s as _DeltaE8s, E8s as _E8s, Error as _Error, EventType as _EventType, NeuronId as _NeuronId, Result as _Result, Result__1 as _Result__1, SyncResult as _SyncResult, SyncStatus as _SyncStatus, Timestamp as _Timestamp, UserRole as _UserRole, Value as _Value } from "./declarations/backend.did.d.ts";
+import type { Cell as _Cell, DailyReward as _DailyReward, DeltaE8s as _DeltaE8s, E8s as _E8s, Error as _Error, EventType as _EventType, NeuronId as _NeuronId, Result as _Result, Result__1 as _Result__1, SyncResult as _SyncResult, SyncStatus as _SyncStatus, Timestamp as _Timestamp, UserRole as _UserRole, Value as _Value, WtnEventType as _WtnEventType, WtnPosition as _WtnPosition, WtnPositionId as _WtnPositionId, WtnSnapshot as _WtnSnapshot } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async __accessControlState(): Promise<any> {
@@ -324,6 +376,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.__neurons();
+            return result;
+        }
+    }
+    async __nextWtnPositionId(): Promise<any> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.__nextWtnPositionId();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.__nextWtnPositionId();
             return result;
         }
     }
@@ -383,6 +449,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async __wtnPositions(arg0: WtnPositionId | null, arg1: bigint | null): Promise<Array<[WtnPositionId, WtnPosition]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.__wtnPositions(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.__wtnPositions(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async __wtnSnapshots(): Promise<any> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.__wtnSnapshots();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.__wtnSnapshots();
+            return result;
+        }
+    }
     async _initialize_access_control(): Promise<void> {
         if (this.processError) {
             try {
@@ -401,14 +495,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor._internet_identity_sign_in_finish();
-                return from_candid_Result__1_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result__1_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor._internet_identity_sign_in_finish();
-            return from_candid_Result__1_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result__1_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async _internet_identity_sign_in_start(): Promise<Uint8Array> {
@@ -439,17 +533,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+    async addWtnPosition(arg0: string, arg1: bigint): Promise<WtnPosition> {
         if (this.processError) {
             try {
-                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.addWtnPosition(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.addWtnPosition(arg0, arg1);
+            return result;
+        }
+    }
+    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n7(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n7(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -467,6 +575,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteWtnSnapshot(arg0: WtnPositionId, arg1: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteWtnSnapshot(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteWtnSnapshot(arg0, arg1);
+            return result;
+        }
+    }
     async editSnapshot(arg0: NeuronId, arg1: bigint, arg2: bigint, arg3: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -481,32 +603,46 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async editWtnSnapshot(arg0: WtnPositionId, arg1: bigint, arg2: bigint, arg3: number, arg4: number, arg5: number): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.editWtnSnapshot(arg0, arg1, arg2, arg3, arg4, arg5);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.editWtnSnapshot(arg0, arg1, arg2, arg3, arg4, arg5);
+            return result;
+        }
+    }
     async execute(arg0: string): Promise<Result> {
         if (this.processError) {
             try {
                 const result = await this.actor.execute(arg0);
-                return from_candid_Result_n7(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.execute(arg0);
-            return from_candid_Result_n7(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_n9(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n17(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCurrentIcpPrice(): Promise<PriceSnapshot> {
@@ -569,42 +705,84 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getRewardHistory(arg0);
-                return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getRewardHistory(arg0);
-            return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
         }
     }
     async getSyncError(arg0: NeuronId): Promise<string | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getSyncError(arg0);
-                return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getSyncError(arg0);
-            return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
         }
     }
     async getSyncStatus(arg0: NeuronId): Promise<SyncStatus> {
         if (this.processError) {
             try {
                 const result = await this.actor.getSyncStatus(arg0);
-                return from_candid_SyncStatus_n23(this._uploadFile, this._downloadFile, result);
+                return from_candid_SyncStatus_n25(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getSyncStatus(arg0);
-            return from_candid_SyncStatus_n23(this._uploadFile, this._downloadFile, result);
+            return from_candid_SyncStatus_n25(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getWtnPosition(arg0: WtnPositionId): Promise<WtnPosition | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getWtnPosition(arg0);
+                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getWtnPosition(arg0);
+            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getWtnSnapshots(arg0: WtnPositionId): Promise<Array<WtnSnapshot>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getWtnSnapshots(arg0);
+                return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getWtnSnapshots(arg0);
+            return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getWtnStats(arg0: WtnPositionId): Promise<WtnStats> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getWtnStats(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getWtnStats(arg0);
+            return result;
         }
     }
     async importHistoricalData(arg0: NeuronId, arg1: Array<HistoricalEntry>): Promise<void> {
@@ -618,6 +796,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.importHistoricalData(arg0, arg1);
+            return result;
+        }
+    }
+    async importWtnHistoricalData(arg0: WtnPositionId, arg1: Array<WtnHistoricalEntry>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.importWtnHistoricalData(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.importWtnHistoricalData(arg0, arg1);
             return result;
         }
     }
@@ -649,18 +841,46 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async listMyWtnPositions(): Promise<Array<WtnPosition>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listMyWtnPositions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listMyWtnPositions();
+            return result;
+        }
+    }
     async recordSnapshot(arg0: NeuronId, arg1: bigint, arg2: bigint, arg3: boolean): Promise<DailyReward> {
         if (this.processError) {
             try {
                 const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
-                return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_DailyReward_n20(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
-            return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
+            return from_candid_DailyReward_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async recordWtnSnapshot(arg0: WtnPositionId, arg1: bigint, arg2: number, arg3: number, arg4: number): Promise<WtnSnapshot> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.recordWtnSnapshot(arg0, arg1, arg2, arg3, arg4);
+                return from_candid_WtnSnapshot_n29(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.recordWtnSnapshot(arg0, arg1, arg2, arg3, arg4);
+            return from_candid_WtnSnapshot_n29(this._uploadFile, this._downloadFile, result);
         }
     }
     async removeNeuron(arg0: NeuronId): Promise<void> {
@@ -674,6 +894,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.removeNeuron(arg0);
+            return result;
+        }
+    }
+    async removeWtnPosition(arg0: WtnPositionId): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeWtnPosition(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeWtnPosition(arg0);
             return result;
         }
     }
@@ -723,28 +957,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.syncAllMyNeurons();
-                return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.syncAllMyNeurons();
-            return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
         }
     }
     async syncNeuron(arg0: NeuronId): Promise<SyncResult> {
         if (this.processError) {
             try {
                 const result = await this.actor.syncNeuron(arg0);
-                return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
+                return from_candid_SyncResult_n34(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.syncNeuron(arg0);
-            return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
+            return from_candid_SyncResult_n34(this._uploadFile, this._downloadFile, result);
         }
     }
     async transform(arg0: TransformationInput): Promise<TransformationOutput> {
@@ -775,44 +1009,79 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async updateWtnPosition(arg0: WtnPosition): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateWtnPosition(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateWtnPosition(arg0);
+            return result;
+        }
+    }
 }
-function from_candid_Cell_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Cell): Cell {
-    return from_candid_record_n12(_uploadFile, _downloadFile, value);
+function from_candid_Cell_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Cell): Cell {
+    return from_candid_record_n14(_uploadFile, _downloadFile, value);
 }
-function from_candid_DailyReward_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _DailyReward): DailyReward {
-    return from_candid_record_n19(_uploadFile, _downloadFile, value);
+function from_candid_DailyReward_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _DailyReward): DailyReward {
+    return from_candid_record_n21(_uploadFile, _downloadFile, value);
 }
-function from_candid_Error_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Error): Error_ {
+function from_candid_Error_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Error): Error_ {
+    return from_candid_variant_n6(_uploadFile, _downloadFile, value);
+}
+function from_candid_EventType_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EventType): EventType {
+    return from_candid_variant_n23(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result__1_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result__1): Result__1 {
     return from_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function from_candid_EventType_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _EventType): EventType {
-    return from_candid_variant_n21(_uploadFile, _downloadFile, value);
+function from_candid_Result_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
+    return from_candid_record_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result__1_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result__1): Result__1 {
-    return from_candid_variant_n2(_uploadFile, _downloadFile, value);
+function from_candid_SyncResult_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SyncResult): SyncResult {
+    return from_candid_record_n35(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
-    return from_candid_record_n8(_uploadFile, _downloadFile, value);
+function from_candid_SyncStatus_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SyncStatus): SyncStatus {
+    return from_candid_variant_n26(_uploadFile, _downloadFile, value);
 }
-function from_candid_SyncResult_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SyncResult): SyncResult {
-    return from_candid_record_n27(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_SyncStatus_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SyncStatus): SyncStatus {
-    return from_candid_variant_n24(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserRole_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+function from_candid_Value_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Value): Value {
     return from_candid_variant_n16(_uploadFile, _downloadFile, value);
 }
-function from_candid_Value_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Value): Value {
-    return from_candid_variant_n14(_uploadFile, _downloadFile, value);
+function from_candid_WtnEventType_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WtnEventType): WtnEventType {
+    return from_candid_variant_n32(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_WtnSnapshot_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _WtnSnapshot): WtnSnapshot {
+    return from_candid_record_n30(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
+function from_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_WtnPosition]): WtnPosition | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n36(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    hasMore: boolean;
+    rows: Array<Array<_Cell>>;
+}): {
+    hasMore: boolean;
+    rows: Array<Array<Cell>>;
+} {
+    return {
+        hasMore: value.hasMore,
+        rows: from_candid_vec_n11(_uploadFile, _downloadFile, value.rows)
+    };
+}
+function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     value: _Value;
     name: string;
 }): {
@@ -820,13 +1089,14 @@ function from_candid_record_n12(_uploadFile: (file: ExternalBlob) => Promise<Uin
     name: string;
 } {
     return {
-        value: from_candid_Value_n13(_uploadFile, _downloadFile, value.value),
+        value: from_candid_Value_n15(_uploadFile, _downloadFile, value.value),
         name: value.name
     };
 }
-function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     stakedMaturityE8s: _E8s;
     unstakedMaturityE8s: _E8s;
+    stakeDeltaE8s: _E8s;
     autoStakeMaturity: boolean;
     timestamp: _Timestamp;
     neuronId: _NeuronId;
@@ -835,6 +1105,7 @@ function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): {
     stakedMaturityE8s: E8s;
     unstakedMaturityE8s: E8s;
+    stakeDeltaE8s: E8s;
     autoStakeMaturity: boolean;
     timestamp: Timestamp;
     neuronId: NeuronId;
@@ -844,14 +1115,39 @@ function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         stakedMaturityE8s: value.stakedMaturityE8s,
         unstakedMaturityE8s: value.unstakedMaturityE8s,
+        stakeDeltaE8s: value.stakeDeltaE8s,
         autoStakeMaturity: value.autoStakeMaturity,
         timestamp: value.timestamp,
         neuronId: value.neuronId,
         deltaE8s: value.deltaE8s,
-        eventType: from_candid_EventType_n20(_uploadFile, _downloadFile, value.eventType)
+        eventType: from_candid_EventType_n22(_uploadFile, _downloadFile, value.eventType)
     };
 }
-function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    date: _Timestamp;
+    positionId: _WtnPositionId;
+    redeemableIcpValue: number;
+    nicpHeld: number;
+    eventType: _WtnEventType;
+    totalIcpPaid: number;
+}): {
+    date: Timestamp;
+    positionId: WtnPositionId;
+    redeemableIcpValue: number;
+    nicpHeld: number;
+    eventType: WtnEventType;
+    totalIcpPaid: number;
+} {
+    return {
+        date: value.date,
+        positionId: value.positionId,
+        redeemableIcpValue: value.redeemableIcpValue,
+        nicpHeld: value.nicpHeld,
+        eventType: from_candid_WtnEventType_n31(_uploadFile, _downloadFile, value.eventType),
+        totalIcpPaid: value.totalIcpPaid
+    };
+}
+function from_candid_record_n35(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     status: _SyncStatus;
     maturityE8s: [] | [bigint];
     lastSyncError: [] | [string];
@@ -865,26 +1161,14 @@ function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uin
     neuronId: NeuronId;
 } {
     return {
-        status: from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value.status),
-        maturityE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.maturityE8s)),
-        lastSyncError: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.lastSyncError)),
-        stakedE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.stakedE8s)),
+        status: from_candid_SyncStatus_n25(_uploadFile, _downloadFile, value.status),
+        maturityE8s: record_opt_to_undefined(from_candid_opt_n36(_uploadFile, _downloadFile, value.maturityE8s)),
+        lastSyncError: record_opt_to_undefined(from_candid_opt_n24(_uploadFile, _downloadFile, value.lastSyncError)),
+        stakedE8s: record_opt_to_undefined(from_candid_opt_n36(_uploadFile, _downloadFile, value.stakedE8s)),
         neuronId: value.neuronId
     };
 }
-function from_candid_record_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    hasMore: boolean;
-    rows: Array<Array<_Cell>>;
-}): {
-    hasMore: boolean;
-    rows: Array<Array<Cell>>;
-} {
-    return {
-        hasMore: value.hasMore,
-        rows: from_candid_vec_n9(_uploadFile, _downloadFile, value.rows)
-    };
-}
-function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     int: bigint;
 } | {
     nat: bigint;
@@ -935,7 +1219,7 @@ function from_candid_variant_n14(_uploadFile: (file: ExternalBlob) => Promise<Ui
         text: value.text
     } : value;
 }
-function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -944,7 +1228,40 @@ function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    mergedToStake: null;
+} | {
+    normalGrowth: null;
+} | {
+    firstReading: null;
+} | {
+    externalTopUp: null;
+} | {
+    disburseOrSpawn: null;
+}): EventType {
+    return "mergedToStake" in value ? EventType.mergedToStake : "normalGrowth" in value ? EventType.normalGrowth : "firstReading" in value ? EventType.firstReading : "externalTopUp" in value ? EventType.externalTopUp : "disburseOrSpawn" in value ? EventType.disburseOrSpawn : value;
+}
+function from_candid_variant_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    hotkeyRequired: null;
+} | {
+    neverSynced: null;
+} | {
+    failed: null;
+} | {
+    synced: null;
+}): SyncStatus {
+    return "hotkeyRequired" in value ? SyncStatus.hotkeyRequired : "neverSynced" in value ? SyncStatus.neverSynced : "failed" in value ? SyncStatus.failed : "synced" in value ? SyncStatus.synced : value;
+}
+function from_candid_variant_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    capitalAdded: null;
+} | {
+    withdrawal: null;
+} | {
+    organicGrowth: null;
+}): WtnEventType {
+    return "capitalAdded" in value ? WtnEventType.capitalAdded : "withdrawal" in value ? WtnEventType.withdrawal : "organicGrowth" in value ? WtnEventType.organicGrowth : value;
+}
+function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: null;
 } | {
     err: _Error;
@@ -960,32 +1277,10 @@ function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uin
         ok: value.ok
     } : "err" in value ? {
         __kind__: "err",
-        err: from_candid_Error_n3(_uploadFile, _downloadFile, value.err)
+        err: from_candid_Error_n5(_uploadFile, _downloadFile, value.err)
     } : value;
 }
-function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    mergedToStake: null;
-} | {
-    normalGrowth: null;
-} | {
-    firstReading: null;
-} | {
-    disburseOrSpawn: null;
-}): EventType {
-    return "mergedToStake" in value ? EventType.mergedToStake : "normalGrowth" in value ? EventType.normalGrowth : "firstReading" in value ? EventType.firstReading : "disburseOrSpawn" in value ? EventType.disburseOrSpawn : value;
-}
-function from_candid_variant_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    hotkeyRequired: null;
-} | {
-    neverSynced: null;
-} | {
-    failed: null;
-} | {
-    synced: null;
-}): SyncStatus {
-    return "hotkeyRequired" in value ? SyncStatus.hotkeyRequired : "neverSynced" in value ? SyncStatus.neverSynced : "failed" in value ? SyncStatus.failed : "synced" in value ? SyncStatus.synced : value;
-}
-function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     FrontendOriginsNotConfigured: null;
 } | {
     MixedSsoSources: {
@@ -1094,22 +1389,31 @@ function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uin
         FrontendOriginMismatch: value.FrontendOriginMismatch
     } : value;
 }
-function from_candid_vec_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Cell>): Array<Cell> {
-    return value.map((x)=>from_candid_Cell_n11(_uploadFile, _downloadFile, x));
+function from_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Array<_Cell>>): Array<Array<Cell>> {
+    return value.map((x)=>from_candid_vec_n12(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_DailyReward>): Array<DailyReward> {
-    return value.map((x)=>from_candid_DailyReward_n18(_uploadFile, _downloadFile, x));
+function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Cell>): Array<Cell> {
+    return value.map((x)=>from_candid_Cell_n13(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_SyncResult>): Array<SyncResult> {
-    return value.map((x)=>from_candid_SyncResult_n26(_uploadFile, _downloadFile, x));
+function from_candid_vec_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_DailyReward>): Array<DailyReward> {
+    return value.map((x)=>from_candid_DailyReward_n20(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Array<_Cell>>): Array<Array<Cell>> {
-    return value.map((x)=>from_candid_vec_n10(_uploadFile, _downloadFile, x));
+function from_candid_vec_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_WtnSnapshot>): Array<WtnSnapshot> {
+    return value.map((x)=>from_candid_WtnSnapshot_n29(_uploadFile, _downloadFile, x));
 }
-function to_candid_UserRole_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
-    return to_candid_variant_n6(_uploadFile, _downloadFile, value);
+function from_candid_vec_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_SyncResult>): Array<SyncResult> {
+    return value.map((x)=>from_candid_SyncResult_n34(_uploadFile, _downloadFile, x));
 }
-function to_candid_variant_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
+function to_candid_UserRole_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
+    return to_candid_variant_n8(_uploadFile, _downloadFile, value);
+}
+function to_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: WtnPositionId | null): [] | [_WtnPositionId] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_opt_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
+    return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
     admin: null;
 } | {
     user: null;

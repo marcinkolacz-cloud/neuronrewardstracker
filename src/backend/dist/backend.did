@@ -1,3 +1,42 @@
+type WtnStats = 
+ record {
+   percentReturn: float64;
+   positionId: WtnPositionId;
+   redeemableIcpValue: float64;
+   totalCapitalContributed: float64;
+   totalEarned: float64;
+   totalWithdrawn: float64;
+ };
+type WtnSnapshot = 
+ record {
+   date: Timestamp;
+   eventType: WtnEventType;
+   nicpHeld: float64;
+   positionId: WtnPositionId;
+   redeemableIcpValue: float64;
+   totalIcpPaid: float64;
+ };
+type WtnPositionId = nat;
+type WtnPosition = 
+ record {
+   id: WtnPositionId;
+   name: text;
+   ownerId: principal;
+   startDate: Timestamp;
+ };
+type WtnHistoricalEntry = 
+ record {
+   date: Timestamp;
+   nicpHeld: float64;
+   redeemableIcpValue: float64;
+   totalIcpPaid: float64;
+ };
+type WtnEventType = 
+ variant {
+   capitalAdded;
+   organicGrowth;
+   withdrawal;
+ };
 type Value = 
  variant {
    "bool": bool;
@@ -63,6 +102,7 @@ type PortfolioStats =
    blendedApy: float64;
    neuronCount: nat;
    percentageReturn: float64;
+   totalCapitalContributedE8s: E8s;
    totalMaturityE8s: nat64;
    totalRewardsE8s: int;
    totalRewardsThisMonthE8s: nat64;
@@ -76,6 +116,7 @@ type NeuronStats =
    neuronId: NeuronId;
    overallReturnPct: float64;
    percentageReturn: float64;
+   totalCapitalContributedE8s: E8s;
    totalRewardsE8s: int;
  };
 type NeuronId = nat64;
@@ -117,6 +158,7 @@ type HistoricalEntry =
 type EventType = 
  variant {
    disburseOrSpawn;
+   externalTopUp;
    firstReading;
    mergedToStake;
    normalGrowth;
@@ -151,6 +193,7 @@ type DailyReward =
    deltaE8s: DeltaE8s;
    eventType: EventType;
    neuronId: NeuronId;
+   stakeDeltaE8s: E8s;
    stakedMaturityE8s: E8s;
    timestamp: Timestamp;
    unstakedMaturityE8s: E8s;
@@ -163,19 +206,31 @@ type Cell =
 service : {
   __accessControlState: () -> (reserved) query;
   __neurons: () -> (reserved) query;
+  __nextWtnPositionId: () -> (reserved) query;
   __priceCache: () -> (reserved) query;
   __rewards: () -> (reserved) query;
   __syncErrors: () -> (reserved) query;
   __syncStatuses: () -> (reserved) query;
+  __wtnPositions: (ko: opt WtnPositionId, count: opt nat) ->
+   (vec record {
+          WtnPositionId;
+          WtnPosition;
+        }) query;
+  __wtnSnapshots: () -> (reserved) query;
   _initialize_access_control: () -> ();
   _internet_identity_sign_in_finish: () -> (Result__1);
   _internet_identity_sign_in_start: () -> (blob);
   addNeuron: (id: NeuronId, name: text, startDate: int, dissolveDelaySeconds:
    nat64, initialStakeE8s: nat64) -> ();
+  addWtnPosition: (name: text, startDate: int) -> (WtnPosition);
   assignCallerUserRole: (user: principal, role: UserRole) -> ();
   deleteSnapshot: (neuronId: NeuronId, timestamp: int) -> ();
+  deleteWtnSnapshot: (positionId: WtnPositionId, date: int) -> ();
   editSnapshot: (neuronId: NeuronId, timestamp: int, newTimestamp: int,
    newMaturityE8s: nat64) -> ();
+  editWtnSnapshot: (positionId: WtnPositionId, date: int, newDate: int,
+   newNicpHeld: float64, newTotalIcpPaid: float64, newRedeemableIcpValue:
+   float64) -> ();
   execute: (qJson: text) -> (Result) query;
   getCallerUserRole: () -> (UserRole) query;
   getCurrentIcpPrice: () -> (PriceSnapshot);
@@ -185,13 +240,23 @@ service : {
   getRewardHistory: (neuronId: NeuronId) -> (vec DailyReward);
   getSyncError: (neuronId: NeuronId) -> (opt text);
   getSyncStatus: (neuronId: NeuronId) -> (SyncStatus);
+  getWtnPosition: (positionId: WtnPositionId) -> (opt WtnPosition);
+  getWtnSnapshots: (positionId: WtnPositionId) -> (vec WtnSnapshot);
+  getWtnStats: (positionId: WtnPositionId) -> (WtnStats);
   importHistoricalData: (neuronId: NeuronId, entries: vec HistoricalEntry) ->
    ();
+  importWtnHistoricalData: (positionId: WtnPositionId, entries:
+   vec WtnHistoricalEntry) -> ();
   isCallerAdmin: () -> (bool) query;
   listMyNeurons: () -> (vec Neuron);
+  listMyWtnPositions: () -> (vec WtnPosition);
   recordSnapshot: (neuronId: NeuronId, unstakedMaturityE8s: nat64,
    stakedMaturityE8s: nat64, autoStakeMaturity: bool) -> (DailyReward);
+  recordWtnSnapshot: (positionId: WtnPositionId, date: int, nicpHeld:
+   float64, totalIcpPaid: float64, redeemableIcpValue: float64) ->
+   (WtnSnapshot);
   removeNeuron: (neuronId: NeuronId) -> ();
+  removeWtnPosition: (positionId: WtnPositionId) -> ();
   /// Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
   /// target on every call so DST transitions do not cause drift. After the
   /// sync runs, reschedules for the following 18:01 Warsaw.
@@ -221,4 +286,5 @@ service : {
   /// into consensus. Passed to PricesLib functions and the PricesApi mixin.
   transform: (input: TransformationInput) -> (TransformationOutput) query;
   updateNeuron: (neuron: Neuron) -> ();
+  updateWtnPosition: (position: WtnPosition) -> ();
 }

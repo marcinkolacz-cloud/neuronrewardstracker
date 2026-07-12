@@ -38,6 +38,7 @@ mixin (
       autoStakeMaturity,
       Time.now(),
       null,
+      0 : Nat64,
     );
   };
 

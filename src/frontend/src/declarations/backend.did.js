@@ -8,6 +8,14 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const WtnPositionId = IDL.Nat;
+export const Timestamp = IDL.Int;
+export const WtnPosition = IDL.Record({
+  'id' : WtnPositionId,
+  'ownerId' : IDL.Principal,
+  'name' : IDL.Text,
+  'startDate' : Timestamp,
+});
 export const Error = IDL.Variant({
   'FrontendOriginsNotConfigured' : IDL.Null,
   'MixedSsoSources' : IDL.Record({
@@ -55,6 +63,7 @@ export const PriceSnapshot = IDL.Record({
   'timestamp' : IDL.Int,
   'cached' : IDL.Bool,
 });
+export const E8s = IDL.Nat64;
 export const MonthlyBreakdown = IDL.Record({
   'month' : IDL.Nat,
   'totalDeltaE8s' : IDL.Int,
@@ -65,33 +74,35 @@ export const MonthlyBreakdown = IDL.Record({
 export const NeuronStats = IDL.Record({
   'averageDailyRewardE8s' : IDL.Int,
   'totalRewardsE8s' : IDL.Int,
+  'totalCapitalContributedE8s' : E8s,
   'apy30d' : IDL.Float64,
   'percentageReturn' : IDL.Float64,
   'neuronId' : NeuronId,
   'monthly' : IDL.Vec(MonthlyBreakdown),
   'overallReturnPct' : IDL.Float64,
 });
-export const E8s = IDL.Nat64;
 export const PortfolioStats = IDL.Record({
   'totalMaturityE8s' : IDL.Nat64,
   'totalRewardsThisMonthE8s' : IDL.Nat64,
   'totalRewardsE8s' : IDL.Int,
   'blendedApy' : IDL.Float64,
   'totalStakedE8s' : E8s,
+  'totalCapitalContributedE8s' : E8s,
   'percentageReturn' : IDL.Float64,
   'neuronCount' : IDL.Nat,
 });
-export const Timestamp = IDL.Int;
 export const DeltaE8s = IDL.Int;
 export const EventType = IDL.Variant({
   'mergedToStake' : IDL.Null,
   'normalGrowth' : IDL.Null,
   'firstReading' : IDL.Null,
+  'externalTopUp' : IDL.Null,
   'disburseOrSpawn' : IDL.Null,
 });
 export const DailyReward = IDL.Record({
   'stakedMaturityE8s' : E8s,
   'unstakedMaturityE8s' : E8s,
+  'stakeDeltaE8s' : E8s,
   'autoStakeMaturity' : IDL.Bool,
   'timestamp' : Timestamp,
   'neuronId' : NeuronId,
@@ -104,10 +115,37 @@ export const SyncStatus = IDL.Variant({
   'failed' : IDL.Null,
   'synced' : IDL.Null,
 });
+export const WtnEventType = IDL.Variant({
+  'capitalAdded' : IDL.Null,
+  'withdrawal' : IDL.Null,
+  'organicGrowth' : IDL.Null,
+});
+export const WtnSnapshot = IDL.Record({
+  'date' : Timestamp,
+  'positionId' : WtnPositionId,
+  'redeemableIcpValue' : IDL.Float64,
+  'nicpHeld' : IDL.Float64,
+  'eventType' : WtnEventType,
+  'totalIcpPaid' : IDL.Float64,
+});
+export const WtnStats = IDL.Record({
+  'percentReturn' : IDL.Float64,
+  'totalCapitalContributed' : IDL.Float64,
+  'totalEarned' : IDL.Float64,
+  'positionId' : WtnPositionId,
+  'redeemableIcpValue' : IDL.Float64,
+  'totalWithdrawn' : IDL.Float64,
+});
 export const HistoricalEntry = IDL.Record({
   'stakedMaturityE8s' : E8s,
   'unstakedMaturityE8s' : E8s,
   'timestamp' : Timestamp,
+});
+export const WtnHistoricalEntry = IDL.Record({
+  'date' : Timestamp,
+  'redeemableIcpValue' : IDL.Float64,
+  'nicpHeld' : IDL.Float64,
+  'totalIcpPaid' : IDL.Float64,
 });
 export const Neuron = IDL.Record({
   'id' : NeuronId,
@@ -145,10 +183,17 @@ export const TransformationOutput = IDL.Record({
 export const idlService = IDL.Service({
   '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
   '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
+  '__nextWtnPositionId' : IDL.Func([], [IDL.Reserved], ['query']),
   '__priceCache' : IDL.Func([], [IDL.Reserved], ['query']),
   '__rewards' : IDL.Func([], [IDL.Reserved], ['query']),
   '__syncErrors' : IDL.Func([], [IDL.Reserved], ['query']),
   '__syncStatuses' : IDL.Func([], [IDL.Reserved], ['query']),
+  '__wtnPositions' : IDL.Func(
+      [IDL.Opt(WtnPositionId), IDL.Opt(IDL.Nat)],
+      [IDL.Vec(IDL.Tuple(WtnPositionId, WtnPosition))],
+      ['query'],
+    ),
+  '__wtnSnapshots' : IDL.Func([], [IDL.Reserved], ['query']),
   '_initialize_access_control' : IDL.Func([], [], []),
   '_internet_identity_sign_in_finish' : IDL.Func([], [Result__1], []),
   '_internet_identity_sign_in_start' : IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
@@ -157,9 +202,16 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'addWtnPosition' : IDL.Func([IDL.Text, IDL.Int], [WtnPosition], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'deleteSnapshot' : IDL.Func([NeuronId, IDL.Int], [], []),
+  'deleteWtnSnapshot' : IDL.Func([WtnPositionId, IDL.Int], [], []),
   'editSnapshot' : IDL.Func([NeuronId, IDL.Int, IDL.Int, IDL.Nat64], [], []),
+  'editWtnSnapshot' : IDL.Func(
+      [WtnPositionId, IDL.Int, IDL.Int, IDL.Float64, IDL.Float64, IDL.Float64],
+      [],
+      [],
+    ),
   'execute' : IDL.Func([IDL.Text], [Result], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCurrentIcpPrice' : IDL.Func([], [PriceSnapshot], []),
@@ -169,19 +221,34 @@ export const idlService = IDL.Service({
   'getRewardHistory' : IDL.Func([NeuronId], [IDL.Vec(DailyReward)], []),
   'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], []),
   'getSyncStatus' : IDL.Func([NeuronId], [SyncStatus], []),
+  'getWtnPosition' : IDL.Func([WtnPositionId], [IDL.Opt(WtnPosition)], []),
+  'getWtnSnapshots' : IDL.Func([WtnPositionId], [IDL.Vec(WtnSnapshot)], []),
+  'getWtnStats' : IDL.Func([WtnPositionId], [WtnStats], []),
   'importHistoricalData' : IDL.Func(
       [NeuronId, IDL.Vec(HistoricalEntry)],
       [],
       [],
     ),
+  'importWtnHistoricalData' : IDL.Func(
+      [WtnPositionId, IDL.Vec(WtnHistoricalEntry)],
+      [],
+      [],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], []),
+  'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], []),
   'recordSnapshot' : IDL.Func(
       [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool],
       [DailyReward],
       [],
     ),
+  'recordWtnSnapshot' : IDL.Func(
+      [WtnPositionId, IDL.Int, IDL.Float64, IDL.Float64, IDL.Float64],
+      [WtnSnapshot],
+      [],
+    ),
   'removeNeuron' : IDL.Func([NeuronId], [], []),
+  'removeWtnPosition' : IDL.Func([WtnPositionId], [], []),
   'scheduleNextSync' : IDL.Func([], [TimerId], []),
   'schema' : IDL.Func([], [IDL.Text], ['query']),
   'startDailySync' : IDL.Func([], [], []),
@@ -193,11 +260,20 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'updateNeuron' : IDL.Func([Neuron], [], []),
+  'updateWtnPosition' : IDL.Func([WtnPosition], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const WtnPositionId = IDL.Nat;
+  const Timestamp = IDL.Int;
+  const WtnPosition = IDL.Record({
+    'id' : WtnPositionId,
+    'ownerId' : IDL.Principal,
+    'name' : IDL.Text,
+    'startDate' : Timestamp,
+  });
   const Error = IDL.Variant({
     'FrontendOriginsNotConfigured' : IDL.Null,
     'MixedSsoSources' : IDL.Record({
@@ -245,6 +321,7 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : IDL.Int,
     'cached' : IDL.Bool,
   });
+  const E8s = IDL.Nat64;
   const MonthlyBreakdown = IDL.Record({
     'month' : IDL.Nat,
     'totalDeltaE8s' : IDL.Int,
@@ -255,33 +332,35 @@ export const idlFactory = ({ IDL }) => {
   const NeuronStats = IDL.Record({
     'averageDailyRewardE8s' : IDL.Int,
     'totalRewardsE8s' : IDL.Int,
+    'totalCapitalContributedE8s' : E8s,
     'apy30d' : IDL.Float64,
     'percentageReturn' : IDL.Float64,
     'neuronId' : NeuronId,
     'monthly' : IDL.Vec(MonthlyBreakdown),
     'overallReturnPct' : IDL.Float64,
   });
-  const E8s = IDL.Nat64;
   const PortfolioStats = IDL.Record({
     'totalMaturityE8s' : IDL.Nat64,
     'totalRewardsThisMonthE8s' : IDL.Nat64,
     'totalRewardsE8s' : IDL.Int,
     'blendedApy' : IDL.Float64,
     'totalStakedE8s' : E8s,
+    'totalCapitalContributedE8s' : E8s,
     'percentageReturn' : IDL.Float64,
     'neuronCount' : IDL.Nat,
   });
-  const Timestamp = IDL.Int;
   const DeltaE8s = IDL.Int;
   const EventType = IDL.Variant({
     'mergedToStake' : IDL.Null,
     'normalGrowth' : IDL.Null,
     'firstReading' : IDL.Null,
+    'externalTopUp' : IDL.Null,
     'disburseOrSpawn' : IDL.Null,
   });
   const DailyReward = IDL.Record({
     'stakedMaturityE8s' : E8s,
     'unstakedMaturityE8s' : E8s,
+    'stakeDeltaE8s' : E8s,
     'autoStakeMaturity' : IDL.Bool,
     'timestamp' : Timestamp,
     'neuronId' : NeuronId,
@@ -294,10 +373,37 @@ export const idlFactory = ({ IDL }) => {
     'failed' : IDL.Null,
     'synced' : IDL.Null,
   });
+  const WtnEventType = IDL.Variant({
+    'capitalAdded' : IDL.Null,
+    'withdrawal' : IDL.Null,
+    'organicGrowth' : IDL.Null,
+  });
+  const WtnSnapshot = IDL.Record({
+    'date' : Timestamp,
+    'positionId' : WtnPositionId,
+    'redeemableIcpValue' : IDL.Float64,
+    'nicpHeld' : IDL.Float64,
+    'eventType' : WtnEventType,
+    'totalIcpPaid' : IDL.Float64,
+  });
+  const WtnStats = IDL.Record({
+    'percentReturn' : IDL.Float64,
+    'totalCapitalContributed' : IDL.Float64,
+    'totalEarned' : IDL.Float64,
+    'positionId' : WtnPositionId,
+    'redeemableIcpValue' : IDL.Float64,
+    'totalWithdrawn' : IDL.Float64,
+  });
   const HistoricalEntry = IDL.Record({
     'stakedMaturityE8s' : E8s,
     'unstakedMaturityE8s' : E8s,
     'timestamp' : Timestamp,
+  });
+  const WtnHistoricalEntry = IDL.Record({
+    'date' : Timestamp,
+    'redeemableIcpValue' : IDL.Float64,
+    'nicpHeld' : IDL.Float64,
+    'totalIcpPaid' : IDL.Float64,
   });
   const Neuron = IDL.Record({
     'id' : NeuronId,
@@ -335,10 +441,17 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '__accessControlState' : IDL.Func([], [IDL.Reserved], ['query']),
     '__neurons' : IDL.Func([], [IDL.Reserved], ['query']),
+    '__nextWtnPositionId' : IDL.Func([], [IDL.Reserved], ['query']),
     '__priceCache' : IDL.Func([], [IDL.Reserved], ['query']),
     '__rewards' : IDL.Func([], [IDL.Reserved], ['query']),
     '__syncErrors' : IDL.Func([], [IDL.Reserved], ['query']),
     '__syncStatuses' : IDL.Func([], [IDL.Reserved], ['query']),
+    '__wtnPositions' : IDL.Func(
+        [IDL.Opt(WtnPositionId), IDL.Opt(IDL.Nat)],
+        [IDL.Vec(IDL.Tuple(WtnPositionId, WtnPosition))],
+        ['query'],
+      ),
+    '__wtnSnapshots' : IDL.Func([], [IDL.Reserved], ['query']),
     '_initialize_access_control' : IDL.Func([], [], []),
     '_internet_identity_sign_in_finish' : IDL.Func([], [Result__1], []),
     '_internet_identity_sign_in_start' : IDL.Func([], [IDL.Vec(IDL.Nat8)], []),
@@ -347,9 +460,23 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'addWtnPosition' : IDL.Func([IDL.Text, IDL.Int], [WtnPosition], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'deleteSnapshot' : IDL.Func([NeuronId, IDL.Int], [], []),
+    'deleteWtnSnapshot' : IDL.Func([WtnPositionId, IDL.Int], [], []),
     'editSnapshot' : IDL.Func([NeuronId, IDL.Int, IDL.Int, IDL.Nat64], [], []),
+    'editWtnSnapshot' : IDL.Func(
+        [
+          WtnPositionId,
+          IDL.Int,
+          IDL.Int,
+          IDL.Float64,
+          IDL.Float64,
+          IDL.Float64,
+        ],
+        [],
+        [],
+      ),
     'execute' : IDL.Func([IDL.Text], [Result], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCurrentIcpPrice' : IDL.Func([], [PriceSnapshot], []),
@@ -359,19 +486,34 @@ export const idlFactory = ({ IDL }) => {
     'getRewardHistory' : IDL.Func([NeuronId], [IDL.Vec(DailyReward)], []),
     'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], []),
     'getSyncStatus' : IDL.Func([NeuronId], [SyncStatus], []),
+    'getWtnPosition' : IDL.Func([WtnPositionId], [IDL.Opt(WtnPosition)], []),
+    'getWtnSnapshots' : IDL.Func([WtnPositionId], [IDL.Vec(WtnSnapshot)], []),
+    'getWtnStats' : IDL.Func([WtnPositionId], [WtnStats], []),
     'importHistoricalData' : IDL.Func(
         [NeuronId, IDL.Vec(HistoricalEntry)],
         [],
         [],
       ),
+    'importWtnHistoricalData' : IDL.Func(
+        [WtnPositionId, IDL.Vec(WtnHistoricalEntry)],
+        [],
+        [],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], []),
+    'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], []),
     'recordSnapshot' : IDL.Func(
         [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool],
         [DailyReward],
         [],
       ),
+    'recordWtnSnapshot' : IDL.Func(
+        [WtnPositionId, IDL.Int, IDL.Float64, IDL.Float64, IDL.Float64],
+        [WtnSnapshot],
+        [],
+      ),
     'removeNeuron' : IDL.Func([NeuronId], [], []),
+    'removeWtnPosition' : IDL.Func([WtnPositionId], [], []),
     'scheduleNextSync' : IDL.Func([], [TimerId], []),
     'schema' : IDL.Func([], [IDL.Text], ['query']),
     'startDailySync' : IDL.Func([], [], []),
@@ -383,6 +525,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'updateNeuron' : IDL.Func([Neuron], [], []),
+    'updateWtnPosition' : IDL.Func([WtnPosition], [], []),
   });
 };
 

@@ -34,6 +34,12 @@ export type {
   E8s,
   DeltaE8s,
   Timestamp,
+  WtnPosition,
+  WtnPositionId,
+  WtnSnapshot,
+  WtnStats,
+  WtnEventType,
+  WtnHistoricalEntry,
 } from "@/backend";
 
 /**

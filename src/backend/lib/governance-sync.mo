@@ -176,9 +176,42 @@ module {
             null;
           };
 
+          // --- External top-up detection ---
+          // If the stake rose but the event was NOT classified as
+          // #mergedToStake (i.e. there was no corresponding unstaked-maturity
+          // drop), the increase came from an external ICP top-up sent directly
+          // to the neuron account. Tag it #externalTopUp so the stats layer
+          // treats the stake increase as new capital contributed (not as
+          // earned reward). stakeDeltaE8s carries the absolute increase.
+          //
+          // stakeDeltaE8s is also populated for #mergedToStake (the amount of
+          // maturity merged into stake), so the stats layer can record the
+          // stake change for both stake-changing event types. For all other
+          // event types it is 0 (no external stake change).
+          let stakeDeltaE8s : Nat64 = switch (newStakedE8s, prevStakedE8s) {
+            case (?newStake, ?prevStake) {
+              if (newStake > prevStake) { newStake - prevStake } else { 0 };
+            };
+            case _ 0;
+          };
+
+          let (finalOverride, finalStakeDelta) : (?RewardTypes.EventType, Nat64) = switch (eventTypeOverride) {
+            case (?#mergedToStake) (?#mergedToStake, stakeDeltaE8s);
+            case _ {
+              // Not a merge — check for an external top-up: stake rose with no
+              // corresponding maturity drop.
+              if (stakeDeltaE8s > 0) {
+                (?#externalTopUp, stakeDeltaE8s);
+              } else {
+                (null, 0);
+              };
+            };
+          };
+
           // Record the maturity snapshot (delta computed from combined total).
           // Pass the override so a Merge Maturity event is tagged
-          // #mergedToStake instead of auto-classified as #disburseOrSpawn.
+          // #mergedToStake and an external top-up is tagged #externalTopUp
+          // instead of auto-classifying by the maturity delta.
           ignore RewardsLib.recordSnapshot(
             rewards,
             neuronId,
@@ -186,7 +219,8 @@ module {
             stakedMaturity,
             autoStake,
             Time.now(),
-            eventTypeOverride,
+            finalOverride,
+            finalStakeDelta,
           );
 
           // Update the neuron's sync-sourced staked amount from

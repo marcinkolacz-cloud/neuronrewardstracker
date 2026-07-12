@@ -41621,7 +41621,7 @@ const createLucideIcon = (iconName, iconNode) => {
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$r = [
+const __iconNode$u = [
   [
     "path",
     {
@@ -41630,37 +41630,37 @@ const __iconNode$r = [
     }
   ]
 ];
-const Activity = createLucideIcon("activity", __iconNode$r);
+const Activity = createLucideIcon("activity", __iconNode$u);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$q = [
+const __iconNode$t = [
   ["path", { d: "M12 17V3", key: "1cwfxf" }],
   ["path", { d: "m6 11 6 6 6-6", key: "12ii2o" }],
   ["path", { d: "M19 21H5", key: "150jfl" }]
 ];
-const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$q);
+const ArrowDownToLine = createLucideIcon("arrow-down-to-line", __iconNode$t);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$p = [
+const __iconNode$s = [
   ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
   ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$p);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$s);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$o = [
+const __iconNode$r = [
   [
     "path",
     {
@@ -41681,7 +41681,41 @@ const __iconNode$o = [
   ["circle", { cx: "20", cy: "21", r: ".5", key: "yhc1fs" }],
   ["circle", { cx: "20", cy: "8", r: ".5", key: "1e43v0" }]
 ];
-const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$o);
+const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$r);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$q = [
+  ["path", { d: "M8 2v4", key: "1cmpym" }],
+  ["path", { d: "M16 2v4", key: "4m81vk" }],
+  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
+  ["path", { d: "M3 10h18", key: "8toen8" }]
+];
+const Calendar = createLucideIcon("calendar", __iconNode$q);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$p = [
+  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
+  ["path", { d: "M18 17V9", key: "2bz60n" }],
+  ["path", { d: "M13 17V5", key: "1frdt8" }],
+  ["path", { d: "M8 17v-3", key: "17ska0" }]
+];
+const ChartColumn = createLucideIcon("chart-column", __iconNode$p);
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$o = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
+const ChevronDown = createLucideIcon("chevron-down", __iconNode$o);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41689,12 +41723,11 @@ const BrainCircuit = createLucideIcon("brain-circuit", __iconNode$o);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$n = [
-  ["path", { d: "M8 2v4", key: "1cmpym" }],
-  ["path", { d: "M16 2v4", key: "4m81vk" }],
-  ["rect", { width: "18", height: "18", x: "3", y: "4", rx: "2", key: "1hopcy" }],
-  ["path", { d: "M3 10h18", key: "8toen8" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M8 12h8", key: "1wcyev" }],
+  ["path", { d: "M12 8v8", key: "napkw2" }]
 ];
-const Calendar = createLucideIcon("calendar", __iconNode$n);
+const CirclePlus = createLucideIcon("circle-plus", __iconNode$n);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41702,20 +41735,26 @@ const Calendar = createLucideIcon("calendar", __iconNode$n);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$m = [
-  ["path", { d: "M3 3v16a2 2 0 0 0 2 2h16", key: "c24i48" }],
-  ["path", { d: "M18 17V9", key: "2bz60n" }],
-  ["path", { d: "M13 17V5", key: "1frdt8" }],
-  ["path", { d: "M8 17v-3", key: "17ska0" }]
+  ["path", { d: "M11 14h10", key: "1w8e9d" }],
+  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
+  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
+  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
+  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
 ];
-const ChartColumn = createLucideIcon("chart-column", __iconNode$m);
+const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$m);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$l = [["path", { d: "m6 9 6 6 6-6", key: "qrunsl" }]];
-const ChevronDown = createLucideIcon("chevron-down", __iconNode$l);
+const __iconNode$l = [
+  ["circle", { cx: "8", cy: "8", r: "6", key: "3yglwk" }],
+  ["path", { d: "M18.09 10.37A6 6 0 1 1 10.34 18", key: "t5s6rm" }],
+  ["path", { d: "M7 6h1v4", key: "1obek4" }],
+  ["path", { d: "m16.71 13.88.7.71-2.82 2.82", key: "1rbuyh" }]
+];
+const Coins = createLucideIcon("coins", __iconNode$l);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41723,13 +41762,10 @@ const ChevronDown = createLucideIcon("chevron-down", __iconNode$l);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$k = [
-  ["path", { d: "M11 14h10", key: "1w8e9d" }],
-  ["path", { d: "M16 4h2a2 2 0 0 1 2 2v1.344", key: "1e62lh" }],
-  ["path", { d: "m17 18 4-4-4-4", key: "z2g111" }],
-  ["path", { d: "M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113", key: "bjbb7m" }],
-  ["rect", { x: "8", y: "2", width: "8", height: "4", rx: "1", key: "ublpy" }]
+  ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
+  ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
 ];
-const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$k);
+const DollarSign = createLucideIcon("dollar-sign", __iconNode$k);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41737,12 +41773,11 @@ const ClipboardPaste = createLucideIcon("clipboard-paste", __iconNode$k);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$j = [
-  ["circle", { cx: "8", cy: "8", r: "6", key: "3yglwk" }],
-  ["path", { d: "M18.09 10.37A6 6 0 1 1 10.34 18", key: "t5s6rm" }],
-  ["path", { d: "M7 6h1v4", key: "1obek4" }],
-  ["path", { d: "m16.71 13.88.7.71-2.82 2.82", key: "1rbuyh" }]
+  ["path", { d: "M12 15V3", key: "m9g1x1" }],
+  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
+  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
 ];
-const Coins = createLucideIcon("coins", __iconNode$j);
+const Download = createLucideIcon("download", __iconNode$j);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41750,10 +41785,22 @@ const Coins = createLucideIcon("coins", __iconNode$j);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$i = [
-  ["line", { x1: "12", x2: "12", y1: "2", y2: "22", key: "7eqyqh" }],
-  ["path", { d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6", key: "1b0p4s" }]
+  [
+    "path",
+    {
+      d: "M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z",
+      key: "1ptgy4"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97",
+      key: "1sl1rz"
+    }
+  ]
 ];
-const DollarSign = createLucideIcon("dollar-sign", __iconNode$i);
+const Droplets = createLucideIcon("droplets", __iconNode$i);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -41761,11 +41808,20 @@ const DollarSign = createLucideIcon("dollar-sign", __iconNode$i);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$h = [
-  ["path", { d: "M12 15V3", key: "m9g1x1" }],
-  ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4", key: "ih7n3h" }],
-  ["path", { d: "m7 10 5 5 5-5", key: "brsn70" }]
+  ["path", { d: "M10 18v-7", key: "wt116b" }],
+  [
+    "path",
+    {
+      d: "M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z",
+      key: "1m329m"
+    }
+  ],
+  ["path", { d: "M14 18v-7", key: "vav6t3" }],
+  ["path", { d: "M18 18v-7", key: "aexdmj" }],
+  ["path", { d: "M3 22h18", key: "8prr45" }],
+  ["path", { d: "M6 18v-7", key: "1ivflk" }]
 ];
-const Download = createLucideIcon("download", __iconNode$h);
+const Landmark = createLucideIcon("landmark", __iconNode$h);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -42004,7 +42060,8 @@ const __iconNode = [
 const Zap = createLucideIcon("zap", __iconNode);
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/", marker: "nav.dashboard" },
-  { label: "Add Neuron", to: "/add-neuron", marker: "nav.add_neuron" }
+  { label: "Add Neuron", to: "/add-neuron", marker: "nav.add_neuron" },
+  { label: "Add WTN", to: "/add-wtn", marker: "nav.add_wtn" }
 ];
 function AppHeader({ rightAction }) {
   const { isAuthenticated, clear, isLoggingIn, login } = useAuth();
@@ -42280,6 +42337,14 @@ function Label$1({
     }
   );
 }
+const WtnPositionId = Nat;
+const Timestamp = Int;
+const WtnPosition = Record({
+  "id": WtnPositionId,
+  "ownerId": Principal2,
+  "name": Text$1,
+  "startDate": Timestamp
+});
 const Error$1 = Variant({
   "FrontendOriginsNotConfigured": Null,
   "MixedSsoSources": Record({
@@ -42327,6 +42392,7 @@ const PriceSnapshot = Record({
   "timestamp": Int,
   "cached": Bool
 });
+const E8s = Nat64;
 const MonthlyBreakdown = Record({
   "month": Nat,
   "totalDeltaE8s": Int,
@@ -42337,33 +42403,35 @@ const MonthlyBreakdown = Record({
 const NeuronStats = Record({
   "averageDailyRewardE8s": Int,
   "totalRewardsE8s": Int,
+  "totalCapitalContributedE8s": E8s,
   "apy30d": Float64,
   "percentageReturn": Float64,
   "neuronId": NeuronId,
   "monthly": Vec(MonthlyBreakdown),
   "overallReturnPct": Float64
 });
-const E8s = Nat64;
 const PortfolioStats = Record({
   "totalMaturityE8s": Nat64,
   "totalRewardsThisMonthE8s": Nat64,
   "totalRewardsE8s": Int,
   "blendedApy": Float64,
   "totalStakedE8s": E8s,
+  "totalCapitalContributedE8s": E8s,
   "percentageReturn": Float64,
   "neuronCount": Nat
 });
-const Timestamp = Int;
 const DeltaE8s = Int;
 const EventType$1 = Variant({
   "mergedToStake": Null,
   "normalGrowth": Null,
   "firstReading": Null,
+  "externalTopUp": Null,
   "disburseOrSpawn": Null
 });
 const DailyReward = Record({
   "stakedMaturityE8s": E8s,
   "unstakedMaturityE8s": E8s,
+  "stakeDeltaE8s": E8s,
   "autoStakeMaturity": Bool,
   "timestamp": Timestamp,
   "neuronId": NeuronId,
@@ -42376,10 +42444,37 @@ const SyncStatus = Variant({
   "failed": Null,
   "synced": Null
 });
+const WtnEventType$1 = Variant({
+  "capitalAdded": Null,
+  "withdrawal": Null,
+  "organicGrowth": Null
+});
+const WtnSnapshot = Record({
+  "date": Timestamp,
+  "positionId": WtnPositionId,
+  "redeemableIcpValue": Float64,
+  "nicpHeld": Float64,
+  "eventType": WtnEventType$1,
+  "totalIcpPaid": Float64
+});
+const WtnStats = Record({
+  "percentReturn": Float64,
+  "totalCapitalContributed": Float64,
+  "totalEarned": Float64,
+  "positionId": WtnPositionId,
+  "redeemableIcpValue": Float64,
+  "totalWithdrawn": Float64
+});
 const HistoricalEntry = Record({
   "stakedMaturityE8s": E8s,
   "unstakedMaturityE8s": E8s,
   "timestamp": Timestamp
+});
+const WtnHistoricalEntry = Record({
+  "date": Timestamp,
+  "redeemableIcpValue": Float64,
+  "nicpHeld": Float64,
+  "totalIcpPaid": Float64
 });
 const Neuron = Record({
   "id": NeuronId,
@@ -42416,10 +42511,17 @@ const TransformationOutput = Record({
 Service({
   "__accessControlState": Func([], [Reserved], ["query"]),
   "__neurons": Func([], [Reserved], ["query"]),
+  "__nextWtnPositionId": Func([], [Reserved], ["query"]),
   "__priceCache": Func([], [Reserved], ["query"]),
   "__rewards": Func([], [Reserved], ["query"]),
   "__syncErrors": Func([], [Reserved], ["query"]),
   "__syncStatuses": Func([], [Reserved], ["query"]),
+  "__wtnPositions": Func(
+    [Opt(WtnPositionId), Opt(Nat)],
+    [Vec(Tuple(WtnPositionId, WtnPosition))],
+    ["query"]
+  ),
+  "__wtnSnapshots": Func([], [Reserved], ["query"]),
   "_initialize_access_control": Func([], [], []),
   "_internet_identity_sign_in_finish": Func([], [Result__1], []),
   "_internet_identity_sign_in_start": Func([], [Vec(Nat8)], []),
@@ -42428,9 +42530,16 @@ Service({
     [],
     []
   ),
+  "addWtnPosition": Func([Text$1, Int], [WtnPosition], []),
   "assignCallerUserRole": Func([Principal2, UserRole], [], []),
   "deleteSnapshot": Func([NeuronId, Int], [], []),
+  "deleteWtnSnapshot": Func([WtnPositionId, Int], [], []),
   "editSnapshot": Func([NeuronId, Int, Int, Nat64], [], []),
+  "editWtnSnapshot": Func(
+    [WtnPositionId, Int, Int, Float64, Float64, Float64],
+    [],
+    []
+  ),
   "execute": Func([Text$1], [Result], ["query"]),
   "getCallerUserRole": Func([], [UserRole], ["query"]),
   "getCurrentIcpPrice": Func([], [PriceSnapshot], []),
@@ -42440,19 +42549,34 @@ Service({
   "getRewardHistory": Func([NeuronId], [Vec(DailyReward)], []),
   "getSyncError": Func([NeuronId], [Opt(Text$1)], []),
   "getSyncStatus": Func([NeuronId], [SyncStatus], []),
+  "getWtnPosition": Func([WtnPositionId], [Opt(WtnPosition)], []),
+  "getWtnSnapshots": Func([WtnPositionId], [Vec(WtnSnapshot)], []),
+  "getWtnStats": Func([WtnPositionId], [WtnStats], []),
   "importHistoricalData": Func(
     [NeuronId, Vec(HistoricalEntry)],
     [],
     []
   ),
+  "importWtnHistoricalData": Func(
+    [WtnPositionId, Vec(WtnHistoricalEntry)],
+    [],
+    []
+  ),
   "isCallerAdmin": Func([], [Bool], ["query"]),
   "listMyNeurons": Func([], [Vec(Neuron)], []),
+  "listMyWtnPositions": Func([], [Vec(WtnPosition)], []),
   "recordSnapshot": Func(
     [NeuronId, Nat64, Nat64, Bool],
     [DailyReward],
     []
   ),
+  "recordWtnSnapshot": Func(
+    [WtnPositionId, Int, Float64, Float64, Float64],
+    [WtnSnapshot],
+    []
+  ),
   "removeNeuron": Func([NeuronId], [], []),
+  "removeWtnPosition": Func([WtnPositionId], [], []),
   "scheduleNextSync": Func([], [TimerId], []),
   "schema": Func([], [Text$1], ["query"]),
   "startDailySync": Func([], [], []),
@@ -42463,9 +42587,18 @@ Service({
     [TransformationOutput],
     ["query"]
   ),
-  "updateNeuron": Func([Neuron], [], [])
+  "updateNeuron": Func([Neuron], [], []),
+  "updateWtnPosition": Func([WtnPosition], [], [])
 });
 const idlFactory = ({ IDL: IDL2 }) => {
+  const WtnPositionId2 = IDL2.Nat;
+  const Timestamp2 = IDL2.Int;
+  const WtnPosition2 = IDL2.Record({
+    "id": WtnPositionId2,
+    "ownerId": IDL2.Principal,
+    "name": IDL2.Text,
+    "startDate": Timestamp2
+  });
   const Error2 = IDL2.Variant({
     "FrontendOriginsNotConfigured": IDL2.Null,
     "MixedSsoSources": IDL2.Record({
@@ -42513,6 +42646,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "timestamp": IDL2.Int,
     "cached": IDL2.Bool
   });
+  const E8s2 = IDL2.Nat64;
   const MonthlyBreakdown2 = IDL2.Record({
     "month": IDL2.Nat,
     "totalDeltaE8s": IDL2.Int,
@@ -42523,33 +42657,35 @@ const idlFactory = ({ IDL: IDL2 }) => {
   const NeuronStats2 = IDL2.Record({
     "averageDailyRewardE8s": IDL2.Int,
     "totalRewardsE8s": IDL2.Int,
+    "totalCapitalContributedE8s": E8s2,
     "apy30d": IDL2.Float64,
     "percentageReturn": IDL2.Float64,
     "neuronId": NeuronId2,
     "monthly": IDL2.Vec(MonthlyBreakdown2),
     "overallReturnPct": IDL2.Float64
   });
-  const E8s2 = IDL2.Nat64;
   const PortfolioStats2 = IDL2.Record({
     "totalMaturityE8s": IDL2.Nat64,
     "totalRewardsThisMonthE8s": IDL2.Nat64,
     "totalRewardsE8s": IDL2.Int,
     "blendedApy": IDL2.Float64,
     "totalStakedE8s": E8s2,
+    "totalCapitalContributedE8s": E8s2,
     "percentageReturn": IDL2.Float64,
     "neuronCount": IDL2.Nat
   });
-  const Timestamp2 = IDL2.Int;
   const DeltaE8s2 = IDL2.Int;
   const EventType2 = IDL2.Variant({
     "mergedToStake": IDL2.Null,
     "normalGrowth": IDL2.Null,
     "firstReading": IDL2.Null,
+    "externalTopUp": IDL2.Null,
     "disburseOrSpawn": IDL2.Null
   });
   const DailyReward2 = IDL2.Record({
     "stakedMaturityE8s": E8s2,
     "unstakedMaturityE8s": E8s2,
+    "stakeDeltaE8s": E8s2,
     "autoStakeMaturity": IDL2.Bool,
     "timestamp": Timestamp2,
     "neuronId": NeuronId2,
@@ -42562,10 +42698,37 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "failed": IDL2.Null,
     "synced": IDL2.Null
   });
+  const WtnEventType2 = IDL2.Variant({
+    "capitalAdded": IDL2.Null,
+    "withdrawal": IDL2.Null,
+    "organicGrowth": IDL2.Null
+  });
+  const WtnSnapshot2 = IDL2.Record({
+    "date": Timestamp2,
+    "positionId": WtnPositionId2,
+    "redeemableIcpValue": IDL2.Float64,
+    "nicpHeld": IDL2.Float64,
+    "eventType": WtnEventType2,
+    "totalIcpPaid": IDL2.Float64
+  });
+  const WtnStats2 = IDL2.Record({
+    "percentReturn": IDL2.Float64,
+    "totalCapitalContributed": IDL2.Float64,
+    "totalEarned": IDL2.Float64,
+    "positionId": WtnPositionId2,
+    "redeemableIcpValue": IDL2.Float64,
+    "totalWithdrawn": IDL2.Float64
+  });
   const HistoricalEntry2 = IDL2.Record({
     "stakedMaturityE8s": E8s2,
     "unstakedMaturityE8s": E8s2,
     "timestamp": Timestamp2
+  });
+  const WtnHistoricalEntry2 = IDL2.Record({
+    "date": Timestamp2,
+    "redeemableIcpValue": IDL2.Float64,
+    "nicpHeld": IDL2.Float64,
+    "totalIcpPaid": IDL2.Float64
   });
   const Neuron2 = IDL2.Record({
     "id": NeuronId2,
@@ -42602,10 +42765,17 @@ const idlFactory = ({ IDL: IDL2 }) => {
   return IDL2.Service({
     "__accessControlState": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__neurons": IDL2.Func([], [IDL2.Reserved], ["query"]),
+    "__nextWtnPositionId": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__priceCache": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__rewards": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__syncErrors": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "__syncStatuses": IDL2.Func([], [IDL2.Reserved], ["query"]),
+    "__wtnPositions": IDL2.Func(
+      [IDL2.Opt(WtnPositionId2), IDL2.Opt(IDL2.Nat)],
+      [IDL2.Vec(IDL2.Tuple(WtnPositionId2, WtnPosition2))],
+      ["query"]
+    ),
+    "__wtnSnapshots": IDL2.Func([], [IDL2.Reserved], ["query"]),
     "_initialize_access_control": IDL2.Func([], [], []),
     "_internet_identity_sign_in_finish": IDL2.Func([], [Result__12], []),
     "_internet_identity_sign_in_start": IDL2.Func([], [IDL2.Vec(IDL2.Nat8)], []),
@@ -42614,9 +42784,23 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [],
       []
     ),
+    "addWtnPosition": IDL2.Func([IDL2.Text, IDL2.Int], [WtnPosition2], []),
     "assignCallerUserRole": IDL2.Func([IDL2.Principal, UserRole2], [], []),
     "deleteSnapshot": IDL2.Func([NeuronId2, IDL2.Int], [], []),
+    "deleteWtnSnapshot": IDL2.Func([WtnPositionId2, IDL2.Int], [], []),
     "editSnapshot": IDL2.Func([NeuronId2, IDL2.Int, IDL2.Int, IDL2.Nat64], [], []),
+    "editWtnSnapshot": IDL2.Func(
+      [
+        WtnPositionId2,
+        IDL2.Int,
+        IDL2.Int,
+        IDL2.Float64,
+        IDL2.Float64,
+        IDL2.Float64
+      ],
+      [],
+      []
+    ),
     "execute": IDL2.Func([IDL2.Text], [Result2], ["query"]),
     "getCallerUserRole": IDL2.Func([], [UserRole2], ["query"]),
     "getCurrentIcpPrice": IDL2.Func([], [PriceSnapshot2], []),
@@ -42626,19 +42810,34 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getRewardHistory": IDL2.Func([NeuronId2], [IDL2.Vec(DailyReward2)], []),
     "getSyncError": IDL2.Func([NeuronId2], [IDL2.Opt(IDL2.Text)], []),
     "getSyncStatus": IDL2.Func([NeuronId2], [SyncStatus2], []),
+    "getWtnPosition": IDL2.Func([WtnPositionId2], [IDL2.Opt(WtnPosition2)], []),
+    "getWtnSnapshots": IDL2.Func([WtnPositionId2], [IDL2.Vec(WtnSnapshot2)], []),
+    "getWtnStats": IDL2.Func([WtnPositionId2], [WtnStats2], []),
     "importHistoricalData": IDL2.Func(
       [NeuronId2, IDL2.Vec(HistoricalEntry2)],
       [],
       []
     ),
+    "importWtnHistoricalData": IDL2.Func(
+      [WtnPositionId2, IDL2.Vec(WtnHistoricalEntry2)],
+      [],
+      []
+    ),
     "isCallerAdmin": IDL2.Func([], [IDL2.Bool], ["query"]),
     "listMyNeurons": IDL2.Func([], [IDL2.Vec(Neuron2)], []),
+    "listMyWtnPositions": IDL2.Func([], [IDL2.Vec(WtnPosition2)], []),
     "recordSnapshot": IDL2.Func(
       [NeuronId2, IDL2.Nat64, IDL2.Nat64, IDL2.Bool],
       [DailyReward2],
       []
     ),
+    "recordWtnSnapshot": IDL2.Func(
+      [WtnPositionId2, IDL2.Int, IDL2.Float64, IDL2.Float64, IDL2.Float64],
+      [WtnSnapshot2],
+      []
+    ),
     "removeNeuron": IDL2.Func([NeuronId2], [], []),
+    "removeWtnPosition": IDL2.Func([WtnPositionId2], [], []),
     "scheduleNextSync": IDL2.Func([], [TimerId2], []),
     "schema": IDL2.Func([], [IDL2.Text], ["query"]),
     "startDailySync": IDL2.Func([], [], []),
@@ -42649,9 +42848,18 @@ const idlFactory = ({ IDL: IDL2 }) => {
       [TransformationOutput2],
       ["query"]
     ),
-    "updateNeuron": IDL2.Func([Neuron2], [], [])
+    "updateNeuron": IDL2.Func([Neuron2], [], []),
+    "updateWtnPosition": IDL2.Func([WtnPosition2], [], [])
   });
 };
+function candid_some(value) {
+  return [
+    value
+  ];
+}
+function candid_none() {
+  return [];
+}
 function record_opt_to_undefined(arg) {
   return arg == null ? void 0 : arg;
 }
@@ -42659,9 +42867,16 @@ var EventType = /* @__PURE__ */ ((EventType2) => {
   EventType2["mergedToStake"] = "mergedToStake";
   EventType2["normalGrowth"] = "normalGrowth";
   EventType2["firstReading"] = "firstReading";
+  EventType2["externalTopUp"] = "externalTopUp";
   EventType2["disburseOrSpawn"] = "disburseOrSpawn";
   return EventType2;
 })(EventType || {});
+var WtnEventType = /* @__PURE__ */ ((WtnEventType2) => {
+  WtnEventType2["capitalAdded"] = "capitalAdded";
+  WtnEventType2["withdrawal"] = "withdrawal";
+  WtnEventType2["organicGrowth"] = "organicGrowth";
+  return WtnEventType2;
+})(WtnEventType || {});
 class Backend {
   constructor(actor, _uploadFile, _downloadFile, processError2) {
     this.actor = actor;
@@ -42694,6 +42909,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.__neurons();
+      return result;
+    }
+  }
+  async __nextWtnPositionId() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.__nextWtnPositionId();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.__nextWtnPositionId();
       return result;
     }
   }
@@ -42753,6 +42982,34 @@ class Backend {
       return result;
     }
   }
+  async __wtnPositions(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.__wtnPositions(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.__wtnPositions(to_candid_opt_n1(this._uploadFile, this._downloadFile, arg0), to_candid_opt_n2(this._uploadFile, this._downloadFile, arg1));
+      return result;
+    }
+  }
+  async __wtnSnapshots() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.__wtnSnapshots();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.__wtnSnapshots();
+      return result;
+    }
+  }
   async _initialize_access_control() {
     if (this.processError) {
       try {
@@ -42771,14 +43028,14 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor._internet_identity_sign_in_finish();
-        return from_candid_Result__1_n1(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result__1_n3(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor._internet_identity_sign_in_finish();
-      return from_candid_Result__1_n1(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result__1_n3(this._uploadFile, this._downloadFile, result);
     }
   }
   async _internet_identity_sign_in_start() {
@@ -42809,17 +43066,31 @@ class Backend {
       return result;
     }
   }
-  async assignCallerUserRole(arg0, arg1) {
+  async addWtnPosition(arg0, arg1) {
     if (this.processError) {
       try {
-        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
+        const result = await this.actor.addWtnPosition(arg0, arg1);
         return result;
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
-      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n5(this._uploadFile, this._downloadFile, arg1));
+      const result = await this.actor.addWtnPosition(arg0, arg1);
+      return result;
+    }
+  }
+  async assignCallerUserRole(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n7(this._uploadFile, this._downloadFile, arg1));
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n7(this._uploadFile, this._downloadFile, arg1));
       return result;
     }
   }
@@ -42837,6 +43108,20 @@ class Backend {
       return result;
     }
   }
+  async deleteWtnSnapshot(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.deleteWtnSnapshot(arg0, arg1);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.deleteWtnSnapshot(arg0, arg1);
+      return result;
+    }
+  }
   async editSnapshot(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
@@ -42851,32 +43136,46 @@ class Backend {
       return result;
     }
   }
+  async editWtnSnapshot(arg0, arg1, arg2, arg3, arg4, arg5) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.editWtnSnapshot(arg0, arg1, arg2, arg3, arg4, arg5);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.editWtnSnapshot(arg0, arg1, arg2, arg3, arg4, arg5);
+      return result;
+    }
+  }
   async execute(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.execute(arg0);
-        return from_candid_Result_n7(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_n9(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.execute(arg0);
-      return from_candid_Result_n7(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_n9(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCallerUserRole() {
     if (this.processError) {
       try {
         const result = await this.actor.getCallerUserRole();
-        return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+        return from_candid_UserRole_n17(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getCallerUserRole();
-      return from_candid_UserRole_n15(this._uploadFile, this._downloadFile, result);
+      return from_candid_UserRole_n17(this._uploadFile, this._downloadFile, result);
     }
   }
   async getCurrentIcpPrice() {
@@ -42939,42 +43238,84 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.getRewardHistory(arg0);
-        return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getRewardHistory(arg0);
-      return from_candid_vec_n17(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n19(this._uploadFile, this._downloadFile, result);
     }
   }
   async getSyncError(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getSyncError(arg0);
-        return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+        return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSyncError(arg0);
-      return from_candid_opt_n22(this._uploadFile, this._downloadFile, result);
+      return from_candid_opt_n24(this._uploadFile, this._downloadFile, result);
     }
   }
   async getSyncStatus(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.getSyncStatus(arg0);
-        return from_candid_SyncStatus_n23(this._uploadFile, this._downloadFile, result);
+        return from_candid_SyncStatus_n25(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.getSyncStatus(arg0);
-      return from_candid_SyncStatus_n23(this._uploadFile, this._downloadFile, result);
+      return from_candid_SyncStatus_n25(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getWtnPosition(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getWtnPosition(arg0);
+        return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getWtnPosition(arg0);
+      return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getWtnSnapshots(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getWtnSnapshots(arg0);
+        return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getWtnSnapshots(arg0);
+      return from_candid_vec_n28(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async getWtnStats(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getWtnStats(arg0);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getWtnStats(arg0);
+      return result;
     }
   }
   async importHistoricalData(arg0, arg1) {
@@ -42988,6 +43329,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.importHistoricalData(arg0, arg1);
+      return result;
+    }
+  }
+  async importWtnHistoricalData(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.importWtnHistoricalData(arg0, arg1);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.importWtnHistoricalData(arg0, arg1);
       return result;
     }
   }
@@ -43019,18 +43374,46 @@ class Backend {
       return result;
     }
   }
+  async listMyWtnPositions() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.listMyWtnPositions();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.listMyWtnPositions();
+      return result;
+    }
+  }
   async recordSnapshot(arg0, arg1, arg2, arg3) {
     if (this.processError) {
       try {
         const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
-        return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
+        return from_candid_DailyReward_n20(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3);
-      return from_candid_DailyReward_n18(this._uploadFile, this._downloadFile, result);
+      return from_candid_DailyReward_n20(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async recordWtnSnapshot(arg0, arg1, arg2, arg3, arg4) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.recordWtnSnapshot(arg0, arg1, arg2, arg3, arg4);
+        return from_candid_WtnSnapshot_n29(this._uploadFile, this._downloadFile, result);
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.recordWtnSnapshot(arg0, arg1, arg2, arg3, arg4);
+      return from_candid_WtnSnapshot_n29(this._uploadFile, this._downloadFile, result);
     }
   }
   async removeNeuron(arg0) {
@@ -43044,6 +43427,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.removeNeuron(arg0);
+      return result;
+    }
+  }
+  async removeWtnPosition(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.removeWtnPosition(arg0);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.removeWtnPosition(arg0);
       return result;
     }
   }
@@ -43093,28 +43490,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.syncAllMyNeurons();
-        return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
+        return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.syncAllMyNeurons();
-      return from_candid_vec_n25(this._uploadFile, this._downloadFile, result);
+      return from_candid_vec_n33(this._uploadFile, this._downloadFile, result);
     }
   }
   async syncNeuron(arg0) {
     if (this.processError) {
       try {
         const result = await this.actor.syncNeuron(arg0);
-        return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
+        return from_candid_SyncResult_n34(this._uploadFile, this._downloadFile, result);
       } catch (e3) {
         this.processError(e3);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.syncNeuron(arg0);
-      return from_candid_SyncResult_n26(this._uploadFile, this._downloadFile, result);
+      return from_candid_SyncResult_n34(this._uploadFile, this._downloadFile, result);
     }
   }
   async transform(arg0) {
@@ -43145,76 +43542,110 @@ class Backend {
       return result;
     }
   }
+  async updateWtnPosition(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.updateWtnPosition(arg0);
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.updateWtnPosition(arg0);
+      return result;
+    }
+  }
 }
-function from_candid_Cell_n11(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n12(_uploadFile, _downloadFile, value);
+function from_candid_Cell_n13(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n14(_uploadFile, _downloadFile, value);
 }
-function from_candid_DailyReward_n18(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n19(_uploadFile, _downloadFile, value);
+function from_candid_DailyReward_n20(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n21(_uploadFile, _downloadFile, value);
 }
-function from_candid_Error_n3(_uploadFile, _downloadFile, value) {
+function from_candid_Error_n5(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n6(_uploadFile, _downloadFile, value);
+}
+function from_candid_EventType_n22(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n23(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result__1_n3(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function from_candid_EventType_n20(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n21(_uploadFile, _downloadFile, value);
+function from_candid_Result_n9(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result__1_n1(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n2(_uploadFile, _downloadFile, value);
+function from_candid_SyncResult_n34(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n35(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_n7(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n8(_uploadFile, _downloadFile, value);
+function from_candid_SyncStatus_n25(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n26(_uploadFile, _downloadFile, value);
 }
-function from_candid_SyncResult_n26(_uploadFile, _downloadFile, value) {
-  return from_candid_record_n27(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n17(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n24(_uploadFile, _downloadFile, value);
-}
-function from_candid_UserRole_n15(_uploadFile, _downloadFile, value) {
+function from_candid_Value_n15(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n16(_uploadFile, _downloadFile, value);
 }
-function from_candid_Value_n13(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n14(_uploadFile, _downloadFile, value);
+function from_candid_WtnEventType_n31(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n32(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n22(_uploadFile, _downloadFile, value) {
+function from_candid_WtnSnapshot_n29(_uploadFile, _downloadFile, value) {
+  return from_candid_record_n30(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n24(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n28(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n27(_uploadFile, _downloadFile, value) {
   return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n12(_uploadFile, _downloadFile, value) {
+function from_candid_opt_n36(_uploadFile, _downloadFile, value) {
+  return value.length === 0 ? null : value[0];
+}
+function from_candid_record_n10(_uploadFile, _downloadFile, value) {
   return {
-    value: from_candid_Value_n13(_uploadFile, _downloadFile, value.value),
+    hasMore: value.hasMore,
+    rows: from_candid_vec_n11(_uploadFile, _downloadFile, value.rows)
+  };
+}
+function from_candid_record_n14(_uploadFile, _downloadFile, value) {
+  return {
+    value: from_candid_Value_n15(_uploadFile, _downloadFile, value.value),
     name: value.name
   };
 }
-function from_candid_record_n19(_uploadFile, _downloadFile, value) {
+function from_candid_record_n21(_uploadFile, _downloadFile, value) {
   return {
     stakedMaturityE8s: value.stakedMaturityE8s,
     unstakedMaturityE8s: value.unstakedMaturityE8s,
+    stakeDeltaE8s: value.stakeDeltaE8s,
     autoStakeMaturity: value.autoStakeMaturity,
     timestamp: value.timestamp,
     neuronId: value.neuronId,
     deltaE8s: value.deltaE8s,
-    eventType: from_candid_EventType_n20(_uploadFile, _downloadFile, value.eventType)
+    eventType: from_candid_EventType_n22(_uploadFile, _downloadFile, value.eventType)
   };
 }
-function from_candid_record_n27(_uploadFile, _downloadFile, value) {
+function from_candid_record_n30(_uploadFile, _downloadFile, value) {
   return {
-    status: from_candid_SyncStatus_n23(_uploadFile, _downloadFile, value.status),
-    maturityE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.maturityE8s)),
-    lastSyncError: record_opt_to_undefined(from_candid_opt_n22(_uploadFile, _downloadFile, value.lastSyncError)),
-    stakedE8s: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.stakedE8s)),
+    date: value.date,
+    positionId: value.positionId,
+    redeemableIcpValue: value.redeemableIcpValue,
+    nicpHeld: value.nicpHeld,
+    eventType: from_candid_WtnEventType_n31(_uploadFile, _downloadFile, value.eventType),
+    totalIcpPaid: value.totalIcpPaid
+  };
+}
+function from_candid_record_n35(_uploadFile, _downloadFile, value) {
+  return {
+    status: from_candid_SyncStatus_n25(_uploadFile, _downloadFile, value.status),
+    maturityE8s: record_opt_to_undefined(from_candid_opt_n36(_uploadFile, _downloadFile, value.maturityE8s)),
+    lastSyncError: record_opt_to_undefined(from_candid_opt_n24(_uploadFile, _downloadFile, value.lastSyncError)),
+    stakedE8s: record_opt_to_undefined(from_candid_opt_n36(_uploadFile, _downloadFile, value.stakedE8s)),
     neuronId: value.neuronId
   };
 }
-function from_candid_record_n8(_uploadFile, _downloadFile, value) {
-  return {
-    hasMore: value.hasMore,
-    rows: from_candid_vec_n9(_uploadFile, _downloadFile, value.rows)
-  };
-}
-function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
   return "int" in value ? {
     __kind__: "int",
     int: value.int
@@ -43235,25 +43666,28 @@ function from_candid_variant_n14(_uploadFile, _downloadFile, value) {
     text: value.text
   } : value;
 }
-function from_candid_variant_n16(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n18(_uploadFile, _downloadFile, value) {
   return "admin" in value ? "admin" : "user" in value ? "user" : "guest" in value ? "guest" : value;
 }
-function from_candid_variant_n2(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n23(_uploadFile, _downloadFile, value) {
+  return "mergedToStake" in value ? "mergedToStake" : "normalGrowth" in value ? "normalGrowth" : "firstReading" in value ? "firstReading" : "externalTopUp" in value ? "externalTopUp" : "disburseOrSpawn" in value ? "disburseOrSpawn" : value;
+}
+function from_candid_variant_n26(_uploadFile, _downloadFile, value) {
+  return "hotkeyRequired" in value ? "hotkeyRequired" : "neverSynced" in value ? "neverSynced" : "failed" in value ? "failed" : "synced" in value ? "synced" : value;
+}
+function from_candid_variant_n32(_uploadFile, _downloadFile, value) {
+  return "capitalAdded" in value ? "capitalAdded" : "withdrawal" in value ? "withdrawal" : "organicGrowth" in value ? "organicGrowth" : value;
+}
+function from_candid_variant_n4(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
   } : "err" in value ? {
     __kind__: "err",
-    err: from_candid_Error_n3(_uploadFile, _downloadFile, value.err)
+    err: from_candid_Error_n5(_uploadFile, _downloadFile, value.err)
   } : value;
 }
-function from_candid_variant_n21(_uploadFile, _downloadFile, value) {
-  return "mergedToStake" in value ? "mergedToStake" : "normalGrowth" in value ? "normalGrowth" : "firstReading" in value ? "firstReading" : "disburseOrSpawn" in value ? "disburseOrSpawn" : value;
-}
-function from_candid_variant_n24(_uploadFile, _downloadFile, value) {
-  return "hotkeyRequired" in value ? "hotkeyRequired" : "neverSynced" in value ? "neverSynced" : "failed" in value ? "failed" : "synced" in value ? "synced" : value;
-}
-function from_candid_variant_n4(_uploadFile, _downloadFile, value) {
+function from_candid_variant_n6(_uploadFile, _downloadFile, value) {
   return "FrontendOriginsNotConfigured" in value ? {
     __kind__: "FrontendOriginsNotConfigured",
     FrontendOriginsNotConfigured: value.FrontendOriginsNotConfigured
@@ -43286,22 +43720,31 @@ function from_candid_variant_n4(_uploadFile, _downloadFile, value) {
     FrontendOriginMismatch: value.FrontendOriginMismatch
   } : value;
 }
-function from_candid_vec_n10(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_Cell_n11(_uploadFile, _downloadFile, x3));
+function from_candid_vec_n11(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_vec_n12(_uploadFile, _downloadFile, x3));
 }
-function from_candid_vec_n17(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_DailyReward_n18(_uploadFile, _downloadFile, x3));
+function from_candid_vec_n12(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_Cell_n13(_uploadFile, _downloadFile, x3));
 }
-function from_candid_vec_n25(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_SyncResult_n26(_uploadFile, _downloadFile, x3));
+function from_candid_vec_n19(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_DailyReward_n20(_uploadFile, _downloadFile, x3));
 }
-function from_candid_vec_n9(_uploadFile, _downloadFile, value) {
-  return value.map((x3) => from_candid_vec_n10(_uploadFile, _downloadFile, x3));
+function from_candid_vec_n28(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_WtnSnapshot_n29(_uploadFile, _downloadFile, x3));
 }
-function to_candid_UserRole_n5(_uploadFile, _downloadFile, value) {
-  return to_candid_variant_n6(_uploadFile, _downloadFile, value);
+function from_candid_vec_n33(_uploadFile, _downloadFile, value) {
+  return value.map((x3) => from_candid_SyncResult_n34(_uploadFile, _downloadFile, x3));
 }
-function to_candid_variant_n6(_uploadFile, _downloadFile, value) {
+function to_candid_UserRole_n7(_uploadFile, _downloadFile, value) {
+  return to_candid_variant_n8(_uploadFile, _downloadFile, value);
+}
+function to_candid_opt_n1(_uploadFile, _downloadFile, value) {
+  return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_opt_n2(_uploadFile, _downloadFile, value) {
+  return value === null ? candid_none() : candid_some(value);
+}
+function to_candid_variant_n8(_uploadFile, _downloadFile, value) {
   return value == "admin" ? {
     admin: null
   } : value == "user" ? {
@@ -43328,18 +43771,18 @@ function useBackendActor() {
   const { actor, isFetching } = useActor(createActor);
   return { actor, isFetching };
 }
-const KEYS = {
+const KEYS$1 = {
   neurons: ["neurons"],
   portfolio: ["portfolio-stats"]
 };
-const statsKey$2 = (id2) => ["neuron-stats", id2];
+const statsKey$3 = (id2) => ["neuron-stats", id2];
 const rewardsKey$2 = (id2) => ["rewards", id2];
 const syncStatusKey$1 = (id2) => ["sync-status", id2];
 const syncErrorKey$1 = (id2) => ["sync-error", id2];
 function useNeurons() {
   const { actor, isFetching } = useBackendActor();
   return useQuery({
-    queryKey: KEYS.neurons,
+    queryKey: KEYS$1.neurons,
     queryFn: async () => {
       if (!actor) return [];
       return actor.listMyNeurons();
@@ -43362,7 +43805,7 @@ function useAddNeuron() {
       );
     },
     onSuccess: () => {
-      void queryClient2.invalidateQueries({ queryKey: KEYS.neurons });
+      void queryClient2.invalidateQueries({ queryKey: KEYS$1.neurons });
     }
   });
 }
@@ -43375,7 +43818,7 @@ function useUpdateNeuron() {
       return actor.updateNeuron(neuron);
     },
     onSuccess: () => {
-      void queryClient2.invalidateQueries({ queryKey: KEYS.neurons });
+      void queryClient2.invalidateQueries({ queryKey: KEYS$1.neurons });
     }
   });
 }
@@ -43389,18 +43832,18 @@ function useRemoveNeuron() {
     },
     onSuccess: (_data, neuronId) => {
       const id2 = neuronId.toString();
-      void queryClient2.invalidateQueries({ queryKey: KEYS.neurons });
+      void queryClient2.invalidateQueries({ queryKey: KEYS$1.neurons });
       void queryClient2.invalidateQueries({ queryKey: rewardsKey$2(id2) });
       void queryClient2.invalidateQueries({ queryKey: syncStatusKey$1(id2) });
       void queryClient2.invalidateQueries({ queryKey: syncErrorKey$1(id2) });
-      void queryClient2.invalidateQueries({ queryKey: statsKey$2(id2) });
-      void queryClient2.invalidateQueries({ queryKey: KEYS.portfolio });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$3(id2) });
+      void queryClient2.invalidateQueries({ queryKey: KEYS$1.portfolio });
     }
   });
 }
 const NEURONS_KEY = ["neurons"];
 const PORTFOLIO_KEY$1 = ["portfolio-stats"];
-const statsKey$1 = (id2) => ["neuron-stats", id2];
+const statsKey$2 = (id2) => ["neuron-stats", id2];
 const rewardsKey$1 = (id2) => ["rewards", id2];
 const syncStatusKey = (id2) => ["sync-status", id2];
 const syncErrorKey = (id2) => ["sync-error", id2];
@@ -43415,7 +43858,7 @@ function useSyncNeuron() {
     onSuccess: (_data, neuronId) => {
       const id2 = neuronId.toString();
       void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
-      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$2(id2) });
       void queryClient2.invalidateQueries({ queryKey: rewardsKey$1(id2) });
       void queryClient2.invalidateQueries({ queryKey: syncStatusKey(id2) });
       void queryClient2.invalidateQueries({ queryKey: syncErrorKey(id2) });
@@ -43455,7 +43898,7 @@ function useRecordSnapshot() {
     },
     onSuccess: (_data, vars) => {
       const id2 = vars.neuronId.toString();
-      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$2(id2) });
       void queryClient2.invalidateQueries({ queryKey: rewardsKey$1(id2) });
       void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
       void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY$1 });
@@ -43484,7 +43927,7 @@ function useImportHistoricalData() {
     onSuccess: (_data, vars) => {
       const id2 = vars.neuronId.toString();
       void queryClient2.invalidateQueries({ queryKey: rewardsKey$1(id2) });
-      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$2(id2) });
       void queryClient2.invalidateQueries({ queryKey: syncStatusKey(id2) });
       void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
       void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY$1 });
@@ -51606,7 +52049,7 @@ reactExports.forwardRef(function(e3, t2) {
     })) : null;
   }));
 });
-const EMPTY = {
+const EMPTY$1 = {
   neuronId: "",
   name: "",
   dissolveDelay: "",
@@ -51620,7 +52063,7 @@ function icpToE8s$1(icp) {
   return BigInt(Math.round(n2 * 1e8));
 }
 function AddNeuronPage() {
-  const [form, setForm] = reactExports.useState(EMPTY);
+  const [form, setForm] = reactExports.useState(EMPTY$1);
   const [errors, setErrors] = reactExports.useState({});
   const addNeuron = useAddNeuron();
   const syncNeuron = useSyncNeuron();
@@ -51912,6 +52355,334 @@ function AddNeuronPage() {
                         /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "size-4 animate-spin" }),
                         "Adding…"
                       ] }) : "Add neuron"
+                    }
+                  )
+                ] })
+              ] }) })
+            ] })
+          ]
+        }
+      )
+    ] })
+  ] });
+}
+const KEYS = {
+  positions: ["wtnPositions"],
+  portfolio: ["portfolio-stats"]
+};
+const positionKey = (id2) => ["wtnPosition", id2];
+const snapshotsKey = (id2) => ["wtnSnapshots", id2];
+const statsKey$1 = (id2) => ["wtnStats", id2];
+function useWtnPositions() {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: KEYS.positions,
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listMyWtnPositions();
+    },
+    enabled: !!actor && !isFetching
+  });
+}
+function useWtnPosition(positionId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: positionKey(positionId ?? "none"),
+    queryFn: async () => {
+      if (!actor || !positionId) throw new Error("No actor or position id");
+      return actor.getWtnPosition(BigInt(positionId));
+    },
+    enabled: !!actor && !isFetching && !!positionId
+  });
+}
+function useCreateWtnPosition() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.addWtnPosition(vars.name, vars.startDate);
+    },
+    onSuccess: () => {
+      void queryClient2.invalidateQueries({ queryKey: KEYS.positions });
+    }
+  });
+}
+function useWtnSnapshots(positionId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: snapshotsKey(positionId ?? "none"),
+    queryFn: async () => {
+      if (!actor || !positionId) return [];
+      return actor.getWtnSnapshots(BigInt(positionId));
+    },
+    enabled: !!actor && !isFetching && !!positionId
+  });
+}
+function useWtnStats(positionId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: statsKey$1(positionId ?? "none"),
+    queryFn: async () => {
+      if (!actor || !positionId) throw new Error("No actor or position id");
+      return actor.getWtnStats(BigInt(positionId));
+    },
+    enabled: !!actor && !isFetching && !!positionId
+  });
+}
+function useRecordWtnSnapshot() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.recordWtnSnapshot(
+        vars.positionId,
+        vars.date,
+        vars.nicpHeld,
+        vars.totalIcpPaid,
+        vars.redeemableIcpValue
+      );
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.positionId.toString();
+      void queryClient2.invalidateQueries({ queryKey: snapshotsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.positions });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.portfolio });
+    }
+  });
+}
+function useEditWtnSnapshot() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.editWtnSnapshot(
+        vars.positionId,
+        vars.date,
+        vars.newDate,
+        vars.newNicpHeld,
+        vars.newTotalIcpPaid,
+        vars.newRedeemableIcpValue
+      );
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.positionId.toString();
+      void queryClient2.invalidateQueries({ queryKey: snapshotsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.portfolio });
+    }
+  });
+}
+function useDeleteWtnSnapshot() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.deleteWtnSnapshot(vars.positionId, vars.date);
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.positionId.toString();
+      void queryClient2.invalidateQueries({ queryKey: snapshotsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.portfolio });
+    }
+  });
+}
+function useImportWtnHistoricalData() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.importWtnHistoricalData(vars.positionId, vars.entries);
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.positionId.toString();
+      void queryClient2.invalidateQueries({ queryKey: snapshotsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey$1(id2) });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.positions });
+      void queryClient2.invalidateQueries({ queryKey: KEYS.portfolio });
+    }
+  });
+}
+const EMPTY = {
+  name: "",
+  startDate: ""
+};
+function AddWtnPage() {
+  const [form, setForm] = reactExports.useState(EMPTY);
+  const [errors, setErrors] = reactExports.useState({});
+  const createPosition = useCreateWtnPosition();
+  const navigate = useNavigate();
+  const validate = () => {
+    const e3 = {};
+    if (!form.name.trim()) {
+      e3.name = "Name is required";
+    }
+    if (form.startDate && Number.isNaN(new Date(form.startDate).getTime())) {
+      e3.startDate = "Invalid date";
+    }
+    return e3;
+  };
+  const handleSubmit = (ev) => {
+    ev.preventDefault();
+    const e3 = validate();
+    setErrors(e3);
+    if (Object.keys(e3).length > 0) return;
+    const startDate = form.startDate ? BigInt(new Date(form.startDate).getTime()) * 1000000n : BigInt(Date.now()) * 1000000n;
+    createPosition.mutate(
+      { name: form.name.trim(), startDate },
+      {
+        onSuccess: (position) => {
+          ue.success("WTN position created");
+          navigate({
+            to: "/wtn-detail/$positionId",
+            params: { positionId: position.id.toString() }
+          });
+        },
+        onError: (err) => ue.error(err.message)
+      }
+    );
+  };
+  const update = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: void 0 }));
+    }
+  };
+  const submitting = createPosition.isPending;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        "aria-hidden": true,
+        className: "pointer-events-none absolute inset-x-0 top-0 h-48 opacity-30",
+        style: {
+          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--accent) / 0.12) 0%, oklch(var(--background) / 0) 70%)"
+        }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          variant: "ghost",
+          size: "sm",
+          onClick: () => navigate({ to: "/" }),
+          className: "text-muted-foreground mb-6",
+          "data-ocid": "add_wtn.back",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "size-4" }),
+            "Back to dashboard"
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        motion.div,
+        {
+          initial: { opacity: 0, y: 12 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.3 },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-6 flex items-center gap-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-11 items-center justify-center rounded-xl shadow-md", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-5" }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-2xl font-semibold tracking-tight", children: "Add a WTN position" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: "Start tracking a WaterNeuron position. Snapshots are entered manually — no governance sync or hotkey required." })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Position details" }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-5", noValidate: true, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(Label$1, { htmlFor: "name", "data-ocid": "add_wtn.name.label", children: [
+                    "Name ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-destructive", children: "*" })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Input,
+                    {
+                      id: "name",
+                      placeholder: "e.g. Main WTN stake",
+                      value: form.name,
+                      onChange: (e3) => update("name", e3.target.value),
+                      "aria-invalid": !!errors.name,
+                      "aria-describedby": errors.name ? "name-error" : void 0,
+                      "data-ocid": "add_wtn.name.input"
+                    }
+                  ),
+                  errors.name && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "p",
+                    {
+                      id: "name-error",
+                      className: "text-destructive text-xs",
+                      "data-ocid": "add_wtn.name.field_error",
+                      children: errors.name
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    Label$1,
+                    {
+                      htmlFor: "startDate",
+                      "data-ocid": "add_wtn.start_date.label",
+                      children: [
+                        "Start date",
+                        " ",
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground font-normal", children: "(optional)" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Input,
+                    {
+                      id: "startDate",
+                      type: "date",
+                      value: form.startDate,
+                      onChange: (e3) => update("startDate", e3.target.value),
+                      "aria-invalid": !!errors.startDate,
+                      "aria-describedby": errors.startDate ? "startDate-error" : void 0,
+                      "data-ocid": "add_wtn.start_date.input",
+                      className: "font-mono"
+                    }
+                  ),
+                  errors.startDate && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "p",
+                    {
+                      id: "startDate-error",
+                      className: "text-destructive text-xs",
+                      "data-ocid": "add_wtn.start_date.field_error",
+                      children: errors.startDate
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-end gap-2 pt-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Button,
+                    {
+                      type: "button",
+                      variant: "ghost",
+                      onClick: () => navigate({ to: "/" }),
+                      disabled: submitting,
+                      "data-ocid": "add_wtn.cancel_button",
+                      children: "Cancel"
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Button,
+                    {
+                      type: "submit",
+                      disabled: submitting,
+                      "data-ocid": "add_wtn.submit_button",
+                      children: submitting ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "size-4 animate-spin" }),
+                        "Creating…"
+                      ] }) : "Create position"
                     }
                   )
                 ] })
@@ -55464,6 +56235,7 @@ function escapeCsvField(value) {
 }
 function eventLabel(eventType) {
   if (eventType === "mergedToStake") return "mergedToStake";
+  if (eventType === "externalTopUp") return "externalTopUp";
   switch (eventType) {
     case EventType.normalGrowth:
       return "normalGrowth";
@@ -55475,12 +56247,29 @@ function eventLabel(eventType) {
       return EventType[eventType] ?? "unknown";
   }
 }
+function classifyEvent(eventType) {
+  if (eventType === "externalTopUp") return "capital";
+  if (eventType === "mergedToStake") return "reclassify";
+  switch (eventType) {
+    case EventType.normalGrowth:
+      return "reward";
+    case EventType.disburseOrSpawn:
+      return "withdrawal";
+    case EventType.firstReading:
+      return "firstReading";
+    default:
+      return "unknown";
+  }
+}
 function maturityBalance(reward) {
   const combined = reward.unstakedMaturityE8s + reward.stakedMaturityE8s;
   return formatIcp(combined, 8, false);
 }
 function deltaIcp(reward) {
   return formatIcp(reward.deltaE8s, 8, false);
+}
+function stakeDeltaIcp(reward) {
+  return formatIcp(reward.stakeDeltaE8s, 8, false);
 }
 function dateKeyFromTimestamp(ns) {
   if (ns == null) return null;
@@ -55518,6 +56307,8 @@ const HEADER = [
   "maturity balance",
   "delta",
   "event type",
+  "classification",
+  "stakeDelta",
   "priceUsd",
   "pricePln",
   "rewardValueUsd",
@@ -55534,6 +56325,8 @@ function rewardsToCsv(rewards, priceMap) {
       maturityBalance(r2),
       deltaIcp(r2),
       eventLabel(r2.eventType),
+      classifyEvent(r2.eventType),
+      stakeDeltaIcp(r2),
       priceUsd,
       pricePln,
       rewardValueUsd,
@@ -55559,6 +56352,8 @@ function rewardsToCombinedCsv(groups, priceMap) {
           maturityBalance(r2),
           deltaIcp(r2),
           eventLabel(r2.eventType),
+          classifyEvent(r2.eventType),
+          stakeDeltaIcp(r2),
           priceUsd,
           pricePln,
           rewardValueUsd,
@@ -55568,6 +56363,91 @@ function rewardsToCombinedCsv(groups, priceMap) {
     }
   }
   return [header, ...rows].join("\n");
+}
+function classifyWtnEvent(eventType) {
+  switch (eventType) {
+    case WtnEventType.capitalAdded:
+      return "capital";
+    case WtnEventType.withdrawal:
+      return "withdrawal";
+    case WtnEventType.organicGrowth:
+      return "reward";
+    default:
+      return "unknown";
+  }
+}
+function formatWtnIcp$1(value) {
+  if (value == null || Number.isNaN(value)) return "";
+  return String(value);
+}
+const WTN_HEADER = [
+  "date",
+  "nicpHeld",
+  "totalIcpPaid",
+  "redeemableIcpValue",
+  "classification"
+];
+function wtnSnapshotsToCsv(snapshots) {
+  const rows = snapshots.map(
+    (s2) => [
+      formatTimestamp(s2.date),
+      formatWtnIcp$1(s2.nicpHeld),
+      formatWtnIcp$1(s2.totalIcpPaid),
+      formatWtnIcp$1(s2.redeemableIcpValue),
+      classifyWtnEvent(s2.eventType)
+    ].map(escapeCsvField).join(",")
+  );
+  return [WTN_HEADER.join(","), ...rows].join("\n");
+}
+const WTN_COMBINED_HEADER = [
+  "id",
+  "type",
+  "date",
+  "nicpHeld",
+  "totalIcpPaid",
+  "redeemableIcpValue",
+  "classification"
+];
+function wtnSnapshotsToCombinedCsv(groups) {
+  const header = WTN_COMBINED_HEADER.join(",");
+  const rows = [];
+  for (const group of groups) {
+    const positionId = group.positionId.toString();
+    for (const s2 of group.snapshots) {
+      rows.push(
+        [
+          positionId,
+          "WTN",
+          formatTimestamp(s2.date),
+          formatWtnIcp$1(s2.nicpHeld),
+          formatWtnIcp$1(s2.totalIcpPaid),
+          formatWtnIcp$1(s2.redeemableIcpValue),
+          classifyWtnEvent(s2.eventType)
+        ].map(escapeCsvField).join(",")
+      );
+    }
+  }
+  return [header, ...rows].join("\n");
+}
+function neuronRewardsToCombinedTypedRows(groups) {
+  const rows = [];
+  for (const group of groups) {
+    const neuronId = group.neuronId.toString();
+    for (const r2 of group.rewards) {
+      rows.push(
+        [
+          neuronId,
+          "NNS",
+          formatTimestamp(r2.timestamp),
+          "",
+          "",
+          "",
+          classifyEvent(r2.eventType)
+        ].map(escapeCsvField).join(",")
+      );
+    }
+  }
+  return rows;
 }
 function downloadCsv(filename, content) {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
@@ -55583,13 +56463,16 @@ function downloadCsv(filename, content) {
 }
 function DashboardPage() {
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
+  const { data: wtnPositions, isLoading: wtnLoading } = useWtnPositions();
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
   const priceQuery = useIcpPrice();
   const syncAll = useSyncAllNeurons();
   const { actor } = useBackendActor();
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = reactExports.useState(false);
-  const isEmpty = !neuronsLoading && ((neurons == null ? void 0 : neurons.length) ?? 0) === 0;
+  const neuronCount = (neurons == null ? void 0 : neurons.length) ?? 0;
+  const wtnCount = (wtnPositions == null ? void 0 : wtnPositions.length) ?? 0;
+  const isEmpty = !neuronsLoading && !wtnLoading && neuronCount === 0 && wtnCount === 0;
   const handleSyncAll = () => {
     syncAll.mutate(void 0, {
       onSuccess: (results) => {
@@ -55616,7 +56499,8 @@ function DashboardPage() {
     priceQuery.refetch();
   };
   const handleExportCsv = async () => {
-    if (!actor || !neurons || neurons.length === 0) return;
+    if (!actor || !neurons || neurons.length === 0 && (!wtnPositions || wtnPositions.length === 0))
+      return;
     setIsExporting(true);
     try {
       const groups = await Promise.all(
@@ -55628,7 +56512,16 @@ function DashboardPage() {
         })
       );
       const nonEmpty = groups.filter((g2) => g2.rewards.length > 0);
-      if (nonEmpty.length === 0) {
+      const wtnGroups = await Promise.all(
+        (wtnPositions ?? []).map(async (position) => {
+          const snapshots = await actor.getWtnSnapshots(
+            position.id
+          );
+          return { positionId: position.id, snapshots };
+        })
+      );
+      const wtnNonEmpty = wtnGroups.filter((g2) => g2.snapshots.length > 0);
+      if (nonEmpty.length === 0 && wtnNonEmpty.length === 0) {
         ue.info("No reward snapshots to export yet");
         return;
       }
@@ -55657,10 +56550,26 @@ function DashboardPage() {
           }
         })
       );
-      const csv = rewardsToCombinedCsv(groups, priceMap);
-      downloadCsv("neuron-rewards-export.csv", csv);
+      const nnsCsv = rewardsToCombinedCsv(groups, priceMap);
+      const wtnCsv = wtnSnapshotsToCombinedCsv(wtnNonEmpty);
+      let csv;
+      if (wtnNonEmpty.length > 0 && nonEmpty.length > 0) {
+        const nnsTypedRows = neuronRewardsToCombinedTypedRows(groups);
+        const wtnRows = wtnCsv.split("\n").slice(1);
+        csv = [
+          "id,type,date,nicpHeld,totalIcpPaid,redeemableIcpValue,classification",
+          ...nnsTypedRows,
+          ...wtnRows
+        ].join("\n");
+      } else if (wtnNonEmpty.length > 0) {
+        csv = wtnCsv;
+      } else {
+        csv = nnsCsv;
+      }
+      downloadCsv("portfolio-export.csv", csv);
+      const totalPositions = nonEmpty.length + wtnNonEmpty.length;
       ue.success(
-        `Exported ${nonEmpty.length} neuron${nonEmpty.length === 1 ? "" : "s"} to CSV`
+        `Exported ${totalPositions} position${totalPositions === 1 ? "" : "s"} to CSV`
       );
     } catch (err) {
       ue.error(err instanceof Error ? err.message : "Failed to export CSV");
@@ -55723,7 +56632,7 @@ function DashboardPage() {
                 ]
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: isEmpty ? "Add a neuron before exporting" : "Download all neurons' reward histories as one CSV" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: isEmpty ? "Add a neuron or WTN position before exporting" : "Download all neurons' and WTN positions' histories as one CSV" })
           ] }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs(
             Button,
@@ -55735,6 +56644,18 @@ function DashboardPage() {
                 "Add Neuron"
               ]
             }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              variant: "outline",
+              onClick: () => navigate({ to: "/add-wtn" }),
+              "data-ocid": "dashboard.add_wtn",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-4" }),
+                "Add WTN Neuron"
+              ]
+            }
           )
         ] })
       ] }),
@@ -55742,6 +56663,7 @@ function DashboardPage() {
         PortfolioSummary,
         {
           totalStaked: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
+          totalCapitalContributed: (portfolio == null ? void 0 : portfolio.totalCapitalContributedE8s) ?? null,
           totalMaturity: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
           blendedApy: (portfolio == null ? void 0 : portfolio.blendedApy) ?? null,
           rewardsThisMonth: (portfolio == null ? void 0 : portfolio.totalRewardsThisMonthE8s) ?? null,
@@ -55761,23 +56683,34 @@ function DashboardPage() {
       ) }),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-10", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground font-display text-lg font-semibold tracking-tight", children: "Neurons" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono", children: (neurons == null ? void 0 : neurons.length) ?? 0 })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground font-display text-lg font-semibold tracking-tight", children: "Positions" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono", children: ((neurons == null ? void 0 : neurons.length) ?? 0) + ((wtnPositions == null ? void 0 : wtnPositions.length) ?? 0) })
         ] }),
-        neuronsLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(NeuronGridSkeleton, {}) : isEmpty ? /* @__PURE__ */ jsxRuntimeExports.jsx(EmptyState, { onAdd: () => navigate({ to: "/add-neuron" }) }) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", children: neurons == null ? void 0 : neurons.map((neuron, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-          NeuronCard,
-          {
-            neuron,
-            index: i
-          },
-          neuron.id.toString()
-        )) })
+        neuronsLoading || wtnLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(NeuronGridSkeleton, {}) : isEmpty ? /* @__PURE__ */ jsxRuntimeExports.jsx(EmptyState, { onAdd: () => navigate({ to: "/add-neuron" }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", children: [
+          neurons == null ? void 0 : neurons.map((neuron, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            NeuronCard,
+            {
+              neuron,
+              index: i
+            },
+            neuron.id.toString()
+          )),
+          wtnPositions == null ? void 0 : wtnPositions.map((position, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnCard,
+            {
+              position,
+              index: ((neurons == null ? void 0 : neurons.length) ?? 0) + i
+            },
+            `wtn-${position.id.toString()}`
+          ))
+        ] })
       ] })
     ] })
   ] });
 }
 function PortfolioSummary({
   totalStaked,
+  totalCapitalContributed,
   totalMaturity,
   blendedApy,
   rewardsThisMonth,
@@ -55791,6 +56724,13 @@ function PortfolioSummary({
       icon: Wallet,
       accent: "text-primary",
       hint: !loading && neuronCount != null ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}` : null
+    },
+    {
+      label: "Total Capital Contributed",
+      value: formatIcp(totalCapitalContributed, 2),
+      icon: Landmark,
+      accent: "text-muted-foreground",
+      hint: "Initial stakes + top-ups"
     },
     {
       label: "Total Maturity",
@@ -55814,7 +56754,7 @@ function PortfolioSummary({
       hint: "ICP rewards this month"
     }
   ];
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: stat.label }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(stat.icon, { className: cn("size-4", stat.accent) })
@@ -55962,6 +56902,85 @@ function NeuronCard({ neuron, index: index2 }) {
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(neuron.startDate) })
+              ] })
+            ] })
+          ] })
+        }
+      )
+    }
+  );
+}
+function WtnCard({
+  position,
+  index: index2
+}) {
+  const idStr = position.id.toString();
+  const { data: stats } = useWtnStats(idStr);
+  const redeemableIcp = (stats == null ? void 0 : stats.redeemableIcpValue) ?? 0;
+  const totalEarned = (stats == null ? void 0 : stats.totalEarned) ?? 0;
+  const percentReturn = (stats == null ? void 0 : stats.percentReturn) ?? 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    motion.div,
+    {
+      initial: { opacity: 0, y: 12 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.3, delay: index2 * 0.06 },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Link,
+        {
+          to: "/wtn-detail/$positionId",
+          params: { positionId: idStr },
+          "data-ocid": `dashboard.wtn.item.${index2 + 1}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 transition-smooth hover:border-accent/40 hover:shadow-elevated h-full", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5 min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-4.5" }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "font-mono text-sm font-semibold truncate", children: position.name || `WTN #${idStr}` }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px] truncate", children: shortenPrincipal(position.ownerId.toString(), 8) })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Badge,
+                {
+                  variant: "outline",
+                  className: "border-accent/40 bg-accent/10 text-accent text-[10px]",
+                  "data-ocid": `dashboard.wtn.badge.${index2 + 1}`,
+                  children: "WTN"
+                }
+              )
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Redeemable" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(
+                    BigInt(Math.trunc(redeemableIcp * Number(E8S_PER_ICP)))
+                  ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: cn(
+                        "font-mono text-xs",
+                        percentReturn >= 0 ? "text-primary" : "text-destructive"
+                      ),
+                      children: formatPercent(percentReturn)
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px] mt-1", children: [
+                  "Earned",
+                  " ",
+                  formatIcpCompact(
+                    BigInt(Math.trunc(totalEarned * Number(E8S_PER_ICP)))
+                  ),
+                  " ",
+                  "ICP"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(position.startDate) })
               ] })
             ] })
           ] })
@@ -79840,8 +80859,8 @@ var AreaChart = generateCategoricalChart({
   }],
   formatAxisMap
 });
-const ACTIVITY_PAGE_SIZE = 25;
-const ACTIVITY_MAX_HEIGHT = "max-h-[400px]";
+const ACTIVITY_PAGE_SIZE$1 = 25;
+const ACTIVITY_MAX_HEIGHT$1 = "max-h-[400px]";
 function nsToDateKey(ns) {
   const ms2 = Number(ns / 1000000n);
   if (!Number.isFinite(ms2) || ms2 <= 0) return "";
@@ -79986,7 +81005,7 @@ function NeuronDetailPage() {
   const stakedE8s = (lastReward == null ? void 0 : lastReward.stakedMaturityE8s) ?? 0n;
   const maturityE8s = unstakedE8s + stakedE8s;
   const autoStakeMaturity = (lastReward == null ? void 0 : lastReward.autoStakeMaturity) ?? false;
-  const maturityPercent = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
+  const maturityPercent = (stats == null ? void 0 : stats.overallReturnPct) ?? (stats == null ? void 0 : stats.percentageReturn) ?? 0;
   const chartData = sortedRewards.map((p2) => {
     const combined = p2.unstakedMaturityE8s + p2.stakedMaturityE8s;
     return {
@@ -80482,7 +81501,8 @@ function RewardsSummaryCard({
     let pln = 0;
     let sawPrice = false;
     for (const r2 of rewards) {
-      if (r2.deltaE8s > 0n) {
+      const isExternalTopUp = r2.eventType === "externalTopUp";
+      if (r2.deltaE8s > 0n && !isExternalTopUp) {
         earned += r2.deltaE8s;
         if (summaryPrices) {
           const key = nsToDateKey(r2.timestamp);
@@ -80722,7 +81742,7 @@ function ActivityFeed({
   editingSnapshot,
   deletingSnapshot
 }) {
-  const [visibleCount, setVisibleCount] = reactExports.useState(ACTIVITY_PAGE_SIZE);
+  const [visibleCount, setVisibleCount] = reactExports.useState(ACTIVITY_PAGE_SIZE$1);
   const [editing, setEditing] = reactExports.useState(null);
   const [deleting, setDeleting] = reactExports.useState(null);
   const reversed = reactExports.useMemo(() => [...rewards].reverse(), [rewards]);
@@ -80739,7 +81759,7 @@ function ActivityFeed({
   const visiblePricesQuery = useHistoricalPrices(visibleDateKeys);
   const visiblePrices = visiblePricesQuery.data ?? null;
   const handleLoadMore = () => {
-    setVisibleCount((c2) => c2 + ACTIVITY_PAGE_SIZE);
+    setVisibleCount((c2) => c2 + ACTIVITY_PAGE_SIZE$1);
   };
   const handleEditSubmit = (newTimestamp, newMaturityE8s) => {
     if (!editing) return;
@@ -80771,7 +81791,7 @@ function ActivityFeed({
         {
           className: cn(
             "space-y-1 overflow-y-auto pr-1",
-            ACTIVITY_MAX_HEIGHT
+            ACTIVITY_MAX_HEIGHT$1
           ),
           "data-ocid": "neuron_detail.activity.list",
           children: visible.map((r2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -80850,7 +81870,8 @@ const EVENT_TYPE_LABEL = {
   normalGrowth: "Maturity growth",
   firstReading: "First reading",
   disburseOrSpawn: "Disburse / spawn",
-  mergedToStake: "Merged to stake"
+  mergedToStake: "Merged to stake",
+  externalTopUp: "External Top-Up"
 };
 function ActivityItem({
   event,
@@ -80862,17 +81883,23 @@ function ActivityItem({
   const isDisburse = event.eventType === EventType.disburseOrSpawn;
   const isFirst = event.eventType === EventType.firstReading;
   const isMergedToStake = event.eventType === "mergedToStake";
-  const Icon2 = isMergedToStake ? ArrowDownToLine : isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
-  const accent = isMergedToStake ? "text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/15" : isDisburse ? "text-primary bg-primary/10" : isFirst ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
+  const isExternalTopUp = event.eventType === "externalTopUp";
+  const Icon2 = isExternalTopUp ? CirclePlus : isMergedToStake ? ArrowDownToLine : isDisburse ? Zap : isFirst ? Sparkles : TrendingUp;
+  const accent = isExternalTopUp ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15" : isMergedToStake ? "text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/15" : isDisburse ? "text-primary bg-primary/10" : isFirst ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
   const combinedE8s = event.unstakedMaturityE8s + event.stakedMaturityE8s;
   const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
   const deltaNegative = event.deltaE8s < 0n;
+  const topUpIcp = isExternalTopUp ? e8sToIcpNumber(event.stakeDeltaE8s) : 0;
+  const showTopUpValuePills = isExternalTopUp && price != null && price.usd > 0 && topUpIcp > 0;
+  const topUpUsd = showTopUpValuePills ? topUpIcp * price.usd : null;
+  const topUpPln = showTopUpValuePills ? topUpIcp * price.pln : null;
   const showValuePills = !deltaNegative && price != null && price.usd > 0;
   const deltaIcp2 = e8sToIcpNumber(event.deltaE8s);
   const deltaUsd = showValuePills ? deltaIcp2 * price.usd : null;
   const deltaPln = showValuePills ? deltaIcp2 * price.pln : null;
-  const priceUnavailable = !deltaNegative && price == null;
+  const priceUnavailable = !deltaNegative && price == null && !isExternalTopUp;
+  const topUpPriceUnavailable = isExternalTopUp && price == null;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     motion.li,
     {
@@ -80895,17 +81922,14 @@ function ActivityItem({
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground text-sm font-medium", children: label }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
               "span",
               {
                 className: cn(
                   "font-mono text-sm font-semibold",
                   deltaNegative ? "text-destructive" : "text-primary"
                 ),
-                children: [
-                  deltaNegative ? "" : "+",
-                  formatIcp(event.deltaE8s, 4, false)
-                ]
+                children: isExternalTopUp ? `Added ${formatIcp(event.stakeDeltaE8s, 4, false)} from outside` : `${deltaNegative ? "" : "+"}${formatIcp(event.deltaE8s, 4, false)}`
               }
             )
           ] }),
@@ -80937,7 +81961,15 @@ function ActivityItem({
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-1.5", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px]", children: formatTimestampDateTime(event.timestamp) }),
-            deltaUsd != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            isExternalTopUp ? topUpUsd != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "value-pill",
+                title: "Capital addition value in USD at historical ICP price",
+                "data-ocid": `neuron_detail.activity.topup_usd_pill.${index2 + 1}`,
+                children: formatUsd(topUpUsd)
+              }
+            ) : deltaUsd != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
               "span",
               {
                 className: "value-pill",
@@ -80946,7 +81978,15 @@ function ActivityItem({
                 children: formatUsd(deltaUsd)
               }
             ),
-            deltaPln != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            isExternalTopUp ? topUpPln != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "value-pill",
+                title: "Capital addition value in PLN at historical ICP price",
+                "data-ocid": `neuron_detail.activity.topup_pln_pill.${index2 + 1}`,
+                children: formatPln(topUpPln)
+              }
+            ) : deltaPln != null && /* @__PURE__ */ jsxRuntimeExports.jsx(
               "span",
               {
                 className: "value-pill",
@@ -80955,7 +81995,14 @@ function ActivityItem({
                 children: formatPln(deltaPln)
               }
             ),
-            priceUnavailable && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            isExternalTopUp ? topUpPriceUnavailable && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "span",
+              {
+                className: "text-muted-foreground/60 font-mono text-[10px]",
+                "data-ocid": `neuron_detail.activity.topup_price_unavailable.${index2 + 1}`,
+                children: "price unavailable"
+              }
+            ) : priceUnavailable && /* @__PURE__ */ jsxRuntimeExports.jsx(
               "span",
               {
                 className: "text-muted-foreground/60 font-mono text-[10px]",
@@ -80995,7 +82042,7 @@ function ActivityItem({
     }
   );
 }
-function nsToDatetimeLocal(ns) {
+function nsToDatetimeLocal$1(ns) {
   const ms2 = Number(ns / 1000000n);
   if (!Number.isFinite(ms2) || ms2 <= 0) return "";
   const d2 = new Date(ms2);
@@ -81003,7 +82050,7 @@ function nsToDatetimeLocal(ns) {
   const pad2 = (n2) => String(n2).padStart(2, "0");
   return `${d2.getFullYear()}-${pad2(d2.getMonth() + 1)}-${pad2(d2.getDate())}T${pad2(d2.getHours())}:${pad2(d2.getMinutes())}`;
 }
-function datetimeLocalToNs(value) {
+function datetimeLocalToNs$1(value) {
   const ms2 = new Date(value).getTime();
   if (!Number.isFinite(ms2)) return 0n;
   return BigInt(Math.floor(ms2)) * 1000000n;
@@ -81034,7 +82081,7 @@ function EditSnapshotDialog({
     setLastKey(eventKey);
     if (event != null) {
       setMaturity(e8sToIcpInput(combinedE8s));
-      setDatetime(nsToDatetimeLocal(event.timestamp));
+      setDatetime(nsToDatetimeLocal$1(event.timestamp));
       setError(null);
     }
   }
@@ -81050,7 +82097,7 @@ function EditSnapshotDialog({
       setError("Pick a date and time");
       return;
     }
-    const newTimestamp = datetimeLocalToNs(datetime);
+    const newTimestamp = datetimeLocalToNs$1(datetime);
     if (newTimestamp <= 0n) {
       setError("Pick a valid date and time");
       return;
@@ -81182,8 +82229,18 @@ function NeuronStatsCard({
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         StatRow,
         {
-          label: "Total rewards",
-          value: formatIcp(stats.totalRewardsE8s, 4)
+          label: "Total capital contributed",
+          value: formatIcp(stats.totalCapitalContributedE8s, 4),
+          dataOcid: "neuron_detail.stats.total_capital"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow,
+        {
+          label: "Total rewards earned",
+          value: formatIcp(stats.totalRewardsE8s, 4),
+          dataOcid: "neuron_detail.stats.total_rewards"
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
@@ -81192,14 +82249,6 @@ function NeuronStatsCard({
         {
           label: "Average daily reward",
           value: formatIcp(stats.averageDailyRewardE8s, 4)
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        StatRow,
-        {
-          label: "Return",
-          value: formatPercent(stats.percentageReturn)
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
@@ -81252,6 +82301,13 @@ function MonthlyBreakdownSection({
     }),
     [monthly]
   );
+  const byKey = reactExports.useMemo(() => {
+    const map2 = /* @__PURE__ */ new Map();
+    for (const m2 of sorted) {
+      map2.set(`${Number(m2.year)}-${Number(m2.month)}`, m2);
+    }
+    return map2;
+  }, [sorted]);
   const chartData = reactExports.useMemo(
     () => sorted.map((m2) => ({
       label: formatMonthLabel(m2.year, m2.month),
@@ -81349,10 +82405,16 @@ function MonthlyBreakdownSection({
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Month" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Total earned" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "MoM delta" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "YoY delta" }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Readings" })
         ] }) }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: sorted.map((m2, i) => {
           const momNegative = m2.momDeltaE8s < 0n;
+          const prevYear = byKey.get(
+            `${Number(m2.year) - 1}-${Number(m2.month)}`
+          );
+          const yoyDeltaE8s = prevYear == null ? null : m2.totalDeltaE8s - prevYear.totalDeltaE8s;
+          const yoyNegative = yoyDeltaE8s != null && yoyDeltaE8s < 0n;
           return /* @__PURE__ */ jsxRuntimeExports.jsxs(
             TableRow,
             {
@@ -81371,6 +82433,16 @@ function MonthlyBreakdownSection({
                       momNegative ? "" : "+",
                       formatIcp(m2.momDeltaE8s, 4, false)
                     ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  TableCell,
+                  {
+                    className: cn(
+                      "font-mono text-right text-xs",
+                      yoyDeltaE8s == null ? "text-muted-foreground" : yoyNegative ? "text-destructive" : "text-primary"
+                    ),
+                    children: yoyDeltaE8s == null ? "—" : `${yoyNegative ? "" : "+"}${formatIcp(yoyDeltaE8s, 4, false)}`
                   }
                 ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-muted-foreground font-mono text-right text-xs", children: Number(m2.readingCount) })
@@ -81800,6 +82872,1359 @@ function DetailSkeleton() {
     ] })
   ] });
 }
+const ACTIVITY_PAGE_SIZE = 25;
+const ACTIVITY_MAX_HEIGHT = "max-h-[400px]";
+function formatWtnIcp(value, decimals = 4, withUnit = true) {
+  if (value == null || Number.isNaN(value)) {
+    return withUnit ? `0.${"0".repeat(decimals)} ICP` : `0.${"0".repeat(decimals)}`;
+  }
+  const fixed = value.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+  return withUnit ? `${fixed} ICP` : fixed;
+}
+function formatWtnPercent(value, decimals = 2) {
+  if (value == null || Number.isNaN(value)) return "—";
+  const sign2 = value > 0 ? "+" : "";
+  return `${sign2}${value.toFixed(decimals)}%`;
+}
+function WtnDetailPage() {
+  const { positionId } = useParams({ strict: false });
+  const idParam = typeof positionId === "string" ? positionId : String(positionId ?? "");
+  const numericId = Number(idParam);
+  const validId = Number.isFinite(numericId) && numericId > 0 ? idParam : null;
+  const { data: position, isLoading: positionLoading } = useWtnPosition(validId);
+  const { data: snapshots, isLoading: snapshotsLoading } = useWtnSnapshots(validId);
+  const { data: stats } = useWtnStats(validId);
+  const recordSnapshot = useRecordWtnSnapshot();
+  const editSnapshot = useEditWtnSnapshot();
+  const deleteSnapshot = useDeleteWtnSnapshot();
+  const importHistorical = useImportWtnHistoricalData();
+  const navigate = useNavigate();
+  const sortedSnapshots = reactExports.useMemo(
+    () => [...snapshots ?? []].sort((a2, b2) => Number(a2.date - b2.date)),
+    [snapshots]
+  );
+  const handleExportCsv = () => {
+    if (!sortedSnapshots || sortedSnapshots.length === 0) {
+      ue.error("No snapshots to export");
+      return;
+    }
+    const csv = wtnSnapshotsToCsv(sortedSnapshots);
+    const safeId = idParam.replace(/[^a-zA-Z0-9_-]/g, "_");
+    downloadCsv(`wtn-${safeId}-snapshots.csv`, csv);
+    ue.success("CSV downloaded");
+  };
+  if (!validId) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-background", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground", children: "Invalid position id." }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          variant: "ghost",
+          size: "sm",
+          onClick: () => navigate({ to: "/" }),
+          className: "text-muted-foreground mt-4",
+          "data-ocid": "wtn_detail.back",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "size-4" }),
+            "Back to dashboard"
+          ]
+        }
+      )
+    ] }) });
+  }
+  if (positionLoading && !position) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(WtnDetailSkeleton, {});
+  }
+  if (!position) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-xl font-semibold", children: "WTN position not found" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-2 text-sm", children: "This position may have been removed or never tracked." }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button,
+        {
+          onClick: () => navigate({ to: "/" }),
+          className: "mt-6",
+          "data-ocid": "wtn_detail.not_found.back",
+          children: "Back to dashboard"
+        }
+      )
+    ] });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        "aria-hidden": true,
+        className: "pointer-events-none absolute inset-x-0 top-0 h-48 opacity-30",
+        style: {
+          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--accent) / 0.12) 0%, oklch(var(--background) / 0) 70%)"
+        }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        Button,
+        {
+          variant: "ghost",
+          size: "sm",
+          onClick: () => navigate({ to: "/" }),
+          className: "text-muted-foreground mb-6",
+          "data-ocid": "wtn_detail.back",
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "size-4" }),
+            "Back to dashboard"
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WtnHeader,
+        {
+          position,
+          onExportCsv: handleExportCsv,
+          exportDisabled: !sortedSnapshots || sortedSnapshots.length === 0
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(WtnStatsCard, { stats }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WtnActivityFeed,
+        {
+          snapshots: sortedSnapshots,
+          loading: snapshotsLoading,
+          positionId: BigInt(idParam),
+          onEditSnapshot: (date2, newDate2, newNicpHeld, newTotalIcpPaid, newRedeemableIcpValue) => editSnapshot.mutate(
+            {
+              positionId: BigInt(idParam),
+              date: date2,
+              newDate: newDate2,
+              newNicpHeld,
+              newTotalIcpPaid,
+              newRedeemableIcpValue
+            },
+            {
+              onSuccess: () => ue.success("Snapshot updated"),
+              onError: (err) => ue.error(err.message)
+            }
+          ),
+          onDeleteSnapshot: (date2) => deleteSnapshot.mutate(
+            { positionId: BigInt(idParam), date: date2 },
+            {
+              onSuccess: () => ue.success("Snapshot deleted"),
+              onError: (err) => ue.error(err.message)
+            }
+          ),
+          editingSnapshot: editSnapshot.isPending,
+          deletingSnapshot: deleteSnapshot.isPending
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WtnSnapshotEntryForm,
+        {
+          onSubmit: (date2, nicpHeld, totalIcpPaid, redeemableIcpValue) => {
+            recordSnapshot.mutate(
+              {
+                positionId: BigInt(idParam),
+                date: date2,
+                nicpHeld,
+                totalIcpPaid,
+                redeemableIcpValue
+              },
+              {
+                onSuccess: () => ue.success("Snapshot recorded"),
+                onError: (err) => ue.error(err.message)
+              }
+            );
+          },
+          submitting: recordSnapshot.isPending
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        WtnImportHistoricalPanel,
+        {
+          positionId: BigInt(idParam),
+          onImport: importHistorical
+        }
+      )
+    ] })
+  ] });
+}
+function WtnHeader({
+  position,
+  onExportCsv,
+  exportDisabled
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    motion.section,
+    {
+      initial: { opacity: 0, y: 12 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.3 },
+      "data-ocid": "wtn_detail.header",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 min-w-0", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-12 shrink-0 items-center justify-center rounded-xl shadow-md", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-6" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-xl font-semibold tracking-tight truncate", children: position.name || "WTN position" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  Badge,
+                  {
+                    variant: "outline",
+                    className: "border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]",
+                    "data-ocid": "wtn_detail.wtn_badge",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-2.5" }),
+                      "WTN"
+                    ]
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-xs mt-0.5", children: [
+                "Owner ",
+                shortenPrincipal(position.ownerId.toString(), 8)
+              ] })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              variant: "outline",
+              onClick: onExportCsv,
+              disabled: exportDisabled,
+              "data-ocid": "wtn_detail.export_csv",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDownToLine, { className: "size-4" }),
+                "Export CSV"
+              ]
+            }
+          ) })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnStat,
+            {
+              label: "Start date",
+              value: formatTimestamp(position.startDate),
+              icon: Activity
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnStat,
+            {
+              label: "Position type",
+              value: "WaterNeuron",
+              icon: Droplets
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(WtnStat, { label: "Tracking", value: "Manual entry", icon: Wallet })
+        ] }) })
+      ] })
+    }
+  );
+}
+function WtnStat({
+  label,
+  value,
+  icon: Icon2,
+  valueClass
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-muted-foreground flex items-center gap-1.5 text-[11px] tracking-wider uppercase", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "size-3.5" }),
+      label
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "p",
+      {
+        className: cn(
+          "text-foreground font-mono text-sm font-semibold",
+          valueClass
+        ),
+        children: value
+      }
+    )
+  ] });
+}
+function WtnStatsCard({ stats }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Card,
+    {
+      className: "bg-card/60 border-border/60",
+      "data-ocid": "wtn_detail.stats_panel",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Position statistics" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: !stats ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" })
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnStatRow,
+            {
+              label: "Total earned",
+              value: formatWtnIcp(stats.totalEarned, 4),
+              hint: "Sum of organic growth deltas",
+              dataOcid: "wtn_detail.stats.total_earned"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnStatRow,
+            {
+              label: "Total capital contributed",
+              value: formatWtnIcp(stats.totalCapitalContributed, 4),
+              hint: "Running total ICP paid",
+              dataOcid: "wtn_detail.stats.total_capital"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnStatRow,
+            {
+              label: "Total withdrawn",
+              value: formatWtnIcp(stats.totalWithdrawn, 4),
+              hint: "Sum of withdrawal deltas",
+              dataOcid: "wtn_detail.stats.total_withdrawn"
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnStatRow,
+            {
+              label: "Return",
+              value: formatWtnPercent(stats.percentReturn),
+              hint: "(redeemable − paid) / paid",
+              dataOcid: "wtn_detail.stats.percent_return",
+              valueClass: stats.percentReturn >= 0 ? "text-primary" : "text-destructive"
+            }
+          )
+        ] }) })
+      ]
+    }
+  );
+}
+function WtnStatRow({
+  label,
+  value,
+  hint,
+  dataOcid,
+  valueClass
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "flex items-center justify-between gap-4",
+      "data-ocid": dataOcid,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-sm", children: label }),
+          hint && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground/70 text-[11px] mt-0.5", children: hint })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "span",
+          {
+            className: cn(
+              "text-foreground font-mono text-sm font-semibold text-right",
+              valueClass
+            ),
+            children: value
+          }
+        )
+      ]
+    }
+  );
+}
+const WTN_EVENT_LABEL = {
+  capitalAdded: "Capital added",
+  withdrawal: "Withdrawal",
+  organicGrowth: "Organic growth"
+};
+function WtnActivityFeed({
+  snapshots,
+  loading,
+  positionId,
+  onEditSnapshot,
+  onDeleteSnapshot,
+  editingSnapshot,
+  deletingSnapshot
+}) {
+  const [visibleCount, setVisibleCount] = reactExports.useState(ACTIVITY_PAGE_SIZE);
+  const [editing, setEditing] = reactExports.useState(null);
+  const [deleting, setDeleting] = reactExports.useState(null);
+  const reversed = reactExports.useMemo(() => [...snapshots].reverse(), [snapshots]);
+  const visible = reversed.slice(0, visibleCount);
+  const hasMore = reversed.length > visibleCount;
+  const handleLoadMore = () => {
+    setVisibleCount((c2) => c2 + ACTIVITY_PAGE_SIZE);
+  };
+  const handleEditSubmit = (newDate2, newNicpHeld, newTotalIcpPaid, newRedeemableIcpValue) => {
+    if (!editing) return;
+    onEditSnapshot(
+      editing.date,
+      newDate2,
+      newNicpHeld,
+      newTotalIcpPaid,
+      newRedeemableIcpValue
+    );
+    setEditing(null);
+  };
+  const handleDeleteConfirm = () => {
+    if (!deleting) return;
+    onDeleteSnapshot(deleting.date);
+    setDeleting(null);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Card,
+    {
+      className: "bg-card/60 border-border/60",
+      "data-ocid": "wtn_detail.activity_feed",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Activity feed" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono text-[10px]", children: snapshots.length })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-3", children: [0, 1, 2].map((n2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Skeleton,
+          {
+            className: "h-12 w-full"
+          },
+          `wtn-activity-skeleton-${n2}`
+        )) }) : snapshots.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: "flex flex-col items-center justify-center py-10 text-center",
+            "data-ocid": "wtn_detail.activity.empty_state",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Activity, { className: "text-muted-foreground/50 size-7" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-3 text-sm", children: "No snapshots recorded yet. Record your first snapshot below." })
+            ]
+          }
+        ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "ol",
+            {
+              className: cn(
+                "space-y-1 overflow-y-auto pr-1",
+                ACTIVITY_MAX_HEIGHT
+              ),
+              "data-ocid": "wtn_detail.activity.list",
+              children: visible.map((s2, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                WtnActivityItem,
+                {
+                  event: s2,
+                  prev: i < reversed.length - 1 ? reversed[i + 1] : null,
+                  index: i,
+                  onEdit: () => setEditing(s2),
+                  onDelete: () => setDeleting(s2)
+                },
+                `${positionId}-${s2.date}-${i}`
+              ))
+            }
+          ),
+          hasMore && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center pt-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              variant: "outline",
+              size: "sm",
+              onClick: handleLoadMore,
+              "data-ocid": "wtn_detail.activity.load_more",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "size-4" }),
+                "Load more",
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-muted-foreground ml-1 font-mono text-[11px]", children: [
+                  "(",
+                  snapshots.length - visibleCount,
+                  " more)"
+                ] })
+              ]
+            }
+          ) })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          WtnEditSnapshotDialog,
+          {
+            open: editing !== null,
+            event: editing,
+            submitting: editingSnapshot,
+            onClose: () => setEditing(null),
+            onSubmit: handleEditSubmit
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          AlertDialog,
+          {
+            open: deleting !== null,
+            onOpenChange: (open) => {
+              if (!open) setDeleting(null);
+            },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogContent, { "data-ocid": "wtn_detail.snapshot.delete_dialog", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogHeader, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogTitle, { children: "Delete this snapshot?" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogDescription, { children: deleting ? `The reading from ${formatTimestampDateTime(deleting.date)} will be permanently removed. Deltas for neighboring entries will be recomputed. This cannot be undone.` : "This snapshot will be permanently removed." })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogFooter, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogCancel, { "data-ocid": "wtn_detail.snapshot.delete.cancel_button", children: "Cancel" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  AlertDialogAction,
+                  {
+                    onClick: handleDeleteConfirm,
+                    disabled: deletingSnapshot,
+                    className: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+                    "data-ocid": "wtn_detail.snapshot.delete.confirm_button",
+                    children: deletingSnapshot ? "Deleting…" : "Delete snapshot"
+                  }
+                )
+              ] })
+            ] })
+          }
+        )
+      ]
+    }
+  );
+}
+function WtnActivityItem({
+  event,
+  prev,
+  index: index2,
+  onEdit,
+  onDelete
+}) {
+  const isCapital = event.eventType === WtnEventType.capitalAdded;
+  const isWithdrawal = event.eventType === WtnEventType.withdrawal;
+  const isOrganic = event.eventType === WtnEventType.organicGrowth;
+  const Icon2 = isCapital ? CirclePlus : isWithdrawal ? TrendingDown : isOrganic ? TrendingUp : Sparkles;
+  const accent = isCapital ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15" : isWithdrawal ? "text-primary bg-primary/10" : isOrganic ? "text-accent bg-accent/10" : "text-muted-foreground bg-muted";
+  const label = WTN_EVENT_LABEL[event.eventType];
+  const nicpDelta = prev ? event.nicpHeld - prev.nicpHeld : 0;
+  const paidDelta = prev ? event.totalIcpPaid - prev.totalIcpPaid : 0;
+  const prevRedeemable = prev ? prev.redeemableIcpValue : 0;
+  let description;
+  if (isCapital) {
+    description = `Bought ${formatWtnIcp(nicpDelta, 4, false)} nICP for ${formatWtnIcp(paidDelta, 4, false)} ICP`;
+  } else if (isWithdrawal) {
+    const proportionalRedeemable = event.nicpHeld > 0 && prev && prev.nicpHeld > 0 ? Math.abs(nicpDelta) / prev.nicpHeld * prev.redeemableIcpValue : Math.abs(nicpDelta);
+    description = `Unstaked ${formatWtnIcp(Math.abs(nicpDelta), 4, false)} nICP for ~${formatWtnIcp(proportionalRedeemable, 4, false)} ICP`;
+  } else if (isOrganic) {
+    description = `Value grew from ${formatWtnIcp(prevRedeemable, 4, false)} to ${formatWtnIcp(event.redeemableIcpValue, 4, false)} ICP`;
+  } else {
+    description = "Snapshot recorded";
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    motion.li,
+    {
+      initial: { opacity: 0, x: -8 },
+      animate: { opacity: 1, x: 0 },
+      transition: { duration: 0.25, delay: Math.min(index2 * 0.04, 0.4) },
+      className: "group flex items-start gap-3 rounded-lg px-2 py-2.5 hover:bg-muted/40 transition-smooth",
+      "data-ocid": `wtn_detail.activity.item.${index2 + 1}`,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "span",
+          {
+            className: cn(
+              "flex size-7 shrink-0 items-center justify-center rounded-lg",
+              accent
+            ),
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon2, { className: "size-3.5" })
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground text-sm font-medium", children: label }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Badge,
+              {
+                variant: "outline",
+                className: cn(
+                  "gap-1 text-[10px]",
+                  isCapital ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : isWithdrawal ? "border-primary/40 bg-primary/10 text-primary" : "border-accent/40 bg-accent/10 text-accent"
+                ),
+                "data-ocid": `wtn_detail.activity.badge.${index2 + 1}`,
+                children: event.eventType
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm mt-0.5 break-words", children: description }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px]", children: formatTimestampDateTime(event.date) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px]", children: [
+              "nICP ",
+              formatWtnIcp(event.nicpHeld, 4, false),
+              " · Paid",
+              " ",
+              formatWtnIcp(event.totalIcpPaid, 4, false),
+              " · Redeemable",
+              " ",
+              formatWtnIcp(event.redeemableIcpValue, 4, false)
+            ] })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              variant: "ghost",
+              size: "icon",
+              className: "size-7",
+              "aria-label": "Edit snapshot",
+              "data-ocid": `wtn_detail.snapshot.edit_button.${index2 + 1}`,
+              onClick: onEdit,
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Pencil, { className: "size-3.5" })
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              variant: "ghost",
+              size: "icon",
+              className: "text-muted-foreground hover:text-destructive size-7",
+              "aria-label": "Delete snapshot",
+              "data-ocid": `wtn_detail.snapshot.delete_button.${index2 + 1}`,
+              onClick: onDelete,
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "size-3.5" })
+            }
+          )
+        ] })
+      ]
+    }
+  );
+}
+function nsToDatetimeLocal(ns) {
+  const ms2 = Number(ns / 1000000n);
+  if (!Number.isFinite(ms2) || ms2 <= 0) return "";
+  const d2 = new Date(ms2);
+  if (Number.isNaN(d2.getTime())) return "";
+  const pad2 = (n2) => String(n2).padStart(2, "0");
+  return `${d2.getFullYear()}-${pad2(d2.getMonth() + 1)}-${pad2(d2.getDate())}T${pad2(d2.getHours())}:${pad2(d2.getMinutes())}`;
+}
+function datetimeLocalToNs(value) {
+  const ms2 = new Date(value).getTime();
+  if (!Number.isFinite(ms2)) return 0n;
+  return BigInt(Math.floor(ms2)) * 1000000n;
+}
+function WtnSnapshotEntryForm({
+  onSubmit,
+  submitting
+}) {
+  const [nicpHeld, setNicpHeld] = reactExports.useState("");
+  const [totalIcpPaid, setTotalIcpPaid] = reactExports.useState("");
+  const [redeemableIcpValue, setRedeemableIcpValue] = reactExports.useState("");
+  const [datetime, setDatetime] = reactExports.useState("");
+  const handleSubmit = (ev) => {
+    ev.preventDefault();
+    const nicp = Number(nicpHeld);
+    const paid = Number(totalIcpPaid);
+    const redeemable = Number(redeemableIcpValue);
+    if (!Number.isFinite(nicp) || nicp < 0) {
+      ue.error("Enter a valid nICP held amount");
+      return;
+    }
+    if (!Number.isFinite(paid) || paid < 0) {
+      ue.error("Enter a valid total ICP paid amount");
+      return;
+    }
+    if (!Number.isFinite(redeemable) || redeemable < 0) {
+      ue.error("Enter a valid redeemable ICP value");
+      return;
+    }
+    if (!datetime) {
+      ue.error("Pick a date and time");
+      return;
+    }
+    const date2 = datetimeLocalToNs(datetime);
+    if (date2 <= 0n) {
+      ue.error("Pick a valid date and time");
+      return;
+    }
+    onSubmit(date2, nicp, paid, redeemable);
+    setNicpHeld("");
+    setTotalIcpPaid("");
+    setRedeemableIcpValue("");
+    setDatetime("");
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Card,
+    {
+      className: "bg-card/60 border-border/60",
+      "data-ocid": "wtn_detail.snapshot_form",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Record snapshot" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-4", noValidate: true, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "Enter the current nICP held, total ICP paid, and redeemable ICP value to record a point in time. The backend classifies the snapshot automatically based on the deltas vs the previous reading." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label$1,
+                {
+                  htmlFor: "wtn-nicp-held",
+                  "data-ocid": "wtn_detail.snapshot.nicp_held.label",
+                  children: "nICP held"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "wtn-nicp-held",
+                  inputMode: "decimal",
+                  placeholder: "0.0000",
+                  value: nicpHeld,
+                  onChange: (e3) => setNicpHeld(e3.target.value),
+                  "data-ocid": "wtn_detail.snapshot.nicp_held.input",
+                  className: "font-mono",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label$1,
+                {
+                  htmlFor: "wtn-total-icp-paid",
+                  "data-ocid": "wtn_detail.snapshot.total_icp_paid.label",
+                  children: "Total ICP paid"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "wtn-total-icp-paid",
+                  inputMode: "decimal",
+                  placeholder: "0.0000",
+                  value: totalIcpPaid,
+                  onChange: (e3) => setTotalIcpPaid(e3.target.value),
+                  "data-ocid": "wtn_detail.snapshot.total_icp_paid.input",
+                  className: "font-mono",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label$1,
+                {
+                  htmlFor: "wtn-redeemable",
+                  "data-ocid": "wtn_detail.snapshot.redeemable.label",
+                  children: "Redeemable ICP value"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "wtn-redeemable",
+                  inputMode: "decimal",
+                  placeholder: "0.0000",
+                  value: redeemableIcpValue,
+                  onChange: (e3) => setRedeemableIcpValue(e3.target.value),
+                  "data-ocid": "wtn_detail.snapshot.redeemable.input",
+                  className: "font-mono",
+                  required: true
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Label$1,
+              {
+                htmlFor: "wtn-snapshot-datetime",
+                "data-ocid": "wtn_detail.snapshot.datetime.label",
+                children: "Timestamp"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Input,
+              {
+                id: "wtn-snapshot-datetime",
+                type: "datetime-local",
+                value: datetime,
+                onChange: (e3) => setDatetime(e3.target.value),
+                "data-ocid": "wtn_detail.snapshot.datetime.input",
+                className: "font-mono",
+                required: true
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Button,
+            {
+              type: "submit",
+              disabled: submitting,
+              "data-ocid": "wtn_detail.snapshot.submit_button",
+              children: submitting ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "size-4 animate-spin" }),
+                "Recording…"
+              ] }) : "Record snapshot"
+            }
+          ) })
+        ] }) })
+      ]
+    }
+  );
+}
+function WtnEditSnapshotDialog({
+  open,
+  event,
+  submitting,
+  onClose,
+  onSubmit
+}) {
+  const [nicpHeld, setNicpHeld] = reactExports.useState("");
+  const [totalIcpPaid, setTotalIcpPaid] = reactExports.useState("");
+  const [redeemableIcpValue, setRedeemableIcpValue] = reactExports.useState("");
+  const [datetime, setDatetime] = reactExports.useState("");
+  const [error, setError] = reactExports.useState(null);
+  const eventKey = event == null ? null : `${event.positionId}-${event.date}`;
+  const [lastKey, setLastKey] = reactExports.useState(null);
+  if (eventKey !== lastKey) {
+    setLastKey(eventKey);
+    if (event != null) {
+      setNicpHeld(String(event.nicpHeld));
+      setTotalIcpPaid(String(event.totalIcpPaid));
+      setRedeemableIcpValue(String(event.redeemableIcpValue));
+      setDatetime(nsToDatetimeLocal(event.date));
+      setError(null);
+    }
+  }
+  const handleSubmit = (e3) => {
+    e3.preventDefault();
+    if (!event) return;
+    const nicp = Number(nicpHeld);
+    const paid = Number(totalIcpPaid);
+    const redeemable = Number(redeemableIcpValue);
+    if (!Number.isFinite(nicp) || nicp < 0) {
+      setError("Enter a valid nICP held amount");
+      return;
+    }
+    if (!Number.isFinite(paid) || paid < 0) {
+      setError("Enter a valid total ICP paid amount");
+      return;
+    }
+    if (!Number.isFinite(redeemable) || redeemable < 0) {
+      setError("Enter a valid redeemable ICP value");
+      return;
+    }
+    if (!datetime) {
+      setError("Pick a date and time");
+      return;
+    }
+    const newDate2 = datetimeLocalToNs(datetime);
+    if (newDate2 <= 0n) {
+      setError("Pick a valid date and time");
+      return;
+    }
+    onSubmit(newDate2, nicp, paid, redeemable);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Dialog,
+    {
+      open,
+      onOpenChange: (o) => {
+        if (!o) onClose();
+      },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { "data-ocid": "wtn_detail.snapshot.edit_dialog", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { children: "Edit snapshot" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { children: "Change the nICP held, total ICP paid, redeemable ICP value, and/or timestamp for this reading. The backend re-sorts the history and recomputes classifications for the edited entry and its new neighbors." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-4", noValidate: true, children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label$1,
+                {
+                  htmlFor: "wtn-edit-nicp",
+                  "data-ocid": "wtn_detail.snapshot.edit.nicp_held.label",
+                  children: "nICP held"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "wtn-edit-nicp",
+                  inputMode: "decimal",
+                  placeholder: "0.0000",
+                  value: nicpHeld,
+                  onChange: (e3) => {
+                    setNicpHeld(e3.target.value);
+                    setError(null);
+                  },
+                  "data-ocid": "wtn_detail.snapshot.edit.nicp_held.input",
+                  className: "font-mono",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label$1,
+                {
+                  htmlFor: "wtn-edit-paid",
+                  "data-ocid": "wtn_detail.snapshot.edit.total_icp_paid.label",
+                  children: "Total ICP paid"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "wtn-edit-paid",
+                  inputMode: "decimal",
+                  placeholder: "0.0000",
+                  value: totalIcpPaid,
+                  onChange: (e3) => {
+                    setTotalIcpPaid(e3.target.value);
+                    setError(null);
+                  },
+                  "data-ocid": "wtn_detail.snapshot.edit.total_icp_paid.input",
+                  className: "font-mono",
+                  required: true
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label$1,
+                {
+                  htmlFor: "wtn-edit-redeemable",
+                  "data-ocid": "wtn_detail.snapshot.edit.redeemable.label",
+                  children: "Redeemable ICP value"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "wtn-edit-redeemable",
+                  inputMode: "decimal",
+                  placeholder: "0.0000",
+                  value: redeemableIcpValue,
+                  onChange: (e3) => {
+                    setRedeemableIcpValue(e3.target.value);
+                    setError(null);
+                  },
+                  "data-ocid": "wtn_detail.snapshot.edit.redeemable.input",
+                  className: "font-mono",
+                  required: true
+                }
+              )
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Label$1,
+              {
+                htmlFor: "wtn-edit-datetime",
+                "data-ocid": "wtn_detail.snapshot.edit.datetime.label",
+                children: "Timestamp"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Input,
+              {
+                id: "wtn-edit-datetime",
+                type: "datetime-local",
+                value: datetime,
+                onChange: (e3) => {
+                  setDatetime(e3.target.value);
+                  setError(null);
+                },
+                "data-ocid": "wtn_detail.snapshot.edit.datetime.input",
+                required: true
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground text-[11px]", children: [
+              "Original: ",
+              event ? formatTimestampDateTime(event.date) : "—"
+            ] })
+          ] }),
+          error && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              role: "alert",
+              className: "text-destructive text-xs",
+              "data-ocid": "wtn_detail.snapshot.edit.field_error",
+              children: error
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                type: "button",
+                variant: "ghost",
+                onClick: onClose,
+                disabled: submitting,
+                "data-ocid": "wtn_detail.snapshot.edit.cancel_button",
+                children: "Cancel"
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                type: "submit",
+                disabled: submitting,
+                "data-ocid": "wtn_detail.snapshot.edit.save_button",
+                children: submitting ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "size-4 animate-spin" }),
+                  "Saving…"
+                ] }) : "Save changes"
+              }
+            )
+          ] })
+        ] })
+      ] })
+    }
+  );
+}
+function WtnImportHistoricalPanel({
+  positionId,
+  onImport
+}) {
+  const [open, setOpen] = reactExports.useState(false);
+  const [raw, setRaw] = reactExports.useState("");
+  const [confirmed, setConfirmed] = reactExports.useState(false);
+  const { rows, errors } = reactExports.useMemo(() => parseWtnPaste(raw), [raw]);
+  const hasErrors = errors.length > 0;
+  const canConfirm = rows.length > 0 && !hasErrors && !onImport.isPending;
+  const handleConfirm = () => {
+    if (!canConfirm) return;
+    const entries = rows.map((r2) => ({
+      date: BigInt(Math.floor(r2.dateMs)) * 1000000n,
+      nicpHeld: r2.nicpHeld,
+      totalIcpPaid: r2.totalIcpPaid,
+      redeemableIcpValue: r2.redeemableIcpValue
+    }));
+    onImport.mutate(
+      { positionId, entries },
+      {
+        onSuccess: () => {
+          ue.success(`Imported ${entries.length} historical readings`);
+          setRaw("");
+          setConfirmed(true);
+          setOpen(false);
+        },
+        onError: (err) => ue.error(err.message)
+      }
+    );
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Card,
+    {
+      className: "bg-card/60 border-border/60 mt-6",
+      "data-ocid": "wtn_detail.import_panel",
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Collapsible, { open, onOpenChange: setOpen, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            type: "button",
+            className: "group flex w-full items-center justify-between px-6 py-4 text-left transition-smooth",
+            "data-ocid": "wtn_detail.import.toggle",
+            "aria-expanded": open,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3 min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ClipboardPaste, { className: "size-4" }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground text-sm font-semibold", children: "Import historical data" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs", children: "Paste tab-separated rows (DD/MM/YYYY, nICP held, total ICP paid, redeemable ICP value) to backfill past readings." })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                ChevronDown,
+                {
+                  className: cn(
+                    "text-muted-foreground size-4 shrink-0 transition-transform duration-200",
+                    open && "rotate-180"
+                  )
+                }
+              )
+            ]
+          }
+        ) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(CollapsibleContent, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-border/60 border-t" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 p-6", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                Label$1,
+                {
+                  htmlFor: "wtn-historical-paste",
+                  className: "text-sm",
+                  "data-ocid": "wtn_detail.import.paste.label",
+                  children: [
+                    "Paste rows (date ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: "⇥" }),
+                    " nICP held",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: "⇥" }),
+                    " total ICP paid",
+                    " ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono", children: "⇥" }),
+                    " redeemable ICP value)"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Textarea,
+                {
+                  id: "wtn-historical-paste",
+                  value: raw,
+                  onChange: (e3) => {
+                    setRaw(e3.target.value);
+                    setConfirmed(false);
+                  },
+                  placeholder: "01/01/2024	100.00	120.00	102.50\n15/01/2024	100.00	120.00	103.75\n01/02/2024	100.00	120.00	105.10",
+                  rows: 8,
+                  className: "font-mono text-xs",
+                  "data-ocid": "wtn_detail.import.paste.input"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px]", children: "One row per line, four columns separated by tabs. Date as DD/MM/YYYY, all numeric values as decimal ICP amounts." })
+            ] }),
+            hasErrors && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                role: "alert",
+                className: "border-destructive/40 bg-destructive/10 rounded-lg border p-3",
+                "data-ocid": "wtn_detail.import.error_state",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-destructive flex items-center gap-1.5 text-xs font-semibold", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-destructive", children: "!" }),
+                    errors.length,
+                    " unparseable",
+                    " ",
+                    errors.length === 1 ? "row" : "rows",
+                    " — fix before importing"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("ul", { className: "text-destructive/90 mt-1.5 space-y-0.5 font-mono text-[11px]", children: errors.map((e3) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "li",
+                    {
+                      "data-ocid": `wtn_detail.import.row_error.${e3.rowIndex}`,
+                      children: [
+                        "Row ",
+                        e3.rowIndex,
+                        ": ",
+                        e3.message
+                      ]
+                    },
+                    `wtn-err-${e3.rowIndex}`
+                  )) })
+                ]
+              }
+            ),
+            rows.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto rounded-lg border border-border/60", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { "data-ocid": "wtn_detail.import.preview_table", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "#" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Date" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "nICP held" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Total ICP paid" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Redeemable ICP" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Classification" })
+              ] }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: rows.map((r2, i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                TableRow,
+                {
+                  "data-ocid": `wtn_detail.import.preview.row.${i + 1}`,
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-muted-foreground font-mono text-[11px]", children: r2.rowIndex }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-xs", children: r2.date }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-right text-xs", children: formatWtnIcp(r2.nicpHeld, 4, false) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-right text-xs", children: formatWtnIcp(r2.totalIcpPaid, 4, false) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-right text-xs", children: formatWtnIcp(r2.redeemableIcpValue, 4, false) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Badge,
+                      {
+                        variant: "outline",
+                        className: cn(
+                          "gap-1 text-[10px]",
+                          r2.classification === "capital" ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : r2.classification === "withdrawal" ? "border-primary/40 bg-primary/10 text-primary" : r2.classification === "reward" ? "border-accent/40 bg-accent/10 text-accent" : "border-border bg-muted text-muted-foreground"
+                        ),
+                        "data-ocid": `wtn_detail.import.classification.${i + 1}`,
+                        children: r2.classification
+                      }
+                    ) })
+                  ]
+                },
+                `wtn-row-${r2.rowIndex}`
+              )) })
+            ] }) }),
+            confirmed && rows.length === 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "p",
+              {
+                className: "text-primary flex items-center gap-1.5 text-xs",
+                "data-ocid": "wtn_detail.import.success_state",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "size-3.5" }),
+                  "Import complete — stats and activity feed refreshed."
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px]", children: rows.length > 0 ? `${rows.length} ${rows.length === 1 ? "row" : "rows"} parsed` : "No rows parsed yet" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    variant: "ghost",
+                    size: "sm",
+                    onClick: () => {
+                      setRaw("");
+                      setConfirmed(false);
+                    },
+                    disabled: !raw || onImport.isPending,
+                    "data-ocid": "wtn_detail.import.clear_button",
+                    children: "Clear"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    size: "sm",
+                    onClick: handleConfirm,
+                    disabled: !canConfirm,
+                    "data-ocid": "wtn_detail.import.confirm_button",
+                    children: onImport.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "size-4 animate-spin" }),
+                      "Importing…"
+                    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "size-4" }),
+                      "Confirm import"
+                    ] })
+                  }
+                )
+              ] })
+            ] })
+          ] })
+        ] })
+      ] })
+    }
+  );
+}
+function parseWtnPaste(input) {
+  const rows = [];
+  const errors = [];
+  const lines = input.split("\n");
+  let dataRowIndex = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    dataRowIndex += 1;
+    const parts = trimmed.split("	");
+    if (parts.length < 4) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: "expected four tab-separated columns"
+      });
+      continue;
+    }
+    const dateStr = parts[0].trim();
+    const nicpStr = parts[1].trim();
+    const paidStr = parts[2].trim();
+    const redeemableStr = parts[3].trim();
+    const dateMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateStr);
+    if (!dateMatch) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `bad date "${dateStr}" (use DD/MM/YYYY)`
+      });
+      continue;
+    }
+    const day = Number(dateMatch[1]);
+    const month = Number(dateMatch[2]);
+    const year = Number(dateMatch[3]);
+    if (month < 1 || month > 12) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid month "${dateStr}" (month must be 01-12)`
+      });
+      continue;
+    }
+    if (day < 1 || day > 31) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid day "${dateStr}" (day must be 01-31)`
+      });
+      continue;
+    }
+    const dateObj = new Date(Date.UTC(year, month - 1, day));
+    if (dateObj.getUTCFullYear() !== year || dateObj.getUTCMonth() !== month - 1 || dateObj.getUTCDate() !== day) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `invalid date "${dateStr}" (no such calendar day, e.g. 29/02 on a non-leap year)`
+      });
+      continue;
+    }
+    const nicpHeld = Number(nicpStr);
+    if (!Number.isFinite(nicpHeld) || nicpHeld < 0) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `non-numeric nICP held "${nicpStr}"`
+      });
+      continue;
+    }
+    const totalIcpPaid = Number(paidStr);
+    if (!Number.isFinite(totalIcpPaid) || totalIcpPaid < 0) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `non-numeric total ICP paid "${paidStr}"`
+      });
+      continue;
+    }
+    const redeemableIcpValue = Number(redeemableStr);
+    if (!Number.isFinite(redeemableIcpValue) || redeemableIcpValue < 0) {
+      errors.push({
+        rowIndex: dataRowIndex,
+        message: `non-numeric redeemable ICP value "${redeemableStr}"`
+      });
+      continue;
+    }
+    const prev = rows[rows.length - 1];
+    let classification;
+    if (prev == null) {
+      classification = "firstReading";
+    } else {
+      const nicpDelta = nicpHeld - prev.nicpHeld;
+      if (nicpDelta > 0) {
+        classification = "capital";
+      } else if (nicpDelta < 0) {
+        classification = "withdrawal";
+      } else {
+        classification = "reward";
+      }
+    }
+    rows.push({
+      rowIndex: dataRowIndex,
+      date: dateStr,
+      dateMs: dateObj.getTime(),
+      nicpHeld,
+      totalIcpPaid,
+      redeemableIcpValue,
+      classification
+    });
+  }
+  return { rows, errors };
+}
+function WtnDetailSkeleton() {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "mb-6 h-8 w-32" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-12 w-full" }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 gap-4 sm:grid-cols-3", children: [0, 1, 2].map((n2) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Skeleton,
+        {
+          className: "h-14 w-full"
+        },
+        `wtn-stat-skeleton-${n2}`
+      )) }) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-6 grid grid-cols-1 gap-6", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-64 w-full" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-48 w-full" })
+    ] })
+  ] });
+}
 const rootRoute = createRootRoute({
   component: RootComponent
 });
@@ -81845,10 +84270,22 @@ const neuronDetailRoute = createRoute({
   path: "/neuron-detail/$neuronId",
   component: NeuronDetailPage
 });
+const addWtnRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/add-wtn",
+  component: AddWtnPage
+});
+const wtnDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/wtn-detail/$positionId",
+  component: WtnDetailPage
+});
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addNeuronRoute,
-  neuronDetailRoute
+  neuronDetailRoute,
+  addWtnRoute,
+  wtnDetailRoute
 ]);
 const router = createRouter({ routeTree });
 function App() {

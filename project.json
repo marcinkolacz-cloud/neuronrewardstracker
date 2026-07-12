@@ -1,22 +1,22 @@
 {
-  "overview": "Track ICP neuron staking rewards with daily sync, portfolio aggregation, historical import, and light/dark themes.",
+  "overview": "Track NNS neuron and WaterNeuron nICP liquid staking rewards in one portfolio with daily snapshots, stats, and CSV export.",
   "features": [
-    "Daily reward snapshots synced from IC governance",
-    "Portfolio dashboard with total staked, maturity, and blended APY",
-    "Paste-in historical data import with DD/MM/YYYY parsing",
-    "Fixed daily sync at 18:01 Europe/Warsaw (DST-aware)",
-    "Merge maturity event detection distinct from disbursements",
-    "Light and dark theme toggle persisted per user",
-    "Activity feed with editable snapshots and CSV export",
-    "Monthly breakdown charts and per-neuron APY"
+    "Add and track NNS neurons with governance sync",
+    "Add WTN positions with manual 3-value daily snapshots",
+    "Capital, withdrawal, and organic growth classification",
+    "Portfolio-wide aggregation across both asset types",
+    "Activity feed with natural-language entries",
+    "CSV export with WTN/NNS type identification",
+    "Historical bulk import with preview"
   ],
-  "category": "finance-tracker",
+  "category": "productivity",
   "tags": [
     "icp",
-    "neuron",
     "staking",
     "rewards",
-    "internet-computer"
+    "portfolio",
+    "waterneuron",
+    "nns"
   ],
-  "last_updated": "2026-07-12T13:05:56.140Z"
+  "last_updated": "2026-07-12T14:08:01.596Z"
 }

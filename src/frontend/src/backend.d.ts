@@ -18,6 +18,12 @@ export interface HttpRequestResult {
     body: Uint8Array;
     headers: Array<HttpHeader>;
 }
+export interface WtnPosition {
+    id: WtnPositionId;
+    ownerId: Principal;
+    name: string;
+    startDate: Timestamp;
+}
 export type Result__1 = {
     __kind__: "ok";
     ok: null;
@@ -25,6 +31,82 @@ export type Result__1 = {
     __kind__: "err";
     err: Error_;
 };
+export interface MonthlyBreakdown {
+    month: bigint;
+    totalDeltaE8s: bigint;
+    year: bigint;
+    readingCount: bigint;
+    momDeltaE8s: bigint;
+}
+export interface WtnStats {
+    percentReturn: number;
+    totalCapitalContributed: number;
+    totalEarned: number;
+    positionId: WtnPositionId;
+    redeemableIcpValue: number;
+    totalWithdrawn: number;
+}
+export type TimerId = bigint;
+export interface WtnSnapshot {
+    date: Timestamp;
+    positionId: WtnPositionId;
+    redeemableIcpValue: number;
+    nicpHeld: number;
+    eventType: WtnEventType;
+    totalIcpPaid: number;
+}
+export type E8s = bigint;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: HttpRequestResult;
+}
+export interface PriceSnapshot {
+    pln: number;
+    usd: number;
+    timestamp: bigint;
+    cached: boolean;
+}
+export interface SyncResult {
+    status: SyncStatus;
+    maturityE8s?: bigint;
+    lastSyncError?: string;
+    stakedE8s?: bigint;
+    neuronId: NeuronId;
+}
+export interface Cell {
+    value: Value;
+    name: string;
+}
+export type Value = {
+    __kind__: "int";
+    int: bigint;
+} | {
+    __kind__: "nat";
+    nat: bigint;
+} | {
+    __kind__: "float";
+    float: number;
+} | {
+    __kind__: "bool";
+    bool: boolean;
+} | {
+    __kind__: "null";
+    null: null;
+} | {
+    __kind__: "text";
+    text: string;
+};
+export interface NeuronStats {
+    averageDailyRewardE8s: bigint;
+    totalRewardsE8s: bigint;
+    totalCapitalContributedE8s: E8s;
+    apy30d: number;
+    percentageReturn: number;
+    neuronId: NeuronId;
+    monthly: Array<MonthlyBreakdown>;
+    overallReturnPct: number;
+}
+export type DeltaE8s = bigint;
 export type Error_ = {
     __kind__: "FrontendOriginsNotConfigured";
     FrontendOriginsNotConfigured: null;
@@ -69,33 +151,31 @@ export type Error_ = {
         expected: Array<string>;
     };
 };
-export type DeltaE8s = bigint;
+export interface WtnHistoricalEntry {
+    date: Timestamp;
+    redeemableIcpValue: number;
+    nicpHeld: number;
+    totalIcpPaid: number;
+}
 export interface HistoricalEntry {
     stakedMaturityE8s: E8s;
     unstakedMaturityE8s: E8s;
     timestamp: Timestamp;
 }
-export interface MonthlyBreakdown {
-    month: bigint;
-    totalDeltaE8s: bigint;
-    year: bigint;
-    readingCount: bigint;
-    momDeltaE8s: bigint;
-}
-export interface HttpHeader {
-    value: string;
-    name: string;
-}
 export interface DailyReward {
     stakedMaturityE8s: E8s;
     unstakedMaturityE8s: E8s;
+    stakeDeltaE8s: E8s;
     autoStakeMaturity: boolean;
     timestamp: Timestamp;
     neuronId: NeuronId;
     deltaE8s: DeltaE8s;
     eventType: EventType;
 }
-export type TimerId = bigint;
+export interface HttpHeader {
+    value: string;
+    name: string;
+}
 export interface Result {
     hasMore: boolean;
     rows: Array<Array<Cell>>;
@@ -106,6 +186,7 @@ export interface PortfolioStats {
     totalRewardsE8s: bigint;
     blendedApy: number;
     totalStakedE8s: E8s;
+    totalCapitalContributedE8s: E8s;
     percentageReturn: number;
     neuronCount: bigint;
 }
@@ -118,61 +199,13 @@ export interface Neuron {
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
-export interface TransformationInput {
-    context: Uint8Array;
-    response: HttpRequestResult;
-}
-export interface PriceSnapshot {
-    pln: number;
-    usd: number;
-    timestamp: bigint;
-    cached: boolean;
-}
-export interface SyncResult {
-    status: SyncStatus;
-    maturityE8s?: bigint;
-    lastSyncError?: string;
-    stakedE8s?: bigint;
-    neuronId: NeuronId;
-}
 export type NeuronId = bigint;
-export type Value = {
-    __kind__: "int";
-    int: bigint;
-} | {
-    __kind__: "nat";
-    nat: bigint;
-} | {
-    __kind__: "float";
-    float: number;
-} | {
-    __kind__: "bool";
-    bool: boolean;
-} | {
-    __kind__: "null";
-    null: null;
-} | {
-    __kind__: "text";
-    text: string;
-};
-export interface NeuronStats {
-    averageDailyRewardE8s: bigint;
-    totalRewardsE8s: bigint;
-    apy30d: number;
-    percentageReturn: number;
-    neuronId: NeuronId;
-    monthly: Array<MonthlyBreakdown>;
-    overallReturnPct: number;
-}
-export type E8s = bigint;
-export interface Cell {
-    value: Value;
-    name: string;
-}
+export type WtnPositionId = bigint;
 export enum EventType {
     mergedToStake = "mergedToStake",
     normalGrowth = "normalGrowth",
     firstReading = "firstReading",
+    externalTopUp = "externalTopUp",
     disburseOrSpawn = "disburseOrSpawn"
 }
 export enum SyncStatus {
@@ -186,11 +219,19 @@ export enum UserRole {
     user = "user",
     guest = "guest"
 }
+export enum WtnEventType {
+    capitalAdded = "capitalAdded",
+    withdrawal = "withdrawal",
+    organicGrowth = "organicGrowth"
+}
 export interface backendInterface {
     addNeuron(id: NeuronId, name: string, startDate: bigint, dissolveDelaySeconds: bigint, initialStakeE8s: bigint): Promise<void>;
+    addWtnPosition(name: string, startDate: bigint): Promise<WtnPosition>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     deleteSnapshot(neuronId: NeuronId, timestamp: bigint): Promise<void>;
+    deleteWtnSnapshot(positionId: WtnPositionId, date: bigint): Promise<void>;
     editSnapshot(neuronId: NeuronId, timestamp: bigint, newTimestamp: bigint, newMaturityE8s: bigint): Promise<void>;
+    editWtnSnapshot(positionId: WtnPositionId, date: bigint, newDate: bigint, newNicpHeld: number, newTotalIcpPaid: number, newRedeemableIcpValue: number): Promise<void>;
     execute(qJson: string): Promise<Result>;
     getCallerUserRole(): Promise<UserRole>;
     getCurrentIcpPrice(): Promise<PriceSnapshot>;
@@ -200,11 +241,18 @@ export interface backendInterface {
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
     getSyncError(neuronId: NeuronId): Promise<string | null>;
     getSyncStatus(neuronId: NeuronId): Promise<SyncStatus>;
+    getWtnPosition(positionId: WtnPositionId): Promise<WtnPosition | null>;
+    getWtnSnapshots(positionId: WtnPositionId): Promise<Array<WtnSnapshot>>;
+    getWtnStats(positionId: WtnPositionId): Promise<WtnStats>;
     importHistoricalData(neuronId: NeuronId, entries: Array<HistoricalEntry>): Promise<void>;
+    importWtnHistoricalData(positionId: WtnPositionId, entries: Array<WtnHistoricalEntry>): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     listMyNeurons(): Promise<Array<Neuron>>;
+    listMyWtnPositions(): Promise<Array<WtnPosition>>;
     recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
+    recordWtnSnapshot(positionId: WtnPositionId, date: bigint, nicpHeld: number, totalIcpPaid: number, redeemableIcpValue: number): Promise<WtnSnapshot>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
+    removeWtnPosition(positionId: WtnPositionId): Promise<void>;
     /**
      * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
      * / target on every call so DST transitions do not cause drift. After the
@@ -240,4 +288,5 @@ export interface backendInterface {
      */
     transform(input: TransformationInput): Promise<TransformationOutput>;
     updateNeuron(neuron: Neuron): Promise<void>;
+    updateWtnPosition(position: WtnPosition): Promise<void>;
 }

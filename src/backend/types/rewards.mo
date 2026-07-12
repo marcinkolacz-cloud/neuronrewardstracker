@@ -14,6 +14,12 @@ module {
     #mergedToStake;     // unstaked maturity merged into stake — value stays in
                         // the neuron, NOT a disbursement; excluded from Total
                         // Disbursed. Delta reflects the maturity that moved.
+    #externalTopUp;     // stake increased from an external ICP top-up (sent
+                        // directly to the neuron account), with no corresponding
+                        // maturity drop. Distinct from #mergedToStake (which
+                        // requires a maturity drop). `stakeDeltaE8s` carries
+                        // the top-up amount; `deltaE8s` is 0 (no maturity
+                        // change). Excluded from Total Rewards.
   };
 
   /// A single maturity reading for a neuron at a point in time.
@@ -30,6 +36,12 @@ module {
   /// (unstaked + staked) versus the previous snapshot's combined total, so a
   /// mode switch that shifts maturity between the two fields does not produce
   /// a spurious negative delta.
+  ///
+  /// `stakeDeltaE8s` records the change in the neuron's stake
+  /// (`cached_neuron_stake_e8s`) versus the previous snapshot, separately from
+  /// the maturity delta: positive for external top-ups, 0 for normal growth,
+  /// negative for disbursements. It is the basis for the
+  /// `#externalTopUp` event and for tracking total capital contributed.
   public type DailyReward = {
     neuronId : NeuronId;
     timestamp : Timestamp;
@@ -37,6 +49,7 @@ module {
     stakedMaturityE8s : E8s;
     autoStakeMaturity : Bool;
     deltaE8s : DeltaE8s;
+    stakeDeltaE8s : E8s;
     eventType : EventType;
   };
 

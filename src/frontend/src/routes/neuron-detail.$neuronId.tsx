@@ -115,6 +115,7 @@ import {
   DollarSign,
   Loader2,
   Pencil,
+  PlusCircle,
   RefreshCw,
   Sparkles,
   Trash2,
@@ -334,7 +335,10 @@ export function NeuronDetailPage() {
   const stakedE8s = lastReward?.stakedMaturityE8s ?? 0n;
   const maturityE8s = unstakedE8s + stakedE8s;
   const autoStakeMaturity = lastReward?.autoStakeMaturity ?? false;
-  const maturityPercent = stats?.percentageReturn ?? 0;
+  // Prefer overallReturnPct (the corrected return field) for the header
+  // return badge; fall back to percentageReturn for older backend responses.
+  const maturityPercent =
+    stats?.overallReturnPct ?? stats?.percentageReturn ?? 0;
 
   const chartData = sortedRewards.map((p) => {
     const combined = p.unstakedMaturityE8s + p.stakedMaturityE8s;
@@ -871,8 +875,14 @@ function RewardsSummaryCard({
       let usd = 0;
       let pln = 0;
       let sawPrice = false;
+      // Only normalGrowth positive deltas count as earned rewards. External
+      // top-ups (externalTopUp) are capital additions from outside, not
+      // income, so they are excluded from the earned total and its USD/PLN
+      // value. Compare externalTopUp as a string for forward-compat with
+      // pre-bindgen bindings (see EventType mapped-type pattern).
       for (const r of rewards) {
-        if (r.deltaE8s > 0n) {
+        const isExternalTopUp = r.eventType === ("externalTopUp" as EventType);
+        if (r.deltaE8s > 0n && !isExternalTopUp) {
           earned += r.deltaE8s;
           if (summaryPrices) {
             const key = nsToDateKey(r.timestamp);
@@ -1286,15 +1296,17 @@ function ActivityFeed({
   );
 }
 
-// mergedToStake is a newer EventType member not yet present in the
-// generated bindings (until bindgen re-runs after the backend change).
-// The mapped type accepts the new key now and after bindgen, so the
-// ActivityItem label lookup stays exhaustive.
-const EVENT_TYPE_LABEL: { [K in EventType | "mergedToStake"]: string } = {
+// mergedToStake and externalTopUp are newer EventType members. The mapped
+// type accepts every key in EventType plus the new ones, so the
+// ActivityItem label lookup stays exhaustive before and after bindgen.
+const EVENT_TYPE_LABEL: {
+  [K in EventType | "mergedToStake" | "externalTopUp"]: string;
+} = {
   normalGrowth: "Maturity growth",
   firstReading: "First reading",
   disburseOrSpawn: "Disburse / spawn",
   mergedToStake: "Merged to stake",
+  externalTopUp: "External Top-Up",
 };
 
 function ActivityItem({
@@ -1317,21 +1329,30 @@ function ActivityItem({
   // the same neuron's stake (governance merge), distinct from a disburse
   // / spawn payout.
   const isMergedToStake = event.eventType === ("mergedToStake" as EventType);
+  // externalTopUp represents capital added from outside the neuron (e.g.
+  // an external stake top-up), distinct from rewards (normalGrowth) or
+  // withdrawals (disburseOrSpawn). Compare as a string for forward-compat
+  // with pre-bindgen bindings.
+  const isExternalTopUp = event.eventType === ("externalTopUp" as EventType);
 
-  const Icon = isMergedToStake
-    ? ArrowDownToLine
-    : isDisburse
-      ? Zap
-      : isFirst
-        ? Sparkles
-        : TrendingUp;
-  const accent = isMergedToStake
-    ? "text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/15"
-    : isDisburse
-      ? "text-primary bg-primary/10"
-      : isFirst
-        ? "text-accent bg-accent/10"
-        : "text-muted-foreground bg-muted";
+  const Icon = isExternalTopUp
+    ? PlusCircle
+    : isMergedToStake
+      ? ArrowDownToLine
+      : isDisburse
+        ? Zap
+        : isFirst
+          ? Sparkles
+          : TrendingUp;
+  const accent = isExternalTopUp
+    ? "text-emerald-600 bg-emerald-500/10 dark:text-emerald-400 dark:bg-emerald-500/15"
+    : isMergedToStake
+      ? "text-violet-600 bg-violet-500/10 dark:text-violet-400 dark:bg-violet-500/15"
+      : isDisburse
+        ? "text-primary bg-primary/10"
+        : isFirst
+          ? "text-accent bg-accent/10"
+          : "text-muted-foreground bg-muted";
 
   // Combined maturity total = unstaked (withdrawable) + staked.
   const combinedE8s = event.unstakedMaturityE8s + event.stakedMaturityE8s;
@@ -1339,6 +1360,15 @@ function ActivityItem({
   const fromE8s = combinedE8s - event.deltaE8s;
   const label = EVENT_TYPE_LABEL[event.eventType];
   const deltaNegative = event.deltaE8s < 0n;
+
+  // For externalTopUp events the capital addition is stakeDeltaE8s (the
+  // amount added to the stake from outside), not deltaE8s (the maturity
+  // delta). Show the historical USD/PLN value of that capital addition.
+  const topUpIcp = isExternalTopUp ? e8sToIcpNumber(event.stakeDeltaE8s) : 0;
+  const showTopUpValuePills =
+    isExternalTopUp && price != null && price.usd > 0 && topUpIcp > 0;
+  const topUpUsd = showTopUpValuePills ? topUpIcp * price.usd : null;
+  const topUpPln = showTopUpValuePills ? topUpIcp * price.pln : null;
 
   // USD + PLN value of this entry's delta at the historical ICP price for
   // the entry's date. Only meaningful for positive deltas (rewards); for
@@ -1348,7 +1378,8 @@ function ActivityItem({
   const deltaIcp = e8sToIcpNumber(event.deltaE8s);
   const deltaUsd = showValuePills ? deltaIcp * price.usd : null;
   const deltaPln = showValuePills ? deltaIcp * price.pln : null;
-  const priceUnavailable = !deltaNegative && price == null;
+  const priceUnavailable = !deltaNegative && price == null && !isExternalTopUp;
+  const topUpPriceUnavailable = isExternalTopUp && price == null;
 
   return (
     <motion.li
@@ -1375,8 +1406,9 @@ function ActivityItem({
               deltaNegative ? "text-destructive" : "text-primary",
             )}
           >
-            {deltaNegative ? "" : "+"}
-            {formatIcp(event.deltaE8s, 4, false)}
+            {isExternalTopUp
+              ? `Added ${formatIcp(event.stakeDeltaE8s, 4, false)} from outside`
+              : `${deltaNegative ? "" : "+"}${formatIcp(event.deltaE8s, 4, false)}`}
           </span>
         </div>
         <p className="text-muted-foreground font-mono text-[11px]">
@@ -1401,32 +1433,61 @@ function ActivityItem({
           <p className="text-muted-foreground font-mono text-[11px]">
             {formatTimestampDateTime(event.timestamp)}
           </p>
-          {deltaUsd != null && (
-            <span
-              className="value-pill"
-              title="Delta value in USD at historical ICP price"
-              data-ocid={`neuron_detail.activity.usd_pill.${index + 1}`}
-            >
-              {formatUsd(deltaUsd)}
-            </span>
-          )}
-          {deltaPln != null && (
-            <span
-              className="value-pill"
-              title="Delta value in PLN at historical ICP price"
-              data-ocid={`neuron_detail.activity.pln_pill.${index + 1}`}
-            >
-              {formatPln(deltaPln)}
-            </span>
-          )}
-          {priceUnavailable && (
-            <span
-              className="text-muted-foreground/60 font-mono text-[10px]"
-              data-ocid={`neuron_detail.activity.price_unavailable.${index + 1}`}
-            >
-              price unavailable
-            </span>
-          )}
+          {isExternalTopUp
+            ? topUpUsd != null && (
+                <span
+                  className="value-pill"
+                  title="Capital addition value in USD at historical ICP price"
+                  data-ocid={`neuron_detail.activity.topup_usd_pill.${index + 1}`}
+                >
+                  {formatUsd(topUpUsd)}
+                </span>
+              )
+            : deltaUsd != null && (
+                <span
+                  className="value-pill"
+                  title="Delta value in USD at historical ICP price"
+                  data-ocid={`neuron_detail.activity.usd_pill.${index + 1}`}
+                >
+                  {formatUsd(deltaUsd)}
+                </span>
+              )}
+          {isExternalTopUp
+            ? topUpPln != null && (
+                <span
+                  className="value-pill"
+                  title="Capital addition value in PLN at historical ICP price"
+                  data-ocid={`neuron_detail.activity.topup_pln_pill.${index + 1}`}
+                >
+                  {formatPln(topUpPln)}
+                </span>
+              )
+            : deltaPln != null && (
+                <span
+                  className="value-pill"
+                  title="Delta value in PLN at historical ICP price"
+                  data-ocid={`neuron_detail.activity.pln_pill.${index + 1}`}
+                >
+                  {formatPln(deltaPln)}
+                </span>
+              )}
+          {isExternalTopUp
+            ? topUpPriceUnavailable && (
+                <span
+                  className="text-muted-foreground/60 font-mono text-[10px]"
+                  data-ocid={`neuron_detail.activity.topup_price_unavailable.${index + 1}`}
+                >
+                  price unavailable
+                </span>
+              )
+            : priceUnavailable && (
+                <span
+                  className="text-muted-foreground/60 font-mono text-[10px]"
+                  data-ocid={`neuron_detail.activity.price_unavailable.${index + 1}`}
+                >
+                  price unavailable
+                </span>
+              )}
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
@@ -1675,19 +1736,25 @@ function NeuronStatsCard({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Capital vs rewards split — the corrected accounting uses
+                totalCapitalContributedE8s as the denominator for both
+                percentageReturn and apy30d, so surfacing it here makes the
+                return figures auditable at a glance. */}
             <StatRow
-              label="Total rewards"
+              label="Total capital contributed"
+              value={formatIcp(stats.totalCapitalContributedE8s, 4)}
+              dataOcid="neuron_detail.stats.total_capital"
+            />
+            <Separator />
+            <StatRow
+              label="Total rewards earned"
               value={formatIcp(stats.totalRewardsE8s, 4)}
+              dataOcid="neuron_detail.stats.total_rewards"
             />
             <Separator />
             <StatRow
               label="Average daily reward"
               value={formatIcp(stats.averageDailyRewardE8s, 4)}
-            />
-            <Separator />
-            <StatRow
-              label="Return"
-              value={formatPercent(stats.percentageReturn)}
             />
             <Separator />
             <StatRow
@@ -1738,9 +1805,19 @@ function StatRow({
  * already grouped by year/month and sorted chronologically by the backend;
  * we sort defensively here in case the wire order changes.
  *
+ * The backend now excludes #externalTopUp and #mergedToStake events from
+ * totalDeltaE8s (and momDeltaE8s), so the chart and table reflect earned
+ * rewards only — not capital top-ups or governance merges. We display the
+ * values as-is from the corrected backend computation.
+ *
+ * Year-over-year (YoY) delta is computed in the frontend by looking up the
+ * same calendar month in the previous year; the MonthlyBreakdown type does
+ * not carry a backend-computed YoY field. A null YoY (no prior-year data)
+ * renders as "—".
+ *
  * Layout: two-column grid on large screens (chart left, table right),
  * stacked on small screens. Bars use the chart-1 cyan token
- * (oklch(0.78 0.16 195)) to match the maturity growth chart.
+ * (oklch(var(--chart-1))) to match the maturity growth chart.
  */
 function MonthlyBreakdownSection({
   monthly,
@@ -1756,6 +1833,16 @@ function MonthlyBreakdownSection({
       }),
     [monthly],
   );
+
+  // Index months by `${year}-${month}` so we can look up the same month in
+  // the previous year for the YoY delta column.
+  const byKey = useMemo(() => {
+    const map = new Map<string, MonthlyBreakdown>();
+    for (const m of sorted) {
+      map.set(`${Number(m.year)}-${Number(m.month)}`, m);
+    }
+    return map;
+  }, [sorted]);
 
   const chartData = useMemo(
     () =>
@@ -1862,6 +1949,9 @@ function MonthlyBreakdownSection({
                       MoM delta
                     </TableHead>
                     <TableHead className="text-[11px] text-right">
+                      YoY delta
+                    </TableHead>
+                    <TableHead className="text-[11px] text-right">
                       Readings
                     </TableHead>
                   </TableRow>
@@ -1869,6 +1959,16 @@ function MonthlyBreakdownSection({
                 <TableBody>
                   {sorted.map((m, i) => {
                     const momNegative = m.momDeltaE8s < 0n;
+                    // YoY: same calendar month in the previous year. Null
+                    // when there is no prior-year data for that month.
+                    const prevYear = byKey.get(
+                      `${Number(m.year) - 1}-${Number(m.month)}`,
+                    );
+                    const yoyDeltaE8s =
+                      prevYear == null
+                        ? null
+                        : m.totalDeltaE8s - prevYear.totalDeltaE8s;
+                    const yoyNegative = yoyDeltaE8s != null && yoyDeltaE8s < 0n;
                     return (
                       <TableRow
                         key={`monthly-${m.year}-${m.month}`}
@@ -1888,6 +1988,20 @@ function MonthlyBreakdownSection({
                         >
                           {momNegative ? "" : "+"}
                           {formatIcp(m.momDeltaE8s, 4, false)}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            "font-mono text-right text-xs",
+                            yoyDeltaE8s == null
+                              ? "text-muted-foreground"
+                              : yoyNegative
+                                ? "text-destructive"
+                                : "text-primary",
+                          )}
+                        >
+                          {yoyDeltaE8s == null
+                            ? "—"
+                            : `${yoyNegative ? "" : "+"}${formatIcp(yoyDeltaE8s, 4, false)}`}
                         </TableCell>
                         <TableCell className="text-muted-foreground font-mono text-right text-xs">
                           {Number(m.readingCount)}

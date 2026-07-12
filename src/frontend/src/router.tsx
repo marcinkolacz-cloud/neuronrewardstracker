@@ -5,6 +5,8 @@
  *   /                          Dashboard (portfolio summary + neuron grid)
  *   /add-neuron                Add neuron form
  *   /neuron-detail/:neuronId  Neuron detail (chart, activity feed, snapshot)
+ *   /add-wtn                   Add WTN position form
+ *   /wtn-detail/:positionId    WTN detail (stats, activity feed, snapshot)
  *
  * The root route renders the app shell (AppHeader + ProtectedRoute +
  * branding footer). All child routes render inside <Outlet />.
@@ -13,8 +15,10 @@
 import { AppHeader } from "@/components/AppHeader";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AddNeuronPage } from "@/routes/add-neuron";
+import { AddWtnPage } from "@/routes/add-wtn";
 import { DashboardPage } from "@/routes/index";
 import { NeuronDetailPage } from "@/routes/neuron-detail.$neuronId";
+import { WtnDetailPage } from "@/routes/wtn-detail.$positionId";
 import {
   Outlet,
   createRootRoute,
@@ -79,10 +83,24 @@ const neuronDetailRoute = createRoute({
   component: NeuronDetailPage,
 });
 
+const addWtnRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/add-wtn",
+  component: AddWtnPage,
+});
+
+const wtnDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/wtn-detail/$positionId",
+  component: WtnDetailPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   addNeuronRoute,
   neuronDetailRoute,
+  addWtnRoute,
+  wtnDetailRoute,
 ]);
 
 export const router = createRouter({ routeTree });

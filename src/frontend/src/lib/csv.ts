@@ -1,10 +1,14 @@
 /**
  * CSV export + download helpers for reward snapshot data.
  *
- * Columns: date, maturity balance, delta, event type, priceUsd, pricePln,
- * rewardValueUsd, rewardValuePln. The event type is one of normalGrowth /
- * disburseOrSpawn / firstReading. For the dashboard combined export a
- * neuronId column is prepended as the first column.
+ * Columns: date, maturity balance, delta, event type, classification,
+ * stakeDelta, priceUsd, pricePln, rewardValueUsd, rewardValuePln. The event
+ * type is one of normalGrowth / disburseOrSpawn / firstReading /
+ * mergedToStake / externalTopUp. The `classification` column maps each event
+ * type to a tax-relevant bucket (capital / reward / reclassify / withdrawal /
+ * firstReading). The `stakeDelta` column shows the stake change (ICP) so
+ * capital top-ups are visible alongside the maturity delta. For the dashboard
+ * combined export a neuronId column is prepended as the first column.
  *
  * The price/value columns are populated from an optional `priceMap` keyed by
  * YYYY-MM-DD date string. When a price is unavailable for a row, the four
@@ -15,8 +19,8 @@
  * per RFC 4180 (wrap in double quotes, double any embedded quotes).
  */
 
-import { EventType } from "@/backend";
-import type { DailyReward } from "@/lib/backend-actor";
+import { EventType, WtnEventType } from "@/backend";
+import type { DailyReward, WtnSnapshot } from "@/lib/backend-actor";
 import { E8S_PER_ICP, formatIcp, formatTimestamp } from "@/lib/format";
 
 /**
@@ -41,11 +45,12 @@ function escapeCsvField(value: string): string {
 
 /** Human-readable label for an EventType enum value. */
 function eventLabel(eventType: EventType): string {
-  // mergedToStake is a newer EventType member that may not yet be present
-  // in the generated bindings (until bindgen re-runs after the backend
-  // change). Handle it via string comparison so CSV exports label merge
-  // maturity events correctly both before and after bindgen.
+  // mergedToStake and externalTopUp are newer EventType members that may not
+  // yet be present in the generated bindings (until bindgen re-runs after the
+  // backend change). Handle them via string comparison so CSV exports label
+  // these events correctly both before and after bindgen.
   if (eventType === ("mergedToStake" as EventType)) return "mergedToStake";
+  if (eventType === ("externalTopUp" as EventType)) return "externalTopUp";
   switch (eventType) {
     case EventType.normalGrowth:
       return "normalGrowth";
@@ -58,6 +63,34 @@ function eventLabel(eventType: EventType): string {
   }
 }
 
+/**
+ * Tax-relevant classification for an EventType enum value. Maps each event
+ * type to a bucket used for tax reconciliation:
+ *   #externalTopUp    → "capital"     (stake added from outside)
+ *   #normalGrowth     → "reward"      (maturity minted as reward)
+ *   #mergedToStake    → "reclassify"  (maturity merged into stake, not a payout)
+ *   #disburseOrSpawn  → "withdrawal"  (maturity disbursed / neuron spawned)
+ *   #firstReading     → "firstReading" (initial snapshot baseline)
+ *
+ * Uses string comparison for the newer members (mergedToStake,
+ * externalTopUp) so classification works before and after bindgen regenerates
+ * the bindings with the new EventType variants.
+ */
+function classifyEvent(eventType: EventType): string {
+  if (eventType === ("externalTopUp" as EventType)) return "capital";
+  if (eventType === ("mergedToStake" as EventType)) return "reclassify";
+  switch (eventType) {
+    case EventType.normalGrowth:
+      return "reward";
+    case EventType.disburseOrSpawn:
+      return "withdrawal";
+    case EventType.firstReading:
+      return "firstReading";
+    default:
+      return "unknown";
+  }
+}
+
 /** Combined maturity balance (unstaked + staked) as an ICP string. */
 function maturityBalance(reward: DailyReward): string {
   const combined = reward.unstakedMaturityE8s + reward.stakedMaturityE8s;
@@ -67,6 +100,16 @@ function maturityBalance(reward: DailyReward): string {
 /** Delta as a full-precision ICP string (can be negative). */
 function deltaIcp(reward: DailyReward): string {
   return formatIcp(reward.deltaE8s, 8, false);
+}
+
+/**
+ * Stake delta as a full-precision ICP string (can be negative). Captures the
+ * change in stake for events like #externalTopUp (capital added) where the
+ * maturity delta is 0 but the stake changes. Used for tax reconciliation so
+ * the CSV shows both the maturity delta and the stake delta.
+ */
+function stakeDeltaIcp(reward: DailyReward): string {
+  return formatIcp(reward.stakeDeltaE8s, 8, false);
 }
 
 /**
@@ -129,6 +172,8 @@ const HEADER = [
   "maturity balance",
   "delta",
   "event type",
+  "classification",
+  "stakeDelta",
   "priceUsd",
   "pricePln",
   "rewardValueUsd",
@@ -137,8 +182,9 @@ const HEADER = [
 
 /**
  * Build a CSV string from a list of DailyReward entries for a single neuron.
- * Columns: date, maturity balance, delta, event type, priceUsd, pricePln,
- * rewardValueUsd, rewardValuePln — one row per snapshot.
+ * Columns: date, maturity balance, delta, event type, classification,
+ * stakeDelta, priceUsd, pricePln, rewardValueUsd, rewardValuePln — one row
+ * per snapshot.
  *
  * When `priceMap` is supplied, the four price/value columns are populated
  * from the historical price for each row's date (keyed YYYY-MM-DD). Rows
@@ -158,6 +204,8 @@ export function rewardsToCsv(
       maturityBalance(r),
       deltaIcp(r),
       eventLabel(r.eventType),
+      classifyEvent(r.eventType),
+      stakeDeltaIcp(r),
       priceUsd,
       pricePln,
       rewardValueUsd,
@@ -202,6 +250,8 @@ export function rewardsToCombinedCsv(
           maturityBalance(r),
           deltaIcp(r),
           eventLabel(r.eventType),
+          classifyEvent(r.eventType),
+          stakeDeltaIcp(r),
           priceUsd,
           pricePln,
           rewardValueUsd,
@@ -213,6 +263,153 @@ export function rewardsToCombinedCsv(
     }
   }
   return [header, ...rows].join("\n");
+}
+
+/**
+ * Tax-relevant classification for a WtnEventType enum value:
+ *   #capitalAdded   → "capital"     (ICP added to the WTN position)
+ *   #withdrawal     → "withdrawal"  (ICP redeemed from the position)
+ *   #organicGrowth  → "reward"      (redeemable value accrued as reward)
+ */
+function classifyWtnEvent(eventType: WtnEventType): string {
+  switch (eventType) {
+    case WtnEventType.capitalAdded:
+      return "capital";
+    case WtnEventType.withdrawal:
+      return "withdrawal";
+    case WtnEventType.organicGrowth:
+      return "reward";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * Format a WTN numeric ICP value (already in ICP units, not e8s) as a
+ * full-precision string suitable for CSV. Returns the raw number string so
+ * spreadsheet consumers can parse it; empty string when null/NaN.
+ */
+function formatWtnIcp(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "";
+  return String(value);
+}
+
+const WTN_HEADER = [
+  "date",
+  "nicpHeld",
+  "totalIcpPaid",
+  "redeemableIcpValue",
+  "classification",
+];
+
+/**
+ * Build a CSV string from a list of WtnSnapshot entries for a single WTN
+ * position. Columns: date, nicpHeld, totalIcpPaid, redeemableIcpValue,
+ * classification — one row per snapshot. The classification column maps
+ * each WtnEventType to a tax-relevant bucket (capital / withdrawal /
+ * reward) via classifyWtnEvent. Follows the same header + data-row
+ * formatting pattern as rewardsToCsv (comma-separated, RFC 4180 escaped).
+ */
+export function wtnSnapshotsToCsv(snapshots: WtnSnapshot[]): string {
+  const rows = snapshots.map((s) =>
+    [
+      formatTimestamp(s.date),
+      formatWtnIcp(s.nicpHeld),
+      formatWtnIcp(s.totalIcpPaid),
+      formatWtnIcp(s.redeemableIcpValue),
+      classifyWtnEvent(s.eventType),
+    ]
+      .map(escapeCsvField)
+      .join(","),
+  );
+  return [WTN_HEADER.join(","), ...rows].join("\n");
+}
+
+const WTN_COMBINED_HEADER = [
+  "id",
+  "type",
+  "date",
+  "nicpHeld",
+  "totalIcpPaid",
+  "redeemableIcpValue",
+  "classification",
+];
+
+/**
+ * Build a combined CSV string from WTN snapshots across multiple
+ * positions, suitable for inclusion in the dashboard's combined export
+ * alongside NNS neuron rewards. A `type` column ("WTN") distinguishes
+ * these rows from NNS rows. The `id` column carries the positionId so the
+ * single exported file can be filtered by position.
+ *
+ * Each entry in `groups` pairs a position id with that position's
+ * snapshot list. Follows the same header + data-row pattern as
+ * rewardsToCombinedCsv (comma-separated, RFC 4180 escaped).
+ */
+export function wtnSnapshotsToCombinedCsv(
+  groups: {
+    positionId: string | number | bigint;
+    snapshots: WtnSnapshot[];
+  }[],
+): string {
+  const header = WTN_COMBINED_HEADER.join(",");
+  const rows: string[] = [];
+  for (const group of groups) {
+    const positionId = group.positionId.toString();
+    for (const s of group.snapshots) {
+      rows.push(
+        [
+          positionId,
+          "WTN",
+          formatTimestamp(s.date),
+          formatWtnIcp(s.nicpHeld),
+          formatWtnIcp(s.totalIcpPaid),
+          formatWtnIcp(s.redeemableIcpValue),
+          classifyWtnEvent(s.eventType),
+        ]
+          .map(escapeCsvField)
+          .join(","),
+      );
+    }
+  }
+  return [header, ...rows].join("\n");
+}
+
+/**
+ * Build NNS neuron reward rows in the combined WTN-style schema (id, type,
+ * date, nicpHeld, totalIcpPaid, redeemableIcpValue, classification) so
+ * they can be concatenated with WTN rows under a single header. The
+ * WTN-only numeric columns (nicpHeld, totalIcpPaid, redeemableIcpValue)
+ * are left empty for NNS rows; the classification column reuses the
+ * existing classifyEvent mapping. Used by the dashboard's combined
+ * export to emit one unified CSV with a type-identifier column.
+ */
+export function neuronRewardsToCombinedTypedRows(
+  groups: {
+    neuronId: string | number | bigint;
+    rewards: DailyReward[];
+  }[],
+): string[] {
+  const rows: string[] = [];
+  for (const group of groups) {
+    const neuronId = group.neuronId.toString();
+    for (const r of group.rewards) {
+      rows.push(
+        [
+          neuronId,
+          "NNS",
+          formatTimestamp(r.timestamp),
+          "",
+          "",
+          "",
+          classifyEvent(r.eventType),
+        ]
+          .map(escapeCsvField)
+          .join(","),
+      );
+    }
+  }
+  return rows;
 }
 
 /**

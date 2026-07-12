@@ -33,6 +33,15 @@ module {
   /// left the maturity bucket and entered the stake bucket), but the
   /// #mergedToStake tag tells the stats layer to exclude the event from
   /// Total Disbursed. Pass null for the default auto-classification.
+  ///
+  /// `stakeDeltaE8sOverride` carries the change in the neuron's stake
+  /// (`cached_neuron_stake_e8s`) versus the previous snapshot. It is only
+  /// meaningful for the override event types: #externalTopUp (the top-up
+  /// amount) and #mergedToStake (the maturity merged into stake). For all
+  /// other event types (including the default auto-classification) it is
+  /// ignored and the snapshot's `stakeDeltaE8s` is set to 0 — normal growth
+  /// and disbursements do not change the externally-contributed capital
+  /// baseline. Pass 0 when not applicable.
   public func recordSnapshot(
     rewards : Map.Map<NeuronId, List.List<DailyReward>>,
     neuronId : NeuronId,
@@ -41,6 +50,7 @@ module {
     autoStakeMaturity : Bool,
     timestamp : Timestamp,
     eventTypeOverride : ?EventType,
+    stakeDeltaE8sOverride : E8s,
   ) : DailyReward {
     let history = switch (rewards.get(neuronId)) {
       case (?h) h;
@@ -79,6 +89,18 @@ module {
       };
     };
 
+    // stakeDeltaE8s is only meaningful for the override event types that
+    // record a stake change: #externalTopUp (external ICP added to the
+    // neuron) and #mergedToStake (maturity merged into stake). For all other
+    // event types (including the default auto-classification) it is 0 —
+    // normal growth and disbursements do not change the externally-
+    // contributed capital baseline.
+    let stakeDelta : E8s = switch (eventTypeOverride) {
+      case (?#externalTopUp) stakeDeltaE8sOverride;
+      case (?#mergedToStake) stakeDeltaE8sOverride;
+      case _ 0 : E8s;
+    };
+
     let snapshot : DailyReward = {
       neuronId;
       timestamp;
@@ -86,6 +108,7 @@ module {
       stakedMaturityE8s;
       autoStakeMaturity;
       deltaE8s = delta;
+      stakeDeltaE8s = stakeDelta;
       eventType;
     };
 
@@ -203,6 +226,7 @@ module {
         stakedMaturityE8s = entry.stakedMaturityE8s;
         autoStakeMaturity = entry.autoStakeMaturity;
         deltaE8s = delta;
+        stakeDeltaE8s = 0 : E8s;
         eventType;
       };
 
@@ -235,6 +259,12 @@ module {
   /// array, based on the combined total of the entry at `idx - 1` (or
   /// #firstReading when `idx` is 0). Returns the updated entry so the caller
   /// can chain further recomputes using its new combined total.
+  ///
+  /// Recomputed entries lose their original override context (e.g. a
+  /// #mergedToStake or #externalTopUp tag set by governance sync), so they
+  /// are re-classified purely by the combined-total delta math and their
+  /// `stakeDeltaE8s` is reset to 0 — manual edits and deletes do not have
+  /// stake-change data to re-derive.
   func recomputeAt(arr : [var DailyReward], idx : Nat) : DailyReward {
     let prevTotal : ?Int = if (idx == 0) { null } else {
       ?combinedTotal(arr[idx - 1]);
@@ -242,7 +272,7 @@ module {
     let r = arr[idx];
     let total = combinedTotal(r);
     let (delta, eventType) = classifyDelta(total, prevTotal);
-    let updated = { r with deltaE8s = delta; eventType };
+    let updated = { r with deltaE8s = delta; eventType; stakeDeltaE8s = 0 : E8s };
     arr[idx] := updated;
     updated;
   };

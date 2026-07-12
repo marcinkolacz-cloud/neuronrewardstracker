@@ -2,8 +2,10 @@
  * Dashboard page — portfolio summary + neuron cards grid.
  *
  * Shows:
- *   - Portfolio summary panel (4 enriched stat cards: Total Staked, Total
- *     Maturity, Blended APY, ICP Earned This Month) using .stat-card utility
+ *   - Portfolio summary panel (5 stat cards: Total Staked, Total Capital
+ *     Contributed, Total Maturity, Blended APY, ICP Earned This Month) using
+ *     .stat-card utility. Capital contributed is the corrected denominator
+ *     used by the backend for blendedApy and percentageReturn.
  *   - Current portfolio value in USD + PLN (computed from
  *     (totalStakedE8s + totalMaturityE8s) * currentPrice / E8S_PER_ICP)
  *     with .value-pill utility
@@ -19,11 +21,16 @@
  * owned by this dashboard and is NOT modified by the price-enrichment task.
  *
  * Portfolio stats come from getPortfolioStats (real PortfolioStats:
- * totalStakedE8s, totalRewardsE8s, percentageReturn, neuronCount,
- * blendedApy, totalMaturityE8s, totalRewardsThisMonthE8s). Per-neuron
- * maturity / % return come from getNeuronStats, and sync status from
- * getSyncStatus. Current ICP price comes from getCurrentIcpPrice via
- * useIcpPrice().
+ * totalStakedE8s, totalCapitalContributedE8s, totalRewardsE8s,
+ * percentageReturn, neuronCount, blendedApy, totalMaturityE8s,
+ * totalRewardsThisMonthE8s). The backend now computes blendedApy
+ * capital-weighted by totalCapitalContributedE8s, and
+ * totalRewardsThisMonthE8s excludes #externalTopUp and #mergedToStake —
+ * the frontend consumes these corrected values directly. Per-neuron
+ * maturity / % return come from getNeuronStats (totalRewardsE8s excludes
+ * top-ups, percentageReturn uses capital contributed as denominator), and
+ * sync status from getSyncStatus. Current ICP price comes from
+ * getCurrentIcpPrice via useIcpPrice().
  */
 
 import { Badge } from "@/components/ui/badge";
@@ -41,9 +48,22 @@ import { useIcpPrice } from "@/hooks/use-prices";
 import { useSyncStatus } from "@/hooks/use-rewards";
 import { useNeuronStats, usePortfolioStats } from "@/hooks/use-stats";
 import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
+import { useWtnPositions, useWtnStats } from "@/hooks/use-wtn";
 import { useBackendActor } from "@/lib/backend-actor";
-import type { DailyReward, Neuron, SyncStatus } from "@/lib/backend-actor";
-import { type PriceMap, downloadCsv, rewardsToCombinedCsv } from "@/lib/csv";
+import type {
+  DailyReward,
+  Neuron,
+  SyncStatus,
+  WtnPosition,
+} from "@/lib/backend-actor";
+import type { WtnSnapshot } from "@/lib/backend-actor";
+import {
+  type PriceMap,
+  downloadCsv,
+  neuronRewardsToCombinedTypedRows,
+  rewardsToCombinedCsv,
+  wtnSnapshotsToCombinedCsv,
+} from "@/lib/csv";
 import {
   E8S_PER_ICP,
   formatApy,
@@ -60,10 +80,11 @@ import {
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  Activity,
   BrainCircuit,
   Coins,
   Download,
+  Droplets,
+  Landmark,
   Plus,
   RefreshCw,
   Sparkles,
@@ -76,6 +97,7 @@ import { toast } from "sonner";
 
 export function DashboardPage() {
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
+  const { data: wtnPositions, isLoading: wtnLoading } = useWtnPositions();
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
   const priceQuery = useIcpPrice();
   const syncAll = useSyncAllNeurons();
@@ -83,7 +105,10 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
 
-  const isEmpty = !neuronsLoading && (neurons?.length ?? 0) === 0;
+  const neuronCount = neurons?.length ?? 0;
+  const wtnCount = wtnPositions?.length ?? 0;
+  const isEmpty =
+    !neuronsLoading && !wtnLoading && neuronCount === 0 && wtnCount === 0;
 
   const handleSyncAll = () => {
     syncAll.mutate(undefined, {
@@ -113,9 +138,15 @@ export function DashboardPage() {
   };
 
   const handleExportCsv = async () => {
-    if (!actor || !neurons || neurons.length === 0) return;
+    if (
+      !actor ||
+      !neurons ||
+      (neurons.length === 0 && (!wtnPositions || wtnPositions.length === 0))
+    )
+      return;
     setIsExporting(true);
     try {
+      // Fetch NNS neuron reward histories in parallel.
       const groups = await Promise.all(
         neurons.map(async (neuron) => {
           const rewards: DailyReward[] = await actor.getRewardHistory(
@@ -125,7 +156,19 @@ export function DashboardPage() {
         }),
       );
       const nonEmpty = groups.filter((g) => g.rewards.length > 0);
-      if (nonEmpty.length === 0) {
+
+      // Fetch WTN snapshots for each WTN position in parallel.
+      const wtnGroups = await Promise.all(
+        (wtnPositions ?? []).map(async (position) => {
+          const snapshots: WtnSnapshot[] = await actor.getWtnSnapshots(
+            position.id,
+          );
+          return { positionId: position.id, snapshots };
+        }),
+      );
+      const wtnNonEmpty = wtnGroups.filter((g) => g.snapshots.length > 0);
+
+      if (nonEmpty.length === 0 && wtnNonEmpty.length === 0) {
         toast.info("No reward snapshots to export yet");
         return;
       }
@@ -160,10 +203,38 @@ export function DashboardPage() {
           }
         }),
       );
-      const csv = rewardsToCombinedCsv(groups, priceMap);
-      downloadCsv("neuron-rewards-export.csv", csv);
+
+      // Build a single combined CSV with a type-identifier column ("NNS" vs
+      // "WTN"). NNS rows reuse the rich rewardsToCombinedCsv schema (with
+      // price columns); WTN rows use the WTN-specific schema (id, type, date,
+      // nicpHeld, totalIcpPaid, redeemableIcpValue, classification). The two
+      // sections share a leading id + type + date + classification shape so
+      // the file can be filtered by position/neuron and by type.
+      const nnsCsv = rewardsToCombinedCsv(groups, priceMap);
+      const wtnCsv = wtnSnapshotsToCombinedCsv(wtnNonEmpty);
+
+      let csv: string;
+      if (wtnNonEmpty.length > 0 && nonEmpty.length > 0) {
+        // Both present: prepend a type column to the NNS section by
+        // rebuilding NNS rows in the typed schema, then concatenate under
+        // the WTN combined header (which has the type column).
+        const nnsTypedRows = neuronRewardsToCombinedTypedRows(groups);
+        const wtnRows = wtnCsv.split("\n").slice(1); // drop WTN header
+        csv = [
+          "id,type,date,nicpHeld,totalIcpPaid,redeemableIcpValue,classification",
+          ...nnsTypedRows,
+          ...wtnRows,
+        ].join("\n");
+      } else if (wtnNonEmpty.length > 0) {
+        csv = wtnCsv;
+      } else {
+        csv = nnsCsv;
+      }
+
+      downloadCsv("portfolio-export.csv", csv);
+      const totalPositions = nonEmpty.length + wtnNonEmpty.length;
       toast.success(
-        `Exported ${nonEmpty.length} neuron${nonEmpty.length === 1 ? "" : "s"} to CSV`,
+        `Exported ${totalPositions} position${totalPositions === 1 ? "" : "s"} to CSV`,
       );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to export CSV");
@@ -224,8 +295,8 @@ export function DashboardPage() {
                 </TooltipTrigger>
                 <TooltipContent>
                   {isEmpty
-                    ? "Add a neuron before exporting"
-                    : "Download all neurons' reward histories as one CSV"}
+                    ? "Add a neuron or WTN position before exporting"
+                    : "Download all neurons' and WTN positions' histories as one CSV"}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -236,6 +307,14 @@ export function DashboardPage() {
               <Plus className="size-4" />
               Add Neuron
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate({ to: "/add-wtn" })}
+              data-ocid="dashboard.add_wtn"
+            >
+              <Droplets className="size-4" />
+              Add WTN Neuron
+            </Button>
           </div>
         </div>
 
@@ -243,6 +322,9 @@ export function DashboardPage() {
         <section className="mt-8" data-ocid="dashboard.portfolio_summary">
           <PortfolioSummary
             totalStaked={portfolio?.totalStakedE8s ?? null}
+            totalCapitalContributed={
+              portfolio?.totalCapitalContributedE8s ?? null
+            }
             totalMaturity={portfolio?.totalMaturityE8s ?? null}
             blendedApy={portfolio?.blendedApy ?? null}
             rewardsThisMonth={portfolio?.totalRewardsThisMonthE8s ?? null}
@@ -262,18 +344,18 @@ export function DashboardPage() {
           />
         </section>
 
-        {/* Neuron cards grid */}
+        {/* Neuron + WTN cards grid */}
         <section className="mt-10">
           <div className="mb-4 flex items-center gap-2">
             <h2 className="text-foreground font-display text-lg font-semibold tracking-tight">
-              Neurons
+              Positions
             </h2>
             <Badge variant="secondary" className="font-mono">
-              {neurons?.length ?? 0}
+              {(neurons?.length ?? 0) + (wtnPositions?.length ?? 0)}
             </Badge>
           </div>
 
-          {neuronsLoading ? (
+          {neuronsLoading || wtnLoading ? (
             <NeuronGridSkeleton />
           ) : isEmpty ? (
             <EmptyState onAdd={() => navigate({ to: "/add-neuron" })} />
@@ -284,6 +366,13 @@ export function DashboardPage() {
                   key={neuron.id.toString()}
                   neuron={neuron}
                   index={i}
+                />
+              ))}
+              {wtnPositions?.map((position, i) => (
+                <WtnCard
+                  key={`wtn-${position.id.toString()}`}
+                  position={position}
+                  index={(neurons?.length ?? 0) + i}
                 />
               ))}
             </div>
@@ -298,6 +387,7 @@ type PriceQueryLike = ReturnType<typeof useIcpPrice>;
 
 function PortfolioSummary({
   totalStaked,
+  totalCapitalContributed,
   totalMaturity,
   blendedApy,
   rewardsThisMonth,
@@ -305,6 +395,7 @@ function PortfolioSummary({
   loading,
 }: {
   totalStaked: bigint | null;
+  totalCapitalContributed: bigint | null;
   totalMaturity: bigint | null;
   blendedApy: number | null;
   rewardsThisMonth: bigint | null;
@@ -321,6 +412,13 @@ function PortfolioSummary({
         !loading && neuronCount != null
           ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}`
           : null,
+    },
+    {
+      label: "Total Capital Contributed",
+      value: formatIcp(totalCapitalContributed, 2),
+      icon: Landmark,
+      accent: "text-muted-foreground",
+      hint: "Initial stakes + top-ups",
     },
     {
       label: "Total Maturity",
@@ -349,7 +447,7 @@ function PortfolioSummary({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {stats.map((stat) => (
         <div key={stat.label} className="stat-card">
           <div className="flex items-center justify-between">
@@ -568,6 +666,103 @@ function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
               </p>
               <p className="text-foreground font-mono text-xs">
                 {formatTimestamp(neuron.startDate)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </motion.div>
+  );
+}
+
+function WtnCard({
+  position,
+  index,
+}: {
+  position: WtnPosition;
+  index: number;
+}) {
+  const idStr = position.id.toString();
+  const { data: stats } = useWtnStats(idStr);
+
+  // redeemableIcpValue is the latest snapshot's redeemable ICP value for the
+  // position (the primary "Redeemable" display). totalEarned is the sum of
+  // organic growth deltas, shown as a secondary stat. percentReturn gives the
+  // capital-weighted return for the WTN badge accent.
+  const redeemableIcp = stats?.redeemableIcpValue ?? 0;
+  const totalEarned = stats?.totalEarned ?? 0;
+  const percentReturn = stats?.percentReturn ?? 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.06 }}
+    >
+      <Link
+        to="/wtn-detail/$positionId"
+        params={{ positionId: idStr }}
+        data-ocid={`dashboard.wtn.item.${index + 1}`}
+      >
+        <Card className="bg-card/60 border-border/60 transition-smooth hover:border-accent/40 hover:shadow-elevated h-full">
+          <CardHeader>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg">
+                  <Droplets className="size-4.5" />
+                </span>
+                <div className="min-w-0">
+                  <CardTitle className="font-mono text-sm font-semibold truncate">
+                    {position.name || `WTN #${idStr}`}
+                  </CardTitle>
+                  <p className="text-muted-foreground font-mono text-[11px] truncate">
+                    {shortenPrincipal(position.ownerId.toString(), 8)}
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
+                className="border-accent/40 bg-accent/10 text-accent text-[10px]"
+                data-ocid={`dashboard.wtn.badge.${index + 1}`}
+              >
+                WTN
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                Redeemable
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-foreground font-mono text-xl font-semibold">
+                  {formatIcpCompact(
+                    BigInt(Math.trunc(redeemableIcp * Number(E8S_PER_ICP))),
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    "font-mono text-xs",
+                    percentReturn >= 0 ? "text-primary" : "text-destructive",
+                  )}
+                >
+                  {formatPercent(percentReturn)}
+                </span>
+              </div>
+              <p className="text-muted-foreground font-mono text-[11px] mt-1">
+                Earned{" "}
+                {formatIcpCompact(
+                  BigInt(Math.trunc(totalEarned * Number(E8S_PER_ICP))),
+                )}{" "}
+                ICP
+              </p>
+            </div>
+            <div className="border-border/40 border-t pt-2.5">
+              <p className="text-muted-foreground text-[11px] tracking-wider uppercase">
+                Start date
+              </p>
+              <p className="text-foreground font-mono text-xs">
+                {formatTimestamp(position.startDate)}
               </p>
             </div>
           </CardContent>

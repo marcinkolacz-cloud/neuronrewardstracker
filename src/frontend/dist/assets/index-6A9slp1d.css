@@ -1177,6 +1177,12 @@ video {
 .max-w-2xl {
   max-width: 42rem;
 }
+.max-w-3xl {
+  max-width: 48rem;
+}
+.max-w-5xl {
+  max-width: 64rem;
+}
 .max-w-7xl {
   max-width: 80rem;
 }
@@ -1547,6 +1553,9 @@ video {
 .border-destructive\/40 {
   border-color: oklch(var(--destructive) / 0.4);
 }
+.border-emerald-500\/40 {
+  border-color: rgb(16 185 129 / 0.4);
+}
 .border-input {
   border-color: oklch(var(--input));
 }
@@ -1603,6 +1612,9 @@ video {
 }
 .bg-destructive\/10 {
   background-color: oklch(var(--destructive) / 0.1);
+}
+.bg-emerald-500\/10 {
+  background-color: rgb(16 185 129 / 0.1);
 }
 .bg-foreground {
   background-color: oklch(var(--foreground));
@@ -1741,6 +1753,10 @@ video {
 .py-10 {
   padding-top: 2.5rem;
   padding-bottom: 2.5rem;
+}
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 }
 .py-16 {
   padding-top: 4rem;
@@ -1932,6 +1948,10 @@ video {
 }
 .text-destructive\/90 {
   color: oklch(var(--destructive) / 0.9);
+}
+.text-emerald-600 {
+  --tw-text-opacity: 1;
+  color: rgb(5 150 105 / var(--tw-text-opacity, 1));
 }
 .text-foreground {
   color: oklch(var(--foreground));
@@ -2437,6 +2457,10 @@ video {
 
 .focus-within\:opacity-100:focus-within {
   opacity: 1;
+}
+
+.hover\:border-accent\/40:hover {
+  border-color: oklch(var(--accent) / 0.4);
 }
 
 .hover\:border-primary\/40:hover {
@@ -3646,8 +3670,17 @@ video {
   background-color: oklch(var(--destructive) / 0.6);
 }
 
+.dark\:bg-emerald-500\/15:is(.dark *) {
+  background-color: rgb(16 185 129 / 0.15);
+}
+
 .dark\:bg-violet-500\/15:is(.dark *) {
   background-color: rgb(139 92 246 / 0.15);
+}
+
+.dark\:text-emerald-400:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(52 211 153 / var(--tw-text-opacity, 1));
 }
 
 .dark\:text-muted-foreground:is(.dark *) {
@@ -3721,6 +3754,10 @@ video {
 
   .sm\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sm\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .sm\:grid-cols-4 {
@@ -3876,6 +3913,10 @@ video {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .lg\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -3908,8 +3949,8 @@ video {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .xl\:grid-cols-4 {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .xl\:grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 

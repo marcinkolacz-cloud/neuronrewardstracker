@@ -5,6 +5,7 @@ import NeuronTypes "../types/neurons";
 import RewardTypes "../types/rewards";
 import StatsTypes "../types/stats";
 import Common "../types/common";
+import WtnTypes "../types/wtn";
 import NeuronsLib "../lib/neurons";
 import RewardsLib "../lib/rewards";
 import StatsLib "../lib/stats";
@@ -12,6 +13,8 @@ import StatsLib "../lib/stats";
 mixin (
   neurons : Map.Map<Common.NeuronId, NeuronTypes.Neuron>,
   rewards : Map.Map<Common.NeuronId, List.List<RewardTypes.DailyReward>>,
+  wtnPositions : Map.Map<WtnTypes.WtnPositionId, WtnTypes.WtnPosition>,
+  wtnSnapshots : Map.Map<WtnTypes.WtnPositionId, List.List<WtnTypes.WtnSnapshot>>,
 ) {
   /// Aggregated stats for a single neuron: total rewards, % return, average
   /// daily reward, and a monthly breakdown.
@@ -32,11 +35,14 @@ mixin (
     };
   };
 
-  /// Aggregated stats across all of the caller's neurons.
+  /// Aggregated stats across all of the caller's neurons AND WTN positions.
+  /// WTN positions are folded into the portfolio totals (Total Staked,
+  /// capital contributed, total rewards) but kept out of `neuronCount` so
+  /// they remain visually distinguishable in the frontend.
   public shared ({ caller }) func getPortfolioStats() : async StatsTypes.PortfolioStats {
     if (Principal.isAnonymous(caller)) {
       Runtime.trap("Anonymous caller not allowed");
     };
-    StatsLib.getPortfolioStats(neurons, rewards, caller);
+    StatsLib.getPortfolioStats(neurons, rewards, wtnPositions, wtnSnapshots, caller);
   };
 };

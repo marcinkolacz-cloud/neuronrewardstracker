@@ -13,6 +13,7 @@ module {
         case (#disburseOrSpawn) "disburseOrSpawn";
         case (#firstReading) "firstReading";
         case (#mergedToStake) "mergedToStake";
+        case (#externalTopUp) "externalTopUp";
       }
     );
   };

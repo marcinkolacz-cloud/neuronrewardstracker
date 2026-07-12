@@ -26,6 +26,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", to: "/", marker: "nav.dashboard" },
   { label: "Add Neuron", to: "/add-neuron", marker: "nav.add_neuron" },
+  { label: "Add WTN", to: "/add-wtn", marker: "nav.add_wtn" },
 ];
 
 interface AppHeaderProps {

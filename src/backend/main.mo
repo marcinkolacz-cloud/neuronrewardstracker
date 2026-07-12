@@ -19,6 +19,7 @@ import RewardTypes "types/rewards";
 import GovernanceSyncTypes "types/governance-sync";
 import _StatsTypes "types/stats";
 import PriceTypes "types/prices";
+import WtnTypes "types/wtn";
 
 // OQL row converters — imported top-level so the entity resolver picks them up
 // for auto-derived fields whose types are non-primitive (variants).
@@ -29,6 +30,7 @@ import RewardsApi "mixins/rewards-api";
 import GovernanceSyncApi "mixins/governance-sync-api";
 import StatsApi "mixins/stats-api";
 import PricesApi "mixins/prices-api";
+import WtnApi "mixins/wtn-api";
 
 import GovernanceSyncLib "lib/governance-sync";
 
@@ -53,11 +55,27 @@ actor {
   // (cached indefinitely since historical prices never change).
   let priceCache : Map.Map<Text, PriceTypes.CachedPrice>;
 
+  // --- Stable state for the WTN (WaterNeuron nICP liquid staking) domain ---
+  // WTN positions are fully separate from NNS neurons: no governance sync, no
+  // hotkey, no dissolve delay, no stakedE8s. Tracked entirely via manually-
+  // entered snapshots. Keyed by canister-assigned position id (Nat).
+  let wtnPositions : Map.Map<WtnTypes.WtnPositionId, WtnTypes.WtnPosition>;
+  // Per-position snapshot lists, keyed by position id. Each list is sorted by
+  // date. Each snapshot carries three manually-entered numeric fields
+  // (nicpHeld, totalIcpPaid, redeemableIcpValue) plus an eventType
+  // classification derived by comparing to the previous snapshot.
+  let wtnSnapshots : Map.Map<WtnTypes.WtnPositionId, List.List<WtnTypes.WtnSnapshot>>;
+  // Monotonic counter for canister-assigned WTN position ids. Wrapped in a
+  // record so the WtnApi mixin (which receives it as a parameter) can mutate
+  // it by reference — a bare `var` would be passed by value to the mixin.
+  let nextWtnPositionId : { var next : Nat };
+
   // --- Domain mixins ---
   include NeuronsApi(neurons, rewards, syncStatuses, syncErrors);
   include RewardsApi(rewards, neurons);
   include GovernanceSyncApi(neurons, rewards, syncStatuses, syncErrors);
-  include StatsApi(neurons, rewards);
+  include StatsApi(neurons, rewards, wtnPositions, wtnSnapshots);
+  include WtnApi(wtnPositions, wtnSnapshots, nextWtnPositionId);
 
   /// IC HTTP outcall transform callback. Required by the IC HTTP outcall
   /// protocol: it must be a public `query` function on the actor and strips
@@ -112,6 +130,7 @@ actor {
         .payload("stakedMaturityE8s", func(r) = r.stakedMaturityE8s)
         .payload("autoStakeMaturity", func(r) = r.autoStakeMaturity)
         .payload("deltaE8s", func(r) = r.deltaE8s)
+        .payload("stakeDeltaE8s", func(r) = r.stakeDeltaE8s)
         .payload(
           "eventType",
           func(r) = switch (r.eventType) {
@@ -119,6 +138,7 @@ actor {
             case (#disburseOrSpawn) "disburseOrSpawn";
             case (#firstReading) "firstReading";
             case (#mergedToStake) "mergedToStake";
+            case (#externalTopUp) "externalTopUp";
           },
         )
         .controllerOnly()
@@ -179,6 +199,49 @@ actor {
         .payload("usd", func((_, p)) = p.usd)
         .payload("pln", func((_, p)) = p.pln)
         .payload("fetchedAtNanos", func((_, p)) = p.fetchedAtNanos)
+        .controllerOnly()
+        .build(),
+      // WTN (WaterNeuron nICP liquid staking) positions. Per-user data — each
+      // signed-in caller reads only their own rows, scoped via ownerId.
+      wtnPositions
+        .toEntity("wtnPosition", "WtnPosition", "id")
+        .sample({
+          id = 0 : WtnTypes.WtnPositionId;
+          name = "";
+          ownerId = Principal.fromText("aaaaa-aa");
+          startDate = 0 : Int;
+        })
+        .ownedBy("ownerId")
+        .controllerOrScoped()
+        .build(),
+      // WTN snapshots are per-user via the owning position. The owner lives
+      // on the position record, not on the snapshot, so we expose snapshots as
+      // controller-only (per-user scoping is enforced by the API layer).
+      // `wtnSnapshots` is a Map<PositionId, List<WtnSnapshot>> — a Map whose
+      // values are Lists, so `.toEntity` cannot apply. We use manual mode and
+      // flatten every position's snapshot list into individual rows.
+      OQL.Entity.manual<WtnTypes.WtnSnapshot>(
+        "wtnSnapshot",
+        func() = wtnSnapshots.entries().flatMap(
+          func((_id, snapshots)) = snapshots.values(),
+        ),
+        "WtnSnapshot",
+        "positionId",
+      )
+        .payload("positionId", func(s) = s.positionId)
+        .edge("positionId", "wtnPosition")
+        .payload("date", func(s) = s.date)
+        .payload("nicpHeld", func(s) = s.nicpHeld)
+        .payload("totalIcpPaid", func(s) = s.totalIcpPaid)
+        .payload("redeemableIcpValue", func(s) = s.redeemableIcpValue)
+        .payload(
+          "eventType",
+          func(s) = switch (s.eventType) {
+            case (#capitalAdded) "capitalAdded";
+            case (#withdrawal) "withdrawal";
+            case (#organicGrowth) "organicGrowth";
+          },
+        )
         .controllerOnly()
         .build(),
     ];

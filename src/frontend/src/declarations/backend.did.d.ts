@@ -14,6 +14,7 @@ export interface Cell { 'value' : Value, 'name' : string }
 export interface DailyReward {
   'stakedMaturityE8s' : E8s,
   'unstakedMaturityE8s' : E8s,
+  'stakeDeltaE8s' : E8s,
   'autoStakeMaturity' : boolean,
   'timestamp' : Timestamp,
   'neuronId' : NeuronId,
@@ -40,6 +41,7 @@ export type Error = { 'FrontendOriginsNotConfigured' : null } |
 export type EventType = { 'mergedToStake' : null } |
   { 'normalGrowth' : null } |
   { 'firstReading' : null } |
+  { 'externalTopUp' : null } |
   { 'disburseOrSpawn' : null };
 export interface HistoricalEntry {
   'stakedMaturityE8s' : E8s,
@@ -72,6 +74,7 @@ export type NeuronId = bigint;
 export interface NeuronStats {
   'averageDailyRewardE8s' : bigint,
   'totalRewardsE8s' : bigint,
+  'totalCapitalContributedE8s' : E8s,
   'apy30d' : number,
   'percentageReturn' : number,
   'neuronId' : NeuronId,
@@ -84,6 +87,7 @@ export interface PortfolioStats {
   'totalRewardsE8s' : bigint,
   'blendedApy' : number,
   'totalStakedE8s' : E8s,
+  'totalCapitalContributedE8s' : E8s,
   'percentageReturn' : number,
   'neuronCount' : bigint,
 }
@@ -127,13 +131,51 @@ export type Value = { 'int' : bigint } |
   { 'bool' : boolean } |
   { 'null' : null } |
   { 'text' : string };
+export type WtnEventType = { 'capitalAdded' : null } |
+  { 'withdrawal' : null } |
+  { 'organicGrowth' : null };
+export interface WtnHistoricalEntry {
+  'date' : Timestamp,
+  'redeemableIcpValue' : number,
+  'nicpHeld' : number,
+  'totalIcpPaid' : number,
+}
+export interface WtnPosition {
+  'id' : WtnPositionId,
+  'ownerId' : Principal,
+  'name' : string,
+  'startDate' : Timestamp,
+}
+export type WtnPositionId = bigint;
+export interface WtnSnapshot {
+  'date' : Timestamp,
+  'positionId' : WtnPositionId,
+  'redeemableIcpValue' : number,
+  'nicpHeld' : number,
+  'eventType' : WtnEventType,
+  'totalIcpPaid' : number,
+}
+export interface WtnStats {
+  'percentReturn' : number,
+  'totalCapitalContributed' : number,
+  'totalEarned' : number,
+  'positionId' : WtnPositionId,
+  'redeemableIcpValue' : number,
+  'totalWithdrawn' : number,
+}
 export interface _SERVICE {
   '__accessControlState' : ActorMethod<[], any>,
   '__neurons' : ActorMethod<[], any>,
+  '__nextWtnPositionId' : ActorMethod<[], any>,
   '__priceCache' : ActorMethod<[], any>,
   '__rewards' : ActorMethod<[], any>,
   '__syncErrors' : ActorMethod<[], any>,
   '__syncStatuses' : ActorMethod<[], any>,
+  '__wtnPositions' : ActorMethod<
+    [[] | [WtnPositionId], [] | [bigint]],
+    Array<[WtnPositionId, WtnPosition]>
+  >,
+  '__wtnSnapshots' : ActorMethod<[], any>,
   '_initialize_access_control' : ActorMethod<[], undefined>,
   '_internet_identity_sign_in_finish' : ActorMethod<[], Result__1>,
   '_internet_identity_sign_in_start' : ActorMethod<[], Uint8Array>,
@@ -141,9 +183,15 @@ export interface _SERVICE {
     [NeuronId, string, bigint, bigint, bigint],
     undefined
   >,
+  'addWtnPosition' : ActorMethod<[string, bigint], WtnPosition>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'deleteSnapshot' : ActorMethod<[NeuronId, bigint], undefined>,
+  'deleteWtnSnapshot' : ActorMethod<[WtnPositionId, bigint], undefined>,
   'editSnapshot' : ActorMethod<[NeuronId, bigint, bigint, bigint], undefined>,
+  'editWtnSnapshot' : ActorMethod<
+    [WtnPositionId, bigint, bigint, number, number, number],
+    undefined
+  >,
   'execute' : ActorMethod<[string], Result>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getCurrentIcpPrice' : ActorMethod<[], PriceSnapshot>,
@@ -153,17 +201,30 @@ export interface _SERVICE {
   'getRewardHistory' : ActorMethod<[NeuronId], Array<DailyReward>>,
   'getSyncError' : ActorMethod<[NeuronId], [] | [string]>,
   'getSyncStatus' : ActorMethod<[NeuronId], SyncStatus>,
+  'getWtnPosition' : ActorMethod<[WtnPositionId], [] | [WtnPosition]>,
+  'getWtnSnapshots' : ActorMethod<[WtnPositionId], Array<WtnSnapshot>>,
+  'getWtnStats' : ActorMethod<[WtnPositionId], WtnStats>,
   'importHistoricalData' : ActorMethod<
     [NeuronId, Array<HistoricalEntry>],
     undefined
   >,
+  'importWtnHistoricalData' : ActorMethod<
+    [WtnPositionId, Array<WtnHistoricalEntry>],
+    undefined
+  >,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'listMyNeurons' : ActorMethod<[], Array<Neuron>>,
+  'listMyWtnPositions' : ActorMethod<[], Array<WtnPosition>>,
   'recordSnapshot' : ActorMethod<
     [NeuronId, bigint, bigint, boolean],
     DailyReward
   >,
+  'recordWtnSnapshot' : ActorMethod<
+    [WtnPositionId, bigint, number, number, number],
+    WtnSnapshot
+  >,
   'removeNeuron' : ActorMethod<[NeuronId], undefined>,
+  'removeWtnPosition' : ActorMethod<[WtnPositionId], undefined>,
   /**
    * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
    * / target on every call so DST transitions do not cause drift. After the
@@ -199,6 +260,7 @@ export interface _SERVICE {
    */
   'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
   'updateNeuron' : ActorMethod<[Neuron], undefined>,
+  'updateWtnPosition' : ActorMethod<[WtnPosition], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
