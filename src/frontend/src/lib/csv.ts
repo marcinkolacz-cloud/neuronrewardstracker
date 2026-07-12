@@ -285,6 +285,28 @@ function classifyWtnEvent(eventType: WtnEventType): string {
 }
 
 /**
+ * Human-readable label for a WtnEventType enum value. Emits the precise
+ * variant string (#organicGrowth / #capitalAdded / #withdrawal /
+ * #firstReading) for use as the classification column in the combined
+ * typed CSV export, replacing the generic bucket labels from
+ * classifyWtnEvent.
+ */
+function wtnEventLabel(eventType: WtnEventType): string {
+  switch (eventType) {
+    case WtnEventType.organicGrowth:
+      return "organicGrowth";
+    case WtnEventType.capitalAdded:
+      return "capitalAdded";
+    case WtnEventType.withdrawal:
+      return "withdrawal";
+    case WtnEventType.firstReading:
+      return "firstReading";
+    default:
+      return WtnEventType[eventType] ?? "unknown";
+  }
+}
+
+/**
  * Format a WTN numeric ICP value (already in ICP units, not e8s) as a
  * full-precision string suitable for CSV. Returns the raw number string so
  * spreadsheet consumers can parse it; empty string when null/NaN.
@@ -329,9 +351,12 @@ const WTN_COMBINED_HEADER = [
   "id",
   "type",
   "date",
+  "maturityBalance",
+  "deltaE8s",
+  "stakeDeltaE8s",
   "nicpHeld",
   "totalIcpPaid",
-  "redeemableIcpValue",
+  "redeemableValue",
   "classification",
 ];
 
@@ -341,6 +366,13 @@ const WTN_COMBINED_HEADER = [
  * alongside NNS neuron rewards. A `type` column ("WTN") distinguishes
  * these rows from NNS rows. The `id` column carries the positionId so the
  * single exported file can be filtered by position.
+ *
+ * The combined typed schema includes BOTH NNS-specific columns
+ * (maturityBalance, deltaE8s, stakeDeltaE8s) and WTN-specific columns
+ * (nicpHeld, totalIcpPaid, redeemableValue). WTN rows populate the WTN
+ * columns and leave the NNS columns blank. The classification column
+ * carries the precise WtnEventType variant string (via wtnEventLabel)
+ * rather than a generic bucket label.
  *
  * Each entry in `groups` pairs a position id with that position's
  * snapshot list. Follows the same header + data-row pattern as
@@ -362,10 +394,13 @@ export function wtnSnapshotsToCombinedCsv(
           positionId,
           "WTN",
           formatTimestamp(s.date),
+          "",
+          "",
+          "",
           formatWtnIcp(s.nicpHeld),
           formatWtnIcp(s.totalIcpPaid),
           formatWtnIcp(s.redeemableIcpValue),
-          classifyWtnEvent(s.eventType),
+          wtnEventLabel(s.eventType),
         ]
           .map(escapeCsvField)
           .join(","),
@@ -376,13 +411,16 @@ export function wtnSnapshotsToCombinedCsv(
 }
 
 /**
- * Build NNS neuron reward rows in the combined WTN-style schema (id, type,
- * date, nicpHeld, totalIcpPaid, redeemableIcpValue, classification) so
- * they can be concatenated with WTN rows under a single header. The
- * WTN-only numeric columns (nicpHeld, totalIcpPaid, redeemableIcpValue)
- * are left empty for NNS rows; the classification column reuses the
- * existing classifyEvent mapping. Used by the dashboard's combined
- * export to emit one unified CSV with a type-identifier column.
+ * Build NNS neuron reward rows in the combined typed schema (id, type,
+ * date, maturityBalance, deltaE8s, stakeDeltaE8s, nicpHeld, totalIcpPaid,
+ * redeemableValue, classification) so they can be concatenated with WTN
+ * rows under a single header. NNS rows populate the NNS-specific columns
+ * (maturityBalance, deltaE8s, stakeDeltaE8s from the DailyReward record)
+ * and leave the WTN-specific columns (nicpHeld, totalIcpPaid,
+ * redeemableValue) blank. The classification column carries the precise
+ * EventType variant string (via eventLabel) rather than a generic bucket
+ * label. Used by the dashboard's combined export to emit one unified CSV
+ * with a type-identifier column.
  */
 export function neuronRewardsToCombinedTypedRows(
   groups: {
@@ -399,10 +437,13 @@ export function neuronRewardsToCombinedTypedRows(
           neuronId,
           "NNS",
           formatTimestamp(r.timestamp),
+          maturityBalance(r),
+          deltaIcp(r),
+          stakeDeltaIcp(r),
           "",
           "",
           "",
-          classifyEvent(r.eventType),
+          eventLabel(r.eventType),
         ]
           .map(escapeCsvField)
           .join(","),

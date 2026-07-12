@@ -102,13 +102,32 @@ type PriceSnapshot =
 type PortfolioStats = 
  record {
    blendedApy: float64;
+   combinedRewardsThisMonthE8s: nat64;
    neuronCount: nat;
+   nnsCapitalContributedE8s: E8s;
+   nnsRewardsE8s: int;
+   nnsRewardsThisMonthE8s: nat64;
+   nnsStakedE8s: E8s;
    percentageReturn: float64;
    totalCapitalContributedE8s: E8s;
    totalMaturityE8s: nat64;
    totalRewardsE8s: int;
    totalRewardsThisMonthE8s: nat64;
    totalStakedE8s: E8s;
+   wtnCapitalContributedE8s: E8s;
+   wtnRewardsE8s: int;
+   wtnRewardsThisMonthFloat: float64;
+   wtnStakedE8s: E8s;
+ };
+type PortfolioRewardStats = 
+ record {
+   apy30d: float64;
+   averageDailyRewardE8s: int;
+   monthly: vec MonthlyBreakdown;
+   monthlyReadings: nat;
+   overallReturnPct: float64;
+   totalCapitalContributedE8s: E8s;
+   totalRewardsE8s: int;
  };
 type NeuronStats = 
  record {
@@ -239,6 +258,7 @@ service : {
   getCurrentIcpPrice: () -> (PriceSnapshot);
   getHistoricalIcpPrice: (date: text) -> (PriceSnapshot);
   getNeuronStats: (neuronId: NeuronId) -> (NeuronStats);
+  getPortfolioRewardStats: () -> (PortfolioRewardStats);
   getPortfolioStats: () -> (PortfolioStats);
   getRewardHistory: (neuronId: NeuronId) -> (vec DailyReward);
   getSyncError: (neuronId: NeuronId) -> (opt text);

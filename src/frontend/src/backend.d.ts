@@ -181,16 +181,6 @@ export interface Result {
     hasMore: boolean;
     rows: Array<Array<Cell>>;
 }
-export interface PortfolioStats {
-    totalMaturityE8s: bigint;
-    totalRewardsThisMonthE8s: bigint;
-    totalRewardsE8s: bigint;
-    blendedApy: number;
-    totalStakedE8s: E8s;
-    totalCapitalContributedE8s: E8s;
-    percentageReturn: number;
-    neuronCount: bigint;
-}
 export interface Neuron {
     id: NeuronId;
     dissolveDelaySeconds: bigint;
@@ -200,7 +190,35 @@ export interface Neuron {
     initialStakeE8s: E8s;
     startDate: Timestamp;
 }
+export interface PortfolioStats {
+    wtnRewardsThisMonthFloat: number;
+    totalMaturityE8s: bigint;
+    wtnRewardsE8s: bigint;
+    nnsStakedE8s: E8s;
+    totalRewardsThisMonthE8s: bigint;
+    wtnCapitalContributedE8s: E8s;
+    totalRewardsE8s: bigint;
+    combinedRewardsThisMonthE8s: bigint;
+    blendedApy: number;
+    totalStakedE8s: E8s;
+    nnsRewardsThisMonthE8s: bigint;
+    totalCapitalContributedE8s: E8s;
+    percentageReturn: number;
+    nnsCapitalContributedE8s: E8s;
+    nnsRewardsE8s: bigint;
+    wtnStakedE8s: E8s;
+    neuronCount: bigint;
+}
 export type NeuronId = bigint;
+export interface PortfolioRewardStats {
+    monthlyReadings: bigint;
+    averageDailyRewardE8s: bigint;
+    totalRewardsE8s: bigint;
+    totalCapitalContributedE8s: E8s;
+    apy30d: number;
+    monthly: Array<MonthlyBreakdown>;
+    overallReturnPct: number;
+}
 export type WtnPositionId = bigint;
 export enum EventType {
     mergedToStake = "mergedToStake",
@@ -239,6 +257,7 @@ export interface backendInterface {
     getCurrentIcpPrice(): Promise<PriceSnapshot>;
     getHistoricalIcpPrice(date: string): Promise<PriceSnapshot>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
+    getPortfolioRewardStats(): Promise<PortfolioRewardStats>;
     getPortfolioStats(): Promise<PortfolioStats>;
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
     getSyncError(neuronId: NeuronId): Promise<string | null>;

@@ -82,14 +82,32 @@ export const NeuronStats = IDL.Record({
   'monthly' : IDL.Vec(MonthlyBreakdown),
   'overallReturnPct' : IDL.Float64,
 });
-export const PortfolioStats = IDL.Record({
-  'totalMaturityE8s' : IDL.Nat64,
-  'totalRewardsThisMonthE8s' : IDL.Nat64,
+export const PortfolioRewardStats = IDL.Record({
+  'monthlyReadings' : IDL.Nat,
+  'averageDailyRewardE8s' : IDL.Int,
   'totalRewardsE8s' : IDL.Int,
+  'totalCapitalContributedE8s' : E8s,
+  'apy30d' : IDL.Float64,
+  'monthly' : IDL.Vec(MonthlyBreakdown),
+  'overallReturnPct' : IDL.Float64,
+});
+export const PortfolioStats = IDL.Record({
+  'wtnRewardsThisMonthFloat' : IDL.Float64,
+  'totalMaturityE8s' : IDL.Nat64,
+  'wtnRewardsE8s' : IDL.Int,
+  'nnsStakedE8s' : E8s,
+  'totalRewardsThisMonthE8s' : IDL.Nat64,
+  'wtnCapitalContributedE8s' : E8s,
+  'totalRewardsE8s' : IDL.Int,
+  'combinedRewardsThisMonthE8s' : IDL.Nat64,
   'blendedApy' : IDL.Float64,
   'totalStakedE8s' : E8s,
+  'nnsRewardsThisMonthE8s' : IDL.Nat64,
   'totalCapitalContributedE8s' : E8s,
   'percentageReturn' : IDL.Float64,
+  'nnsCapitalContributedE8s' : E8s,
+  'nnsRewardsE8s' : IDL.Int,
+  'wtnStakedE8s' : E8s,
   'neuronCount' : IDL.Nat,
 });
 export const DeltaE8s = IDL.Int;
@@ -220,6 +238,7 @@ export const idlService = IDL.Service({
   'getCurrentIcpPrice' : IDL.Func([], [PriceSnapshot], []),
   'getHistoricalIcpPrice' : IDL.Func([IDL.Text], [PriceSnapshot], []),
   'getNeuronStats' : IDL.Func([NeuronId], [NeuronStats], []),
+  'getPortfolioRewardStats' : IDL.Func([], [PortfolioRewardStats], []),
   'getPortfolioStats' : IDL.Func([], [PortfolioStats], []),
   'getRewardHistory' : IDL.Func([NeuronId], [IDL.Vec(DailyReward)], []),
   'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], []),
@@ -343,14 +362,32 @@ export const idlFactory = ({ IDL }) => {
     'monthly' : IDL.Vec(MonthlyBreakdown),
     'overallReturnPct' : IDL.Float64,
   });
-  const PortfolioStats = IDL.Record({
-    'totalMaturityE8s' : IDL.Nat64,
-    'totalRewardsThisMonthE8s' : IDL.Nat64,
+  const PortfolioRewardStats = IDL.Record({
+    'monthlyReadings' : IDL.Nat,
+    'averageDailyRewardE8s' : IDL.Int,
     'totalRewardsE8s' : IDL.Int,
+    'totalCapitalContributedE8s' : E8s,
+    'apy30d' : IDL.Float64,
+    'monthly' : IDL.Vec(MonthlyBreakdown),
+    'overallReturnPct' : IDL.Float64,
+  });
+  const PortfolioStats = IDL.Record({
+    'wtnRewardsThisMonthFloat' : IDL.Float64,
+    'totalMaturityE8s' : IDL.Nat64,
+    'wtnRewardsE8s' : IDL.Int,
+    'nnsStakedE8s' : E8s,
+    'totalRewardsThisMonthE8s' : IDL.Nat64,
+    'wtnCapitalContributedE8s' : E8s,
+    'totalRewardsE8s' : IDL.Int,
+    'combinedRewardsThisMonthE8s' : IDL.Nat64,
     'blendedApy' : IDL.Float64,
     'totalStakedE8s' : E8s,
+    'nnsRewardsThisMonthE8s' : IDL.Nat64,
     'totalCapitalContributedE8s' : E8s,
     'percentageReturn' : IDL.Float64,
+    'nnsCapitalContributedE8s' : E8s,
+    'nnsRewardsE8s' : IDL.Int,
+    'wtnStakedE8s' : E8s,
     'neuronCount' : IDL.Nat,
   });
   const DeltaE8s = IDL.Int;
@@ -488,6 +525,7 @@ export const idlFactory = ({ IDL }) => {
     'getCurrentIcpPrice' : IDL.Func([], [PriceSnapshot], []),
     'getHistoricalIcpPrice' : IDL.Func([IDL.Text], [PriceSnapshot], []),
     'getNeuronStats' : IDL.Func([NeuronId], [NeuronStats], []),
+    'getPortfolioRewardStats' : IDL.Func([], [PortfolioRewardStats], []),
     'getPortfolioStats' : IDL.Func([], [PortfolioStats], []),
     'getRewardHistory' : IDL.Func([NeuronId], [IDL.Vec(DailyReward)], []),
     'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], []),

@@ -33,6 +33,10 @@
  * getCurrentIcpPrice via useIcpPrice().
  */
 
+import {
+  MonthlyBreakdownSection,
+  RewardStatsCard,
+} from "@/components/stats-panel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +50,11 @@ import {
 import { useNeurons } from "@/hooks/use-neurons";
 import { HISTORICAL_PRICES_ENABLED, useIcpPrice } from "@/hooks/use-prices";
 import { useSyncStatus } from "@/hooks/use-rewards";
-import { useNeuronStats, usePortfolioStats } from "@/hooks/use-stats";
+import {
+  useNeuronStats,
+  usePortfolioRewardStats,
+  usePortfolioStats,
+} from "@/hooks/use-stats";
 import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
 import { useWtnPositions, useWtnStats } from "@/hooks/use-wtn";
 import { useBackendActor } from "@/lib/backend-actor";
@@ -61,7 +69,6 @@ import {
   type PriceMap,
   downloadCsv,
   neuronRewardsToCombinedTypedRows,
-  rewardsToCombinedCsv,
   wtnSnapshotsToCombinedCsv,
 } from "@/lib/csv";
 import {
@@ -78,6 +85,7 @@ import {
   shortenPrincipal,
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   BrainCircuit,
@@ -85,6 +93,7 @@ import {
   Download,
   Droplets,
   Landmark,
+  Loader2,
   Plus,
   RefreshCw,
   Sparkles,
@@ -99,8 +108,11 @@ export function DashboardPage() {
   const { data: neurons, isLoading: neuronsLoading } = useNeurons();
   const { data: wtnPositions, isLoading: wtnLoading } = useWtnPositions();
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
+  const { data: rewardStats, isLoading: rewardStatsLoading } =
+    usePortfolioRewardStats();
   const priceQuery = useIcpPrice();
   const syncAll = useSyncAllNeurons();
+  const queryClient = useQueryClient();
   const { actor } = useBackendActor();
   const navigate = useNavigate();
   const [isExporting, setIsExporting] = useState(false);
@@ -109,28 +121,45 @@ export function DashboardPage() {
   const wtnCount = wtnPositions?.length ?? 0;
   const isEmpty =
     !neuronsLoading && !wtnLoading && neuronCount === 0 && wtnCount === 0;
+  const isSyncingAll = syncAll.isPending;
 
-  const handleSyncAll = () => {
-    syncAll.mutate(undefined, {
-      onSuccess: (results) => {
-        const failed = results.filter(
-          (r) => r.status === ("failed" as SyncStatus),
+  const handleSyncAll = async () => {
+    try {
+      const results = await syncAll.mutateAsync();
+      // The hook's onSuccess already invalidates with refetchType:'active',
+      // but we await a fresh invalidation here so the UI waits for the
+      // mutation to fully settle (and the active refetches to be queued)
+      // before toasting. This guarantees the user sees the loading state
+      // for the whole sync duration, then updated timestamps/stats after.
+      await queryClient.invalidateQueries({
+        predicate: (q) =>
+          q.queryKey[0] === "neurons" ||
+          q.queryKey[0] === "neuron-stats" ||
+          q.queryKey[0] === "rewards" ||
+          q.queryKey[0] === "sync-status" ||
+          q.queryKey[0] === "sync-error" ||
+          q.queryKey[0] === "portfolio-stats" ||
+          q.queryKey[0] === "portfolio-reward-stats",
+        refetchType: "active",
+      });
+      const failed = results.filter(
+        (r) => r.status === ("failed" as SyncStatus),
+      );
+      const needsHotkey = results.some(
+        (r) => r.status === ("hotkeyRequired" as SyncStatus),
+      );
+      if (failed.length > 0) {
+        toast.error(
+          `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`,
         );
-        const needsHotkey = results.some(
-          (r) => r.status === ("hotkeyRequired" as SyncStatus),
-        );
-        if (failed.length > 0) {
-          toast.error(
-            `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`,
-          );
-        } else if (needsHotkey) {
-          toast.warning("Synced — some neurons need a hotkey to fully sync");
-        } else {
-          toast.success("Synced all neurons with NNS governance");
-        }
-      },
-      onError: (err) => toast.error(err.message),
-    });
+      } else if (needsHotkey) {
+        toast.warning("Synced — some neurons need a hotkey to fully sync");
+      } else {
+        toast.success("Synced all neurons with NNS governance");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to sync");
+    }
   };
 
   const handleRefreshPrice = () => {
@@ -217,26 +246,21 @@ export function DashboardPage() {
       // nicpHeld, totalIcpPaid, redeemableIcpValue, classification). The two
       // sections share a leading id + type + date + classification shape so
       // the file can be filtered by position/neuron and by type.
-      const nnsCsv = rewardsToCombinedCsv(groups, priceMap);
       const wtnCsv = wtnSnapshotsToCombinedCsv(wtnNonEmpty);
 
-      let csv: string;
-      if (wtnNonEmpty.length > 0 && nonEmpty.length > 0) {
-        // Both present: prepend a type column to the NNS section by
-        // rebuilding NNS rows in the typed schema, then concatenate under
-        // the WTN combined header (which has the type column).
-        const nnsTypedRows = neuronRewardsToCombinedTypedRows(groups);
-        const wtnRows = wtnCsv.split("\n").slice(1); // drop WTN header
-        csv = [
-          "id,type,date,nicpHeld,totalIcpPaid,redeemableIcpValue,classification",
-          ...nnsTypedRows,
-          ...wtnRows,
-        ].join("\n");
-      } else if (wtnNonEmpty.length > 0) {
-        csv = wtnCsv;
-      } else {
-        csv = nnsCsv;
-      }
+      // Emit a single unified CSV with the wide typed header
+      // (id,type,date,maturityBalance,deltaE8s,stakeDeltaE8s,nicpHeld,
+      // totalIcpPaid,redeemableValue,classification) exactly once, then
+      // append all NNS typed rows + WTN rows beneath it. NNS rows populate
+      // the maturityBalance/deltaE8s/stakeDeltaE8s columns; WTN rows
+      // populate the nicpHeld/totalIcpPaid/redeemableValue columns. The
+      // classification column carries the precise event-type variant
+      // string for each row.
+      const TYPED_HEADER =
+        "id,type,date,maturityBalance,deltaE8s,stakeDeltaE8s,nicpHeld,totalIcpPaid,redeemableValue,classification";
+      const nnsTypedRows = neuronRewardsToCombinedTypedRows(groups);
+      const wtnRows = wtnCsv.split("\n").slice(1); // drop WTN header
+      const csv = [TYPED_HEADER, ...nnsTypedRows, ...wtnRows].join("\n");
 
       downloadCsv("portfolio-export.csv", csv);
       const totalPositions = nonEmpty.length + wtnNonEmpty.length;
@@ -329,12 +353,23 @@ export function DashboardPage() {
         <section className="mt-8" data-ocid="dashboard.portfolio_summary">
           <PortfolioSummary
             totalStaked={portfolio?.totalStakedE8s ?? null}
+            nnsStaked={portfolio?.nnsStakedE8s ?? null}
+            wtnStaked={portfolio?.wtnStakedE8s ?? null}
             totalCapitalContributed={
               portfolio?.totalCapitalContributedE8s ?? null
             }
+            nnsCapitalContributed={portfolio?.nnsCapitalContributedE8s ?? null}
+            wtnCapitalContributed={portfolio?.wtnCapitalContributedE8s ?? null}
             totalMaturity={portfolio?.totalMaturityE8s ?? null}
             blendedApy={portfolio?.blendedApy ?? null}
-            rewardsThisMonth={portfolio?.totalRewardsThisMonthE8s ?? null}
+            rewardsThisMonth={portfolio?.combinedRewardsThisMonthE8s ?? null}
+            nnsRewardsThisMonth={portfolio?.nnsRewardsThisMonthE8s ?? null}
+            wtnRewardsThisMonthFloat={
+              portfolio?.wtnRewardsThisMonthFloat ?? null
+            }
+            totalRewards={portfolio?.totalRewardsE8s ?? null}
+            nnsRewards={portfolio?.nnsRewardsE8s ?? null}
+            wtnRewards={portfolio?.wtnRewardsE8s ?? null}
             neuronCount={portfolio?.neuronCount ?? null}
             loading={portfolioLoading}
           />
@@ -351,6 +386,19 @@ export function DashboardPage() {
           />
         </section>
 
+        {/* Portfolio-wide reward statistics + monthly breakdown */}
+        <section className="mt-6" data-ocid="dashboard.reward_stats_section">
+          <RewardStatsCard
+            stats={rewardStats}
+            loading={rewardStatsLoading}
+            dataOcidPrefix="dashboard.reward_stats"
+          />
+          <MonthlyBreakdownSection
+            monthly={rewardStats?.monthly ?? []}
+            dataOcidPrefix="dashboard.monthly"
+          />
+        </section>
+
         {/* Neuron + WTN cards grid */}
         <section className="mt-10">
           <div className="mb-4 flex items-center gap-2">
@@ -361,6 +409,22 @@ export function DashboardPage() {
               {(neurons?.length ?? 0) + (wtnPositions?.length ?? 0)}
             </Badge>
           </div>
+
+          {isSyncingAll && (
+            <output
+              className="bg-primary/5 border-primary/30 mb-4 flex items-center gap-3 rounded-lg border px-4 py-3"
+              data-ocid="dashboard.refreshing_banner"
+              aria-live="polite"
+            >
+              <Loader2 className="text-primary size-4 animate-spin" />
+              <span className="text-foreground text-sm font-medium">
+                Refreshing all neurons…
+              </span>
+              <span className="text-muted-foreground text-xs">
+                Syncing with NNS governance and WTN positions
+              </span>
+            </output>
+          )}
 
           {neuronsLoading || wtnLoading ? (
             <NeuronGridSkeleton />
@@ -373,6 +437,7 @@ export function DashboardPage() {
                   key={neuron.id.toString()}
                   neuron={neuron}
                   index={i}
+                  syncing={isSyncingAll}
                 />
               ))}
               {wtnPositions?.map((position, i) => (
@@ -380,6 +445,7 @@ export function DashboardPage() {
                   key={`wtn-${position.id.toString()}`}
                   position={position}
                   index={(neurons?.length ?? 0) + i}
+                  syncing={isSyncingAll}
                 />
               ))}
             </div>
@@ -394,21 +460,48 @@ type PriceQueryLike = ReturnType<typeof useIcpPrice>;
 
 function PortfolioSummary({
   totalStaked,
+  nnsStaked,
+  wtnStaked,
   totalCapitalContributed,
+  nnsCapitalContributed,
+  wtnCapitalContributed,
   totalMaturity,
   blendedApy,
   rewardsThisMonth,
+  nnsRewardsThisMonth,
+  wtnRewardsThisMonthFloat,
+  totalRewards,
+  nnsRewards,
+  wtnRewards,
   neuronCount,
   loading,
 }: {
   totalStaked: bigint | null;
+  nnsStaked: bigint | null;
+  wtnStaked: bigint | null;
   totalCapitalContributed: bigint | null;
+  nnsCapitalContributed: bigint | null;
+  wtnCapitalContributed: bigint | null;
   totalMaturity: bigint | null;
   blendedApy: number | null;
   rewardsThisMonth: bigint | null;
+  nnsRewardsThisMonth: bigint | null;
+  wtnRewardsThisMonthFloat: number | null;
+  totalRewards: bigint | null;
+  nnsRewards: bigint | null;
+  wtnRewards: bigint | null;
   neuronCount: bigint | null;
   loading: boolean;
 }) {
+  // WTN rewards-this-month comes from the backend as a float (ICP units,
+  // not e8s) because WTN snapshots store ICP values as Float64. Convert it
+  // to an e8s bigint so the sub-line uses the same formatIcpCompact path
+  // as the NNS e8s figure.
+  const wtnRewardsThisMonthE8s =
+    wtnRewardsThisMonthFloat != null
+      ? BigInt(Math.trunc(wtnRewardsThisMonthFloat * Number(E8S_PER_ICP)))
+      : 0n;
+
   const stats = [
     {
       label: "Total Staked",
@@ -419,6 +512,7 @@ function PortfolioSummary({
         !loading && neuronCount != null
           ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}`
           : null,
+      subline: `${formatIcpCompact(nnsStaked ?? 0n)} (NNS) + ${formatIcpCompact(wtnStaked ?? 0n)} (nICP)`,
     },
     {
       label: "Total Capital Contributed",
@@ -426,6 +520,7 @@ function PortfolioSummary({
       icon: Landmark,
       accent: "text-muted-foreground",
       hint: "Initial stakes + top-ups",
+      subline: `${formatIcpCompact(nnsCapitalContributed ?? 0n)} (NNS) + ${formatIcpCompact(wtnCapitalContributed ?? 0n)} (nICP)`,
     },
     {
       label: "Total Maturity",
@@ -433,6 +528,7 @@ function PortfolioSummary({
       icon: Coins,
       accent: "text-accent",
       hint: "Withdrawable + staked",
+      subline: null,
     },
     {
       label: "Blended APY",
@@ -443,18 +539,28 @@ function PortfolioSummary({
           ? "text-primary"
           : "text-muted-foreground",
       hint: blendedApy === 0 ? "Insufficient history" : null,
+      subline: null,
     },
     {
       label: "Earned This Month",
       value: formatIcp(rewardsThisMonth, 2),
       icon: Sparkles,
       accent: "text-primary",
-      hint: "ICP rewards this month",
+      hint: "Combined NNS + nICP rewards",
+      subline: `${formatIcpCompact(nnsRewardsThisMonth ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewardsThisMonthE8s)} (nICP)`,
+    },
+    {
+      label: "Total Rewards Earned",
+      value: formatIcp(totalRewards, 2),
+      icon: BrainCircuit,
+      accent: "text-primary",
+      hint: "Lifetime rewards",
+      subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`,
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       {stats.map((stat) => (
         <div key={stat.label} className="stat-card">
           <div className="flex items-center justify-between">
@@ -469,6 +575,14 @@ function PortfolioSummary({
             ) : (
               <p className="text-foreground font-mono text-2xl font-semibold tracking-tight">
                 {stat.value}
+              </p>
+            )}
+            {stat.subline && !loading && (
+              <p
+                className="value-pill mt-2"
+                data-ocid="dashboard.portfolio_summary.subline"
+              >
+                {stat.subline}
               </p>
             )}
             {stat.hint && !loading && (
@@ -603,7 +717,15 @@ function PortfolioValuation({
   );
 }
 
-function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
+function NeuronCard({
+  neuron,
+  index,
+  syncing,
+}: {
+  neuron: Neuron;
+  index: number;
+  syncing?: boolean;
+}) {
   const idStr = neuron.id.toString();
   const { data: stats } = useNeuronStats(idStr);
   const { data: syncStatus } = useSyncStatus(idStr);
@@ -626,7 +748,21 @@ function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
         params={{ neuronId: idStr }}
         data-ocid={`dashboard.neuron.item.${index + 1}`}
       >
-        <Card className="bg-card/60 border-border/60 transition-smooth hover:border-primary/40 hover:shadow-elevated h-full">
+        <Card className="bg-card/60 border-border/60 transition-smooth hover:border-primary/40 hover:shadow-elevated relative h-full">
+          {syncing && (
+            <output
+              className="bg-primary/5 border-primary/30 absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]"
+              data-ocid={`dashboard.neuron.syncing.${index + 1}`}
+              aria-live="polite"
+            >
+              <div className="bg-card/90 border-border/60 flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm">
+                <Loader2 className="text-primary size-3.5 animate-spin" />
+                <span className="text-foreground text-xs font-medium">
+                  Syncing…
+                </span>
+              </div>
+            </output>
+          )}
           <CardHeader>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -685,9 +821,11 @@ function NeuronCard({ neuron, index }: { neuron: Neuron; index: number }) {
 function WtnCard({
   position,
   index,
+  syncing,
 }: {
   position: WtnPosition;
   index: number;
+  syncing?: boolean;
 }) {
   const idStr = position.id.toString();
   const { data: stats } = useWtnStats(idStr);
@@ -711,7 +849,21 @@ function WtnCard({
         params={{ positionId: idStr }}
         data-ocid={`dashboard.wtn.item.${index + 1}`}
       >
-        <Card className="bg-card/60 border-border/60 transition-smooth hover:border-accent/40 hover:shadow-elevated h-full">
+        <Card className="bg-card/60 border-border/60 transition-smooth hover:border-accent/40 hover:shadow-elevated relative h-full">
+          {syncing && (
+            <output
+              className="bg-accent/5 border-accent/30 absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]"
+              data-ocid={`dashboard.wtn.syncing.${index + 1}`}
+              aria-live="polite"
+            >
+              <div className="bg-card/90 border-border/60 flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm">
+                <Loader2 className="text-accent size-3.5 animate-spin" />
+                <span className="text-foreground text-xs font-medium">
+                  Syncing…
+                </span>
+              </div>
+            </output>
+          )}
           <CardHeader>
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2.5 min-w-0">

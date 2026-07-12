@@ -28,6 +28,7 @@ export type {
   SyncResult,
   NeuronStats,
   PortfolioStats,
+  PortfolioRewardStats,
   MonthlyBreakdown,
   HistoricalEntry,
   PriceSnapshot,

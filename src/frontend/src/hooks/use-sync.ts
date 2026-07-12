@@ -63,14 +63,26 @@ export function useSyncAllNeurons() {
       return actor.syncAllMyNeurons();
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: NEURONS_KEY });
-      void queryClient.invalidateQueries({ queryKey: PORTFOLIO_KEY });
+      // refetchType: 'active' forces currently-rendered queries to refetch
+      // immediately (rather than just marking stale), so the dashboard cards
+      // and portfolio summary visibly update right after a sync-all run.
+      void queryClient.invalidateQueries({
+        queryKey: NEURONS_KEY,
+        refetchType: "active",
+      });
+      void queryClient.invalidateQueries({
+        queryKey: PORTFOLIO_KEY,
+        refetchType: "active",
+      });
       void queryClient.invalidateQueries({
         predicate: (q) =>
           q.queryKey[0] === "neuron-stats" ||
           q.queryKey[0] === "rewards" ||
           q.queryKey[0] === "sync-status" ||
-          q.queryKey[0] === "sync-error",
+          q.queryKey[0] === "sync-error" ||
+          q.queryKey[0] === "portfolio-stats" ||
+          q.queryKey[0] === "portfolio-reward-stats",
+        refetchType: "active",
       });
     },
   });

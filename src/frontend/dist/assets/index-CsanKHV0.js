@@ -42423,14 +42423,32 @@ const NeuronStats = Record({
   "monthly": Vec(MonthlyBreakdown),
   "overallReturnPct": Float64
 });
-const PortfolioStats = Record({
-  "totalMaturityE8s": Nat64,
-  "totalRewardsThisMonthE8s": Nat64,
+const PortfolioRewardStats = Record({
+  "monthlyReadings": Nat,
+  "averageDailyRewardE8s": Int,
   "totalRewardsE8s": Int,
+  "totalCapitalContributedE8s": E8s,
+  "apy30d": Float64,
+  "monthly": Vec(MonthlyBreakdown),
+  "overallReturnPct": Float64
+});
+const PortfolioStats = Record({
+  "wtnRewardsThisMonthFloat": Float64,
+  "totalMaturityE8s": Nat64,
+  "wtnRewardsE8s": Int,
+  "nnsStakedE8s": E8s,
+  "totalRewardsThisMonthE8s": Nat64,
+  "wtnCapitalContributedE8s": E8s,
+  "totalRewardsE8s": Int,
+  "combinedRewardsThisMonthE8s": Nat64,
   "blendedApy": Float64,
   "totalStakedE8s": E8s,
+  "nnsRewardsThisMonthE8s": Nat64,
   "totalCapitalContributedE8s": E8s,
   "percentageReturn": Float64,
+  "nnsCapitalContributedE8s": E8s,
+  "nnsRewardsE8s": Int,
+  "wtnStakedE8s": E8s,
   "neuronCount": Nat
 });
 const DeltaE8s = Int;
@@ -42560,6 +42578,7 @@ Service({
   "getCurrentIcpPrice": Func([], [PriceSnapshot], []),
   "getHistoricalIcpPrice": Func([Text$1], [PriceSnapshot], []),
   "getNeuronStats": Func([NeuronId], [NeuronStats], []),
+  "getPortfolioRewardStats": Func([], [PortfolioRewardStats], []),
   "getPortfolioStats": Func([], [PortfolioStats], []),
   "getRewardHistory": Func([NeuronId], [Vec(DailyReward)], []),
   "getSyncError": Func([NeuronId], [Opt(Text$1)], []),
@@ -42680,14 +42699,32 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "monthly": IDL2.Vec(MonthlyBreakdown2),
     "overallReturnPct": IDL2.Float64
   });
-  const PortfolioStats2 = IDL2.Record({
-    "totalMaturityE8s": IDL2.Nat64,
-    "totalRewardsThisMonthE8s": IDL2.Nat64,
+  const PortfolioRewardStats2 = IDL2.Record({
+    "monthlyReadings": IDL2.Nat,
+    "averageDailyRewardE8s": IDL2.Int,
     "totalRewardsE8s": IDL2.Int,
+    "totalCapitalContributedE8s": E8s2,
+    "apy30d": IDL2.Float64,
+    "monthly": IDL2.Vec(MonthlyBreakdown2),
+    "overallReturnPct": IDL2.Float64
+  });
+  const PortfolioStats2 = IDL2.Record({
+    "wtnRewardsThisMonthFloat": IDL2.Float64,
+    "totalMaturityE8s": IDL2.Nat64,
+    "wtnRewardsE8s": IDL2.Int,
+    "nnsStakedE8s": E8s2,
+    "totalRewardsThisMonthE8s": IDL2.Nat64,
+    "wtnCapitalContributedE8s": E8s2,
+    "totalRewardsE8s": IDL2.Int,
+    "combinedRewardsThisMonthE8s": IDL2.Nat64,
     "blendedApy": IDL2.Float64,
     "totalStakedE8s": E8s2,
+    "nnsRewardsThisMonthE8s": IDL2.Nat64,
     "totalCapitalContributedE8s": E8s2,
     "percentageReturn": IDL2.Float64,
+    "nnsCapitalContributedE8s": E8s2,
+    "nnsRewardsE8s": IDL2.Int,
+    "wtnStakedE8s": E8s2,
     "neuronCount": IDL2.Nat
   });
   const DeltaE8s2 = IDL2.Int;
@@ -42824,6 +42861,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getCurrentIcpPrice": IDL2.Func([], [PriceSnapshot2], []),
     "getHistoricalIcpPrice": IDL2.Func([IDL2.Text], [PriceSnapshot2], []),
     "getNeuronStats": IDL2.Func([NeuronId2], [NeuronStats2], []),
+    "getPortfolioRewardStats": IDL2.Func([], [PortfolioRewardStats2], []),
     "getPortfolioStats": IDL2.Func([], [PortfolioStats2], []),
     "getRewardHistory": IDL2.Func([NeuronId2], [IDL2.Vec(DailyReward2)], []),
     "getSyncError": IDL2.Func([NeuronId2], [IDL2.Opt(IDL2.Text)], []),
@@ -43250,6 +43288,20 @@ class Backend {
       }
     } else {
       const result = await this.actor.getNeuronStats(arg0);
+      return result;
+    }
+  }
+  async getPortfolioRewardStats() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getPortfolioRewardStats();
+        return result;
+      } catch (e3) {
+        this.processError(e3);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getPortfolioRewardStats();
       return result;
     }
   }
@@ -43908,10 +43960,17 @@ function useSyncAllNeurons() {
       return actor.syncAllMyNeurons();
     },
     onSuccess: () => {
-      void queryClient2.invalidateQueries({ queryKey: NEURONS_KEY });
-      void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY$1 });
       void queryClient2.invalidateQueries({
-        predicate: (q2) => q2.queryKey[0] === "neuron-stats" || q2.queryKey[0] === "rewards" || q2.queryKey[0] === "sync-status" || q2.queryKey[0] === "sync-error"
+        queryKey: NEURONS_KEY,
+        refetchType: "active"
+      });
+      void queryClient2.invalidateQueries({
+        queryKey: PORTFOLIO_KEY$1,
+        refetchType: "active"
+      });
+      void queryClient2.invalidateQueries({
+        predicate: (q2) => q2.queryKey[0] === "neuron-stats" || q2.queryKey[0] === "rewards" || q2.queryKey[0] === "sync-status" || q2.queryKey[0] === "sync-error" || q2.queryKey[0] === "portfolio-stats" || q2.queryKey[0] === "portfolio-reward-stats",
+        refetchType: "active"
       });
     }
   });
@@ -52760,6405 +52819,6 @@ function AddWtnPage() {
     ] })
   ] });
 }
-function composeEventHandlers(originalEventHandler, ourEventHandler, { checkForDefaultPrevented = true } = {}) {
-  return function handleEvent(event) {
-    originalEventHandler == null ? void 0 : originalEventHandler(event);
-    if (checkForDefaultPrevented === false || !event.defaultPrevented) {
-      return ourEventHandler == null ? void 0 : ourEventHandler(event);
-    }
-  };
-}
-function createContext2(rootComponentName, defaultContext) {
-  const Context = reactExports.createContext(defaultContext);
-  const Provider2 = (props) => {
-    const { children, ...context } = props;
-    const value = reactExports.useMemo(() => context, Object.values(context));
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Context.Provider, { value, children });
-  };
-  Provider2.displayName = rootComponentName + "Provider";
-  function useContext2(consumerName) {
-    const context = reactExports.useContext(Context);
-    if (context) return context;
-    if (defaultContext !== void 0) return defaultContext;
-    throw new Error(`\`${consumerName}\` must be used within \`${rootComponentName}\``);
-  }
-  return [Provider2, useContext2];
-}
-function createContextScope(scopeName, createContextScopeDeps = []) {
-  let defaultContexts = [];
-  function createContext3(rootComponentName, defaultContext) {
-    const BaseContext = reactExports.createContext(defaultContext);
-    const index2 = defaultContexts.length;
-    defaultContexts = [...defaultContexts, defaultContext];
-    const Provider2 = (props) => {
-      var _a2;
-      const { scope, children, ...context } = props;
-      const Context = ((_a2 = scope == null ? void 0 : scope[scopeName]) == null ? void 0 : _a2[index2]) || BaseContext;
-      const value = reactExports.useMemo(() => context, Object.values(context));
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Context.Provider, { value, children });
-    };
-    Provider2.displayName = rootComponentName + "Provider";
-    function useContext2(consumerName, scope) {
-      var _a2;
-      const Context = ((_a2 = scope == null ? void 0 : scope[scopeName]) == null ? void 0 : _a2[index2]) || BaseContext;
-      const context = reactExports.useContext(Context);
-      if (context) return context;
-      if (defaultContext !== void 0) return defaultContext;
-      throw new Error(`\`${consumerName}\` must be used within \`${rootComponentName}\``);
-    }
-    return [Provider2, useContext2];
-  }
-  const createScope = () => {
-    const scopeContexts = defaultContexts.map((defaultContext) => {
-      return reactExports.createContext(defaultContext);
-    });
-    return function useScope(scope) {
-      const contexts = (scope == null ? void 0 : scope[scopeName]) || scopeContexts;
-      return reactExports.useMemo(
-        () => ({ [`__scope${scopeName}`]: { ...scope, [scopeName]: contexts } }),
-        [scope, contexts]
-      );
-    };
-  };
-  createScope.scopeName = scopeName;
-  return [createContext3, composeContextScopes(createScope, ...createContextScopeDeps)];
-}
-function composeContextScopes(...scopes) {
-  const baseScope = scopes[0];
-  if (scopes.length === 1) return baseScope;
-  const createScope = () => {
-    const scopeHooks = scopes.map((createScope2) => ({
-      useScope: createScope2(),
-      scopeName: createScope2.scopeName
-    }));
-    return function useComposedScopes(overrideScopes) {
-      const nextScopes = scopeHooks.reduce((nextScopes2, { useScope, scopeName }) => {
-        const scopeProps = useScope(overrideScopes);
-        const currentScope = scopeProps[`__scope${scopeName}`];
-        return { ...nextScopes2, ...currentScope };
-      }, {});
-      return reactExports.useMemo(() => ({ [`__scope${baseScope.scopeName}`]: nextScopes }), [nextScopes]);
-    };
-  };
-  createScope.scopeName = baseScope.scopeName;
-  return createScope;
-}
-// @__NO_SIDE_EFFECTS__
-function createSlot(ownerName) {
-  const SlotClone = /* @__PURE__ */ createSlotClone(ownerName);
-  const Slot2 = reactExports.forwardRef((props, forwardedRef) => {
-    const { children, ...slotProps } = props;
-    const childrenArray = reactExports.Children.toArray(children);
-    const slottable = childrenArray.find(isSlottable);
-    if (slottable) {
-      const newElement = slottable.props.children;
-      const newChildren = childrenArray.map((child) => {
-        if (child === slottable) {
-          if (reactExports.Children.count(newElement) > 1) return reactExports.Children.only(null);
-          return reactExports.isValidElement(newElement) ? newElement.props.children : null;
-        } else {
-          return child;
-        }
-      });
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
-    }
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children });
-  });
-  Slot2.displayName = `${ownerName}.Slot`;
-  return Slot2;
-}
-// @__NO_SIDE_EFFECTS__
-function createSlotClone(ownerName) {
-  const SlotClone = reactExports.forwardRef((props, forwardedRef) => {
-    const { children, ...slotProps } = props;
-    if (reactExports.isValidElement(children)) {
-      const childrenRef = getElementRef$1(children);
-      const props2 = mergeProps(slotProps, children.props);
-      if (children.type !== reactExports.Fragment) {
-        props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
-      }
-      return reactExports.cloneElement(children, props2);
-    }
-    return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
-  });
-  SlotClone.displayName = `${ownerName}.SlotClone`;
-  return SlotClone;
-}
-var SLOTTABLE_IDENTIFIER = Symbol("radix.slottable");
-// @__NO_SIDE_EFFECTS__
-function createSlottable(ownerName) {
-  const Slottable2 = ({ children }) => {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
-  };
-  Slottable2.displayName = `${ownerName}.Slottable`;
-  Slottable2.__radixId = SLOTTABLE_IDENTIFIER;
-  return Slottable2;
-}
-function isSlottable(child) {
-  return reactExports.isValidElement(child) && typeof child.type === "function" && "__radixId" in child.type && child.type.__radixId === SLOTTABLE_IDENTIFIER;
-}
-function mergeProps(slotProps, childProps) {
-  const overrideProps = { ...childProps };
-  for (const propName in childProps) {
-    const slotPropValue = slotProps[propName];
-    const childPropValue = childProps[propName];
-    const isHandler = /^on[A-Z]/.test(propName);
-    if (isHandler) {
-      if (slotPropValue && childPropValue) {
-        overrideProps[propName] = (...args) => {
-          const result = childPropValue(...args);
-          slotPropValue(...args);
-          return result;
-        };
-      } else if (slotPropValue) {
-        overrideProps[propName] = slotPropValue;
-      }
-    } else if (propName === "style") {
-      overrideProps[propName] = { ...slotPropValue, ...childPropValue };
-    } else if (propName === "className") {
-      overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(" ");
-    }
-  }
-  return { ...slotProps, ...overrideProps };
-}
-function getElementRef$1(element) {
-  var _a2, _b2;
-  let getter = (_a2 = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a2.get;
-  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.ref;
-  }
-  getter = (_b2 = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b2.get;
-  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.props.ref;
-  }
-  return element.props.ref || element.ref;
-}
-var NODES = [
-  "a",
-  "button",
-  "div",
-  "form",
-  "h2",
-  "h3",
-  "img",
-  "input",
-  "label",
-  "li",
-  "nav",
-  "ol",
-  "p",
-  "select",
-  "span",
-  "svg",
-  "ul"
-];
-var Primitive = NODES.reduce((primitive, node) => {
-  const Slot2 = /* @__PURE__ */ createSlot(`Primitive.${node}`);
-  const Node2 = reactExports.forwardRef((props, forwardedRef) => {
-    const { asChild, ...primitiveProps } = props;
-    const Comp = asChild ? Slot2 : node;
-    if (typeof window !== "undefined") {
-      window[Symbol.for("radix-ui")] = true;
-    }
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Comp, { ...primitiveProps, ref: forwardedRef });
-  });
-  Node2.displayName = `Primitive.${node}`;
-  return { ...primitive, [node]: Node2 };
-}, {});
-function dispatchDiscreteCustomEvent(target, event) {
-  if (target) reactDomExports.flushSync(() => target.dispatchEvent(event));
-}
-function useEscapeKeydown(onEscapeKeyDownProp, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
-  const onEscapeKeyDown = useCallbackRef$1(onEscapeKeyDownProp);
-  reactExports.useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        onEscapeKeyDown(event);
-      }
-    };
-    ownerDocument.addEventListener("keydown", handleKeyDown, { capture: true });
-    return () => ownerDocument.removeEventListener("keydown", handleKeyDown, { capture: true });
-  }, [onEscapeKeyDown, ownerDocument]);
-}
-var DISMISSABLE_LAYER_NAME = "DismissableLayer";
-var CONTEXT_UPDATE = "dismissableLayer.update";
-var POINTER_DOWN_OUTSIDE = "dismissableLayer.pointerDownOutside";
-var FOCUS_OUTSIDE = "dismissableLayer.focusOutside";
-var originalBodyPointerEvents;
-var DismissableLayerContext = reactExports.createContext({
-  layers: /* @__PURE__ */ new Set(),
-  layersWithOutsidePointerEventsDisabled: /* @__PURE__ */ new Set(),
-  branches: /* @__PURE__ */ new Set()
-});
-var DismissableLayer = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const {
-      disableOutsidePointerEvents = false,
-      onEscapeKeyDown,
-      onPointerDownOutside,
-      onFocusOutside,
-      onInteractOutside,
-      onDismiss,
-      ...layerProps
-    } = props;
-    const context = reactExports.useContext(DismissableLayerContext);
-    const [node, setNode] = reactExports.useState(null);
-    const ownerDocument = (node == null ? void 0 : node.ownerDocument) ?? (globalThis == null ? void 0 : globalThis.document);
-    const [, force] = reactExports.useState({});
-    const composedRefs = useComposedRefs(forwardedRef, (node2) => setNode(node2));
-    const layers = Array.from(context.layers);
-    const [highestLayerWithOutsidePointerEventsDisabled] = [...context.layersWithOutsidePointerEventsDisabled].slice(-1);
-    const highestLayerWithOutsidePointerEventsDisabledIndex = layers.indexOf(highestLayerWithOutsidePointerEventsDisabled);
-    const index2 = node ? layers.indexOf(node) : -1;
-    const isBodyPointerEventsDisabled = context.layersWithOutsidePointerEventsDisabled.size > 0;
-    const isPointerEventsEnabled = index2 >= highestLayerWithOutsidePointerEventsDisabledIndex;
-    const pointerDownOutside = usePointerDownOutside((event) => {
-      const target = event.target;
-      const isPointerDownOnBranch = [...context.branches].some((branch) => branch.contains(target));
-      if (!isPointerEventsEnabled || isPointerDownOnBranch) return;
-      onPointerDownOutside == null ? void 0 : onPointerDownOutside(event);
-      onInteractOutside == null ? void 0 : onInteractOutside(event);
-      if (!event.defaultPrevented) onDismiss == null ? void 0 : onDismiss();
-    }, ownerDocument);
-    const focusOutside = useFocusOutside((event) => {
-      const target = event.target;
-      const isFocusInBranch = [...context.branches].some((branch) => branch.contains(target));
-      if (isFocusInBranch) return;
-      onFocusOutside == null ? void 0 : onFocusOutside(event);
-      onInteractOutside == null ? void 0 : onInteractOutside(event);
-      if (!event.defaultPrevented) onDismiss == null ? void 0 : onDismiss();
-    }, ownerDocument);
-    useEscapeKeydown((event) => {
-      const isHighestLayer = index2 === context.layers.size - 1;
-      if (!isHighestLayer) return;
-      onEscapeKeyDown == null ? void 0 : onEscapeKeyDown(event);
-      if (!event.defaultPrevented && onDismiss) {
-        event.preventDefault();
-        onDismiss();
-      }
-    }, ownerDocument);
-    reactExports.useEffect(() => {
-      if (!node) return;
-      if (disableOutsidePointerEvents) {
-        if (context.layersWithOutsidePointerEventsDisabled.size === 0) {
-          originalBodyPointerEvents = ownerDocument.body.style.pointerEvents;
-          ownerDocument.body.style.pointerEvents = "none";
-        }
-        context.layersWithOutsidePointerEventsDisabled.add(node);
-      }
-      context.layers.add(node);
-      dispatchUpdate();
-      return () => {
-        if (disableOutsidePointerEvents && context.layersWithOutsidePointerEventsDisabled.size === 1) {
-          ownerDocument.body.style.pointerEvents = originalBodyPointerEvents;
-        }
-      };
-    }, [node, ownerDocument, disableOutsidePointerEvents, context]);
-    reactExports.useEffect(() => {
-      return () => {
-        if (!node) return;
-        context.layers.delete(node);
-        context.layersWithOutsidePointerEventsDisabled.delete(node);
-        dispatchUpdate();
-      };
-    }, [node, context]);
-    reactExports.useEffect(() => {
-      const handleUpdate = () => force({});
-      document.addEventListener(CONTEXT_UPDATE, handleUpdate);
-      return () => document.removeEventListener(CONTEXT_UPDATE, handleUpdate);
-    }, []);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.div,
-      {
-        ...layerProps,
-        ref: composedRefs,
-        style: {
-          pointerEvents: isBodyPointerEventsDisabled ? isPointerEventsEnabled ? "auto" : "none" : void 0,
-          ...props.style
-        },
-        onFocusCapture: composeEventHandlers(props.onFocusCapture, focusOutside.onFocusCapture),
-        onBlurCapture: composeEventHandlers(props.onBlurCapture, focusOutside.onBlurCapture),
-        onPointerDownCapture: composeEventHandlers(
-          props.onPointerDownCapture,
-          pointerDownOutside.onPointerDownCapture
-        )
-      }
-    );
-  }
-);
-DismissableLayer.displayName = DISMISSABLE_LAYER_NAME;
-var BRANCH_NAME = "DismissableLayerBranch";
-var DismissableLayerBranch = reactExports.forwardRef((props, forwardedRef) => {
-  const context = reactExports.useContext(DismissableLayerContext);
-  const ref = reactExports.useRef(null);
-  const composedRefs = useComposedRefs(forwardedRef, ref);
-  reactExports.useEffect(() => {
-    const node = ref.current;
-    if (node) {
-      context.branches.add(node);
-      return () => {
-        context.branches.delete(node);
-      };
-    }
-  }, [context.branches]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...props, ref: composedRefs });
-});
-DismissableLayerBranch.displayName = BRANCH_NAME;
-function usePointerDownOutside(onPointerDownOutside, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
-  const handlePointerDownOutside = useCallbackRef$1(onPointerDownOutside);
-  const isPointerInsideReactTreeRef = reactExports.useRef(false);
-  const handleClickRef = reactExports.useRef(() => {
-  });
-  reactExports.useEffect(() => {
-    const handlePointerDown = (event) => {
-      if (event.target && !isPointerInsideReactTreeRef.current) {
-        let handleAndDispatchPointerDownOutsideEvent2 = function() {
-          handleAndDispatchCustomEvent(
-            POINTER_DOWN_OUTSIDE,
-            handlePointerDownOutside,
-            eventDetail,
-            { discrete: true }
-          );
-        };
-        const eventDetail = { originalEvent: event };
-        if (event.pointerType === "touch") {
-          ownerDocument.removeEventListener("click", handleClickRef.current);
-          handleClickRef.current = handleAndDispatchPointerDownOutsideEvent2;
-          ownerDocument.addEventListener("click", handleClickRef.current, { once: true });
-        } else {
-          handleAndDispatchPointerDownOutsideEvent2();
-        }
-      } else {
-        ownerDocument.removeEventListener("click", handleClickRef.current);
-      }
-      isPointerInsideReactTreeRef.current = false;
-    };
-    const timerId = window.setTimeout(() => {
-      ownerDocument.addEventListener("pointerdown", handlePointerDown);
-    }, 0);
-    return () => {
-      window.clearTimeout(timerId);
-      ownerDocument.removeEventListener("pointerdown", handlePointerDown);
-      ownerDocument.removeEventListener("click", handleClickRef.current);
-    };
-  }, [ownerDocument, handlePointerDownOutside]);
-  return {
-    // ensures we check React component tree (not just DOM tree)
-    onPointerDownCapture: () => isPointerInsideReactTreeRef.current = true
-  };
-}
-function useFocusOutside(onFocusOutside, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
-  const handleFocusOutside = useCallbackRef$1(onFocusOutside);
-  const isFocusInsideReactTreeRef = reactExports.useRef(false);
-  reactExports.useEffect(() => {
-    const handleFocus = (event) => {
-      if (event.target && !isFocusInsideReactTreeRef.current) {
-        const eventDetail = { originalEvent: event };
-        handleAndDispatchCustomEvent(FOCUS_OUTSIDE, handleFocusOutside, eventDetail, {
-          discrete: false
-        });
-      }
-    };
-    ownerDocument.addEventListener("focusin", handleFocus);
-    return () => ownerDocument.removeEventListener("focusin", handleFocus);
-  }, [ownerDocument, handleFocusOutside]);
-  return {
-    onFocusCapture: () => isFocusInsideReactTreeRef.current = true,
-    onBlurCapture: () => isFocusInsideReactTreeRef.current = false
-  };
-}
-function dispatchUpdate() {
-  const event = new CustomEvent(CONTEXT_UPDATE);
-  document.dispatchEvent(event);
-}
-function handleAndDispatchCustomEvent(name, handler, detail, { discrete }) {
-  const target = detail.originalEvent.target;
-  const event = new CustomEvent(name, { bubbles: false, cancelable: true, detail });
-  if (handler) target.addEventListener(name, handler, { once: true });
-  if (discrete) {
-    dispatchDiscreteCustomEvent(target, event);
-  } else {
-    target.dispatchEvent(event);
-  }
-}
-var useReactId = React$5[" useId ".trim().toString()] || (() => void 0);
-var count$1 = 0;
-function useId(deterministicId) {
-  const [id2, setId] = reactExports.useState(useReactId());
-  useLayoutEffect2(() => {
-    setId((reactId) => reactId ?? String(count$1++));
-  }, [deterministicId]);
-  return id2 ? `radix-${id2}` : "";
-}
-const sides = ["top", "right", "bottom", "left"];
-const min$3 = Math.min;
-const max$3 = Math.max;
-const round$1 = Math.round;
-const floor = Math.floor;
-const createCoords = (v2) => ({
-  x: v2,
-  y: v2
-});
-const oppositeSideMap = {
-  left: "right",
-  right: "left",
-  bottom: "top",
-  top: "bottom"
-};
-function clamp(start, value, end) {
-  return max$3(start, min$3(value, end));
-}
-function evaluate(value, param) {
-  return typeof value === "function" ? value(param) : value;
-}
-function getSide(placement) {
-  return placement.split("-")[0];
-}
-function getAlignment(placement) {
-  return placement.split("-")[1];
-}
-function getOppositeAxis(axis) {
-  return axis === "x" ? "y" : "x";
-}
-function getAxisLength(axis) {
-  return axis === "y" ? "height" : "width";
-}
-function getSideAxis(placement) {
-  const firstChar = placement[0];
-  return firstChar === "t" || firstChar === "b" ? "y" : "x";
-}
-function getAlignmentAxis(placement) {
-  return getOppositeAxis(getSideAxis(placement));
-}
-function getAlignmentSides(placement, rects, rtl) {
-  if (rtl === void 0) {
-    rtl = false;
-  }
-  const alignment = getAlignment(placement);
-  const alignmentAxis = getAlignmentAxis(placement);
-  const length = getAxisLength(alignmentAxis);
-  let mainAlignmentSide = alignmentAxis === "x" ? alignment === (rtl ? "end" : "start") ? "right" : "left" : alignment === "start" ? "bottom" : "top";
-  if (rects.reference[length] > rects.floating[length]) {
-    mainAlignmentSide = getOppositePlacement(mainAlignmentSide);
-  }
-  return [mainAlignmentSide, getOppositePlacement(mainAlignmentSide)];
-}
-function getExpandedPlacements(placement) {
-  const oppositePlacement = getOppositePlacement(placement);
-  return [getOppositeAlignmentPlacement(placement), oppositePlacement, getOppositeAlignmentPlacement(oppositePlacement)];
-}
-function getOppositeAlignmentPlacement(placement) {
-  return placement.includes("start") ? placement.replace("start", "end") : placement.replace("end", "start");
-}
-const lrPlacement = ["left", "right"];
-const rlPlacement = ["right", "left"];
-const tbPlacement = ["top", "bottom"];
-const btPlacement = ["bottom", "top"];
-function getSideList(side, isStart, rtl) {
-  switch (side) {
-    case "top":
-    case "bottom":
-      if (rtl) return isStart ? rlPlacement : lrPlacement;
-      return isStart ? lrPlacement : rlPlacement;
-    case "left":
-    case "right":
-      return isStart ? tbPlacement : btPlacement;
-    default:
-      return [];
-  }
-}
-function getOppositeAxisPlacements(placement, flipAlignment, direction, rtl) {
-  const alignment = getAlignment(placement);
-  let list = getSideList(getSide(placement), direction === "start", rtl);
-  if (alignment) {
-    list = list.map((side) => side + "-" + alignment);
-    if (flipAlignment) {
-      list = list.concat(list.map(getOppositeAlignmentPlacement));
-    }
-  }
-  return list;
-}
-function getOppositePlacement(placement) {
-  const side = getSide(placement);
-  return oppositeSideMap[side] + placement.slice(side.length);
-}
-function expandPaddingObject(padding) {
-  return {
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    ...padding
-  };
-}
-function getPaddingObject(padding) {
-  return typeof padding !== "number" ? expandPaddingObject(padding) : {
-    top: padding,
-    right: padding,
-    bottom: padding,
-    left: padding
-  };
-}
-function rectToClientRect(rect) {
-  const {
-    x: x3,
-    y: y2,
-    width,
-    height
-  } = rect;
-  return {
-    width,
-    height,
-    top: y2,
-    left: x3,
-    right: x3 + width,
-    bottom: y2 + height,
-    x: x3,
-    y: y2
-  };
-}
-function computeCoordsFromPlacement(_ref, placement, rtl) {
-  let {
-    reference,
-    floating
-  } = _ref;
-  const sideAxis = getSideAxis(placement);
-  const alignmentAxis = getAlignmentAxis(placement);
-  const alignLength = getAxisLength(alignmentAxis);
-  const side = getSide(placement);
-  const isVertical = sideAxis === "y";
-  const commonX = reference.x + reference.width / 2 - floating.width / 2;
-  const commonY = reference.y + reference.height / 2 - floating.height / 2;
-  const commonAlign = reference[alignLength] / 2 - floating[alignLength] / 2;
-  let coords;
-  switch (side) {
-    case "top":
-      coords = {
-        x: commonX,
-        y: reference.y - floating.height
-      };
-      break;
-    case "bottom":
-      coords = {
-        x: commonX,
-        y: reference.y + reference.height
-      };
-      break;
-    case "right":
-      coords = {
-        x: reference.x + reference.width,
-        y: commonY
-      };
-      break;
-    case "left":
-      coords = {
-        x: reference.x - floating.width,
-        y: commonY
-      };
-      break;
-    default:
-      coords = {
-        x: reference.x,
-        y: reference.y
-      };
-  }
-  switch (getAlignment(placement)) {
-    case "start":
-      coords[alignmentAxis] -= commonAlign * (rtl && isVertical ? -1 : 1);
-      break;
-    case "end":
-      coords[alignmentAxis] += commonAlign * (rtl && isVertical ? -1 : 1);
-      break;
-  }
-  return coords;
-}
-async function detectOverflow(state, options) {
-  var _await$platform$isEle;
-  if (options === void 0) {
-    options = {};
-  }
-  const {
-    x: x3,
-    y: y2,
-    platform: platform2,
-    rects,
-    elements,
-    strategy
-  } = state;
-  const {
-    boundary = "clippingAncestors",
-    rootBoundary = "viewport",
-    elementContext = "floating",
-    altBoundary = false,
-    padding = 0
-  } = evaluate(options, state);
-  const paddingObject = getPaddingObject(padding);
-  const altContext = elementContext === "floating" ? "reference" : "floating";
-  const element = elements[altBoundary ? altContext : elementContext];
-  const clippingClientRect = rectToClientRect(await platform2.getClippingRect({
-    element: ((_await$platform$isEle = await (platform2.isElement == null ? void 0 : platform2.isElement(element))) != null ? _await$platform$isEle : true) ? element : element.contextElement || await (platform2.getDocumentElement == null ? void 0 : platform2.getDocumentElement(elements.floating)),
-    boundary,
-    rootBoundary,
-    strategy
-  }));
-  const rect = elementContext === "floating" ? {
-    x: x3,
-    y: y2,
-    width: rects.floating.width,
-    height: rects.floating.height
-  } : rects.reference;
-  const offsetParent = await (platform2.getOffsetParent == null ? void 0 : platform2.getOffsetParent(elements.floating));
-  const offsetScale = await (platform2.isElement == null ? void 0 : platform2.isElement(offsetParent)) ? await (platform2.getScale == null ? void 0 : platform2.getScale(offsetParent)) || {
-    x: 1,
-    y: 1
-  } : {
-    x: 1,
-    y: 1
-  };
-  const elementClientRect = rectToClientRect(platform2.convertOffsetParentRelativeRectToViewportRelativeRect ? await platform2.convertOffsetParentRelativeRectToViewportRelativeRect({
-    elements,
-    rect,
-    offsetParent,
-    strategy
-  }) : rect);
-  return {
-    top: (clippingClientRect.top - elementClientRect.top + paddingObject.top) / offsetScale.y,
-    bottom: (elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom) / offsetScale.y,
-    left: (clippingClientRect.left - elementClientRect.left + paddingObject.left) / offsetScale.x,
-    right: (elementClientRect.right - clippingClientRect.right + paddingObject.right) / offsetScale.x
-  };
-}
-const MAX_RESET_COUNT = 50;
-const computePosition$1 = async (reference, floating, config2) => {
-  const {
-    placement = "bottom",
-    strategy = "absolute",
-    middleware = [],
-    platform: platform2
-  } = config2;
-  const platformWithDetectOverflow = platform2.detectOverflow ? platform2 : {
-    ...platform2,
-    detectOverflow
-  };
-  const rtl = await (platform2.isRTL == null ? void 0 : platform2.isRTL(floating));
-  let rects = await platform2.getElementRects({
-    reference,
-    floating,
-    strategy
-  });
-  let {
-    x: x3,
-    y: y2
-  } = computeCoordsFromPlacement(rects, placement, rtl);
-  let statefulPlacement = placement;
-  let resetCount = 0;
-  const middlewareData = {};
-  for (let i = 0; i < middleware.length; i++) {
-    const currentMiddleware = middleware[i];
-    if (!currentMiddleware) {
-      continue;
-    }
-    const {
-      name,
-      fn
-    } = currentMiddleware;
-    const {
-      x: nextX,
-      y: nextY,
-      data,
-      reset
-    } = await fn({
-      x: x3,
-      y: y2,
-      initialPlacement: placement,
-      placement: statefulPlacement,
-      strategy,
-      middlewareData,
-      rects,
-      platform: platformWithDetectOverflow,
-      elements: {
-        reference,
-        floating
-      }
-    });
-    x3 = nextX != null ? nextX : x3;
-    y2 = nextY != null ? nextY : y2;
-    middlewareData[name] = {
-      ...middlewareData[name],
-      ...data
-    };
-    if (reset && resetCount < MAX_RESET_COUNT) {
-      resetCount++;
-      if (typeof reset === "object") {
-        if (reset.placement) {
-          statefulPlacement = reset.placement;
-        }
-        if (reset.rects) {
-          rects = reset.rects === true ? await platform2.getElementRects({
-            reference,
-            floating,
-            strategy
-          }) : reset.rects;
-        }
-        ({
-          x: x3,
-          y: y2
-        } = computeCoordsFromPlacement(rects, statefulPlacement, rtl));
-      }
-      i = -1;
-    }
-  }
-  return {
-    x: x3,
-    y: y2,
-    placement: statefulPlacement,
-    strategy,
-    middlewareData
-  };
-};
-const arrow$3 = (options) => ({
-  name: "arrow",
-  options,
-  async fn(state) {
-    const {
-      x: x3,
-      y: y2,
-      placement,
-      rects,
-      platform: platform2,
-      elements,
-      middlewareData
-    } = state;
-    const {
-      element,
-      padding = 0
-    } = evaluate(options, state) || {};
-    if (element == null) {
-      return {};
-    }
-    const paddingObject = getPaddingObject(padding);
-    const coords = {
-      x: x3,
-      y: y2
-    };
-    const axis = getAlignmentAxis(placement);
-    const length = getAxisLength(axis);
-    const arrowDimensions = await platform2.getDimensions(element);
-    const isYAxis = axis === "y";
-    const minProp = isYAxis ? "top" : "left";
-    const maxProp = isYAxis ? "bottom" : "right";
-    const clientProp = isYAxis ? "clientHeight" : "clientWidth";
-    const endDiff = rects.reference[length] + rects.reference[axis] - coords[axis] - rects.floating[length];
-    const startDiff = coords[axis] - rects.reference[axis];
-    const arrowOffsetParent = await (platform2.getOffsetParent == null ? void 0 : platform2.getOffsetParent(element));
-    let clientSize = arrowOffsetParent ? arrowOffsetParent[clientProp] : 0;
-    if (!clientSize || !await (platform2.isElement == null ? void 0 : platform2.isElement(arrowOffsetParent))) {
-      clientSize = elements.floating[clientProp] || rects.floating[length];
-    }
-    const centerToReference = endDiff / 2 - startDiff / 2;
-    const largestPossiblePadding = clientSize / 2 - arrowDimensions[length] / 2 - 1;
-    const minPadding = min$3(paddingObject[minProp], largestPossiblePadding);
-    const maxPadding = min$3(paddingObject[maxProp], largestPossiblePadding);
-    const min$12 = minPadding;
-    const max2 = clientSize - arrowDimensions[length] - maxPadding;
-    const center = clientSize / 2 - arrowDimensions[length] / 2 + centerToReference;
-    const offset2 = clamp(min$12, center, max2);
-    const shouldAddOffset = !middlewareData.arrow && getAlignment(placement) != null && center !== offset2 && rects.reference[length] / 2 - (center < min$12 ? minPadding : maxPadding) - arrowDimensions[length] / 2 < 0;
-    const alignmentOffset = shouldAddOffset ? center < min$12 ? center - min$12 : center - max2 : 0;
-    return {
-      [axis]: coords[axis] + alignmentOffset,
-      data: {
-        [axis]: offset2,
-        centerOffset: center - offset2 - alignmentOffset,
-        ...shouldAddOffset && {
-          alignmentOffset
-        }
-      },
-      reset: shouldAddOffset
-    };
-  }
-});
-const flip$2 = function(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  return {
-    name: "flip",
-    options,
-    async fn(state) {
-      var _middlewareData$arrow, _middlewareData$flip;
-      const {
-        placement,
-        middlewareData,
-        rects,
-        initialPlacement,
-        platform: platform2,
-        elements
-      } = state;
-      const {
-        mainAxis: checkMainAxis = true,
-        crossAxis: checkCrossAxis = true,
-        fallbackPlacements: specifiedFallbackPlacements,
-        fallbackStrategy = "bestFit",
-        fallbackAxisSideDirection = "none",
-        flipAlignment = true,
-        ...detectOverflowOptions
-      } = evaluate(options, state);
-      if ((_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) {
-        return {};
-      }
-      const side = getSide(placement);
-      const initialSideAxis = getSideAxis(initialPlacement);
-      const isBasePlacement = getSide(initialPlacement) === initialPlacement;
-      const rtl = await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating));
-      const fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipAlignment ? [getOppositePlacement(initialPlacement)] : getExpandedPlacements(initialPlacement));
-      const hasFallbackAxisSideDirection = fallbackAxisSideDirection !== "none";
-      if (!specifiedFallbackPlacements && hasFallbackAxisSideDirection) {
-        fallbackPlacements.push(...getOppositeAxisPlacements(initialPlacement, flipAlignment, fallbackAxisSideDirection, rtl));
-      }
-      const placements = [initialPlacement, ...fallbackPlacements];
-      const overflow = await platform2.detectOverflow(state, detectOverflowOptions);
-      const overflows = [];
-      let overflowsData = ((_middlewareData$flip = middlewareData.flip) == null ? void 0 : _middlewareData$flip.overflows) || [];
-      if (checkMainAxis) {
-        overflows.push(overflow[side]);
-      }
-      if (checkCrossAxis) {
-        const sides2 = getAlignmentSides(placement, rects, rtl);
-        overflows.push(overflow[sides2[0]], overflow[sides2[1]]);
-      }
-      overflowsData = [...overflowsData, {
-        placement,
-        overflows
-      }];
-      if (!overflows.every((side2) => side2 <= 0)) {
-        var _middlewareData$flip2, _overflowsData$filter;
-        const nextIndex = (((_middlewareData$flip2 = middlewareData.flip) == null ? void 0 : _middlewareData$flip2.index) || 0) + 1;
-        const nextPlacement = placements[nextIndex];
-        if (nextPlacement) {
-          const ignoreCrossAxisOverflow = checkCrossAxis === "alignment" ? initialSideAxis !== getSideAxis(nextPlacement) : false;
-          if (!ignoreCrossAxisOverflow || // We leave the current main axis only if every placement on that axis
-          // overflows the main axis.
-          overflowsData.every((d2) => getSideAxis(d2.placement) === initialSideAxis ? d2.overflows[0] > 0 : true)) {
-            return {
-              data: {
-                index: nextIndex,
-                overflows: overflowsData
-              },
-              reset: {
-                placement: nextPlacement
-              }
-            };
-          }
-        }
-        let resetPlacement = (_overflowsData$filter = overflowsData.filter((d2) => d2.overflows[0] <= 0).sort((a2, b2) => a2.overflows[1] - b2.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
-        if (!resetPlacement) {
-          switch (fallbackStrategy) {
-            case "bestFit": {
-              var _overflowsData$filter2;
-              const placement2 = (_overflowsData$filter2 = overflowsData.filter((d2) => {
-                if (hasFallbackAxisSideDirection) {
-                  const currentSideAxis = getSideAxis(d2.placement);
-                  return currentSideAxis === initialSideAxis || // Create a bias to the `y` side axis due to horizontal
-                  // reading directions favoring greater width.
-                  currentSideAxis === "y";
-                }
-                return true;
-              }).map((d2) => [d2.placement, d2.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a2, b2) => a2[1] - b2[1])[0]) == null ? void 0 : _overflowsData$filter2[0];
-              if (placement2) {
-                resetPlacement = placement2;
-              }
-              break;
-            }
-            case "initialPlacement":
-              resetPlacement = initialPlacement;
-              break;
-          }
-        }
-        if (placement !== resetPlacement) {
-          return {
-            reset: {
-              placement: resetPlacement
-            }
-          };
-        }
-      }
-      return {};
-    }
-  };
-};
-function getSideOffsets(overflow, rect) {
-  return {
-    top: overflow.top - rect.height,
-    right: overflow.right - rect.width,
-    bottom: overflow.bottom - rect.height,
-    left: overflow.left - rect.width
-  };
-}
-function isAnySideFullyClipped(overflow) {
-  return sides.some((side) => overflow[side] >= 0);
-}
-const hide$2 = function(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  return {
-    name: "hide",
-    options,
-    async fn(state) {
-      const {
-        rects,
-        platform: platform2
-      } = state;
-      const {
-        strategy = "referenceHidden",
-        ...detectOverflowOptions
-      } = evaluate(options, state);
-      switch (strategy) {
-        case "referenceHidden": {
-          const overflow = await platform2.detectOverflow(state, {
-            ...detectOverflowOptions,
-            elementContext: "reference"
-          });
-          const offsets = getSideOffsets(overflow, rects.reference);
-          return {
-            data: {
-              referenceHiddenOffsets: offsets,
-              referenceHidden: isAnySideFullyClipped(offsets)
-            }
-          };
-        }
-        case "escaped": {
-          const overflow = await platform2.detectOverflow(state, {
-            ...detectOverflowOptions,
-            altBoundary: true
-          });
-          const offsets = getSideOffsets(overflow, rects.floating);
-          return {
-            data: {
-              escapedOffsets: offsets,
-              escaped: isAnySideFullyClipped(offsets)
-            }
-          };
-        }
-        default: {
-          return {};
-        }
-      }
-    }
-  };
-};
-const originSides = /* @__PURE__ */ new Set(["left", "top"]);
-async function convertValueToCoords(state, options) {
-  const {
-    placement,
-    platform: platform2,
-    elements
-  } = state;
-  const rtl = await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating));
-  const side = getSide(placement);
-  const alignment = getAlignment(placement);
-  const isVertical = getSideAxis(placement) === "y";
-  const mainAxisMulti = originSides.has(side) ? -1 : 1;
-  const crossAxisMulti = rtl && isVertical ? -1 : 1;
-  const rawValue = evaluate(options, state);
-  let {
-    mainAxis,
-    crossAxis,
-    alignmentAxis
-  } = typeof rawValue === "number" ? {
-    mainAxis: rawValue,
-    crossAxis: 0,
-    alignmentAxis: null
-  } : {
-    mainAxis: rawValue.mainAxis || 0,
-    crossAxis: rawValue.crossAxis || 0,
-    alignmentAxis: rawValue.alignmentAxis
-  };
-  if (alignment && typeof alignmentAxis === "number") {
-    crossAxis = alignment === "end" ? alignmentAxis * -1 : alignmentAxis;
-  }
-  return isVertical ? {
-    x: crossAxis * crossAxisMulti,
-    y: mainAxis * mainAxisMulti
-  } : {
-    x: mainAxis * mainAxisMulti,
-    y: crossAxis * crossAxisMulti
-  };
-}
-const offset$2 = function(options) {
-  if (options === void 0) {
-    options = 0;
-  }
-  return {
-    name: "offset",
-    options,
-    async fn(state) {
-      var _middlewareData$offse, _middlewareData$arrow;
-      const {
-        x: x3,
-        y: y2,
-        placement,
-        middlewareData
-      } = state;
-      const diffCoords = await convertValueToCoords(state, options);
-      if (placement === ((_middlewareData$offse = middlewareData.offset) == null ? void 0 : _middlewareData$offse.placement) && (_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) {
-        return {};
-      }
-      return {
-        x: x3 + diffCoords.x,
-        y: y2 + diffCoords.y,
-        data: {
-          ...diffCoords,
-          placement
-        }
-      };
-    }
-  };
-};
-const shift$2 = function(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  return {
-    name: "shift",
-    options,
-    async fn(state) {
-      const {
-        x: x3,
-        y: y2,
-        placement,
-        platform: platform2
-      } = state;
-      const {
-        mainAxis: checkMainAxis = true,
-        crossAxis: checkCrossAxis = false,
-        limiter = {
-          fn: (_ref) => {
-            let {
-              x: x4,
-              y: y3
-            } = _ref;
-            return {
-              x: x4,
-              y: y3
-            };
-          }
-        },
-        ...detectOverflowOptions
-      } = evaluate(options, state);
-      const coords = {
-        x: x3,
-        y: y2
-      };
-      const overflow = await platform2.detectOverflow(state, detectOverflowOptions);
-      const crossAxis = getSideAxis(getSide(placement));
-      const mainAxis = getOppositeAxis(crossAxis);
-      let mainAxisCoord = coords[mainAxis];
-      let crossAxisCoord = coords[crossAxis];
-      if (checkMainAxis) {
-        const minSide = mainAxis === "y" ? "top" : "left";
-        const maxSide = mainAxis === "y" ? "bottom" : "right";
-        const min2 = mainAxisCoord + overflow[minSide];
-        const max2 = mainAxisCoord - overflow[maxSide];
-        mainAxisCoord = clamp(min2, mainAxisCoord, max2);
-      }
-      if (checkCrossAxis) {
-        const minSide = crossAxis === "y" ? "top" : "left";
-        const maxSide = crossAxis === "y" ? "bottom" : "right";
-        const min2 = crossAxisCoord + overflow[minSide];
-        const max2 = crossAxisCoord - overflow[maxSide];
-        crossAxisCoord = clamp(min2, crossAxisCoord, max2);
-      }
-      const limitedCoords = limiter.fn({
-        ...state,
-        [mainAxis]: mainAxisCoord,
-        [crossAxis]: crossAxisCoord
-      });
-      return {
-        ...limitedCoords,
-        data: {
-          x: limitedCoords.x - x3,
-          y: limitedCoords.y - y2,
-          enabled: {
-            [mainAxis]: checkMainAxis,
-            [crossAxis]: checkCrossAxis
-          }
-        }
-      };
-    }
-  };
-};
-const limitShift$2 = function(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  return {
-    options,
-    fn(state) {
-      const {
-        x: x3,
-        y: y2,
-        placement,
-        rects,
-        middlewareData
-      } = state;
-      const {
-        offset: offset2 = 0,
-        mainAxis: checkMainAxis = true,
-        crossAxis: checkCrossAxis = true
-      } = evaluate(options, state);
-      const coords = {
-        x: x3,
-        y: y2
-      };
-      const crossAxis = getSideAxis(placement);
-      const mainAxis = getOppositeAxis(crossAxis);
-      let mainAxisCoord = coords[mainAxis];
-      let crossAxisCoord = coords[crossAxis];
-      const rawOffset = evaluate(offset2, state);
-      const computedOffset = typeof rawOffset === "number" ? {
-        mainAxis: rawOffset,
-        crossAxis: 0
-      } : {
-        mainAxis: 0,
-        crossAxis: 0,
-        ...rawOffset
-      };
-      if (checkMainAxis) {
-        const len = mainAxis === "y" ? "height" : "width";
-        const limitMin = rects.reference[mainAxis] - rects.floating[len] + computedOffset.mainAxis;
-        const limitMax = rects.reference[mainAxis] + rects.reference[len] - computedOffset.mainAxis;
-        if (mainAxisCoord < limitMin) {
-          mainAxisCoord = limitMin;
-        } else if (mainAxisCoord > limitMax) {
-          mainAxisCoord = limitMax;
-        }
-      }
-      if (checkCrossAxis) {
-        var _middlewareData$offse, _middlewareData$offse2;
-        const len = mainAxis === "y" ? "width" : "height";
-        const isOriginSide = originSides.has(getSide(placement));
-        const limitMin = rects.reference[crossAxis] - rects.floating[len] + (isOriginSide ? ((_middlewareData$offse = middlewareData.offset) == null ? void 0 : _middlewareData$offse[crossAxis]) || 0 : 0) + (isOriginSide ? 0 : computedOffset.crossAxis);
-        const limitMax = rects.reference[crossAxis] + rects.reference[len] + (isOriginSide ? 0 : ((_middlewareData$offse2 = middlewareData.offset) == null ? void 0 : _middlewareData$offse2[crossAxis]) || 0) - (isOriginSide ? computedOffset.crossAxis : 0);
-        if (crossAxisCoord < limitMin) {
-          crossAxisCoord = limitMin;
-        } else if (crossAxisCoord > limitMax) {
-          crossAxisCoord = limitMax;
-        }
-      }
-      return {
-        [mainAxis]: mainAxisCoord,
-        [crossAxis]: crossAxisCoord
-      };
-    }
-  };
-};
-const size$2 = function(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  return {
-    name: "size",
-    options,
-    async fn(state) {
-      var _state$middlewareData, _state$middlewareData2;
-      const {
-        placement,
-        rects,
-        platform: platform2,
-        elements
-      } = state;
-      const {
-        apply: apply2 = () => {
-        },
-        ...detectOverflowOptions
-      } = evaluate(options, state);
-      const overflow = await platform2.detectOverflow(state, detectOverflowOptions);
-      const side = getSide(placement);
-      const alignment = getAlignment(placement);
-      const isYAxis = getSideAxis(placement) === "y";
-      const {
-        width,
-        height
-      } = rects.floating;
-      let heightSide;
-      let widthSide;
-      if (side === "top" || side === "bottom") {
-        heightSide = side;
-        widthSide = alignment === (await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating)) ? "start" : "end") ? "left" : "right";
-      } else {
-        widthSide = side;
-        heightSide = alignment === "end" ? "top" : "bottom";
-      }
-      const maximumClippingHeight = height - overflow.top - overflow.bottom;
-      const maximumClippingWidth = width - overflow.left - overflow.right;
-      const overflowAvailableHeight = min$3(height - overflow[heightSide], maximumClippingHeight);
-      const overflowAvailableWidth = min$3(width - overflow[widthSide], maximumClippingWidth);
-      const noShift = !state.middlewareData.shift;
-      let availableHeight = overflowAvailableHeight;
-      let availableWidth = overflowAvailableWidth;
-      if ((_state$middlewareData = state.middlewareData.shift) != null && _state$middlewareData.enabled.x) {
-        availableWidth = maximumClippingWidth;
-      }
-      if ((_state$middlewareData2 = state.middlewareData.shift) != null && _state$middlewareData2.enabled.y) {
-        availableHeight = maximumClippingHeight;
-      }
-      if (noShift && !alignment) {
-        const xMin = max$3(overflow.left, 0);
-        const xMax = max$3(overflow.right, 0);
-        const yMin = max$3(overflow.top, 0);
-        const yMax = max$3(overflow.bottom, 0);
-        if (isYAxis) {
-          availableWidth = width - 2 * (xMin !== 0 || xMax !== 0 ? xMin + xMax : max$3(overflow.left, overflow.right));
-        } else {
-          availableHeight = height - 2 * (yMin !== 0 || yMax !== 0 ? yMin + yMax : max$3(overflow.top, overflow.bottom));
-        }
-      }
-      await apply2({
-        ...state,
-        availableWidth,
-        availableHeight
-      });
-      const nextDimensions = await platform2.getDimensions(elements.floating);
-      if (width !== nextDimensions.width || height !== nextDimensions.height) {
-        return {
-          reset: {
-            rects: true
-          }
-        };
-      }
-      return {};
-    }
-  };
-};
-function hasWindow() {
-  return typeof window !== "undefined";
-}
-function getNodeName(node) {
-  if (isNode(node)) {
-    return (node.nodeName || "").toLowerCase();
-  }
-  return "#document";
-}
-function getWindow(node) {
-  var _node$ownerDocument;
-  return (node == null || (_node$ownerDocument = node.ownerDocument) == null ? void 0 : _node$ownerDocument.defaultView) || window;
-}
-function getDocumentElement(node) {
-  var _ref;
-  return (_ref = (isNode(node) ? node.ownerDocument : node.document) || window.document) == null ? void 0 : _ref.documentElement;
-}
-function isNode(value) {
-  if (!hasWindow()) {
-    return false;
-  }
-  return value instanceof Node || value instanceof getWindow(value).Node;
-}
-function isElement(value) {
-  if (!hasWindow()) {
-    return false;
-  }
-  return value instanceof Element || value instanceof getWindow(value).Element;
-}
-function isHTMLElement(value) {
-  if (!hasWindow()) {
-    return false;
-  }
-  return value instanceof HTMLElement || value instanceof getWindow(value).HTMLElement;
-}
-function isShadowRoot(value) {
-  if (!hasWindow() || typeof ShadowRoot === "undefined") {
-    return false;
-  }
-  return value instanceof ShadowRoot || value instanceof getWindow(value).ShadowRoot;
-}
-function isOverflowElement(element) {
-  const {
-    overflow,
-    overflowX,
-    overflowY,
-    display
-  } = getComputedStyle$1(element);
-  return /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX) && display !== "inline" && display !== "contents";
-}
-function isTableElement(element) {
-  return /^(table|td|th)$/.test(getNodeName(element));
-}
-function isTopLayer(element) {
-  try {
-    if (element.matches(":popover-open")) {
-      return true;
-    }
-  } catch (_e2) {
-  }
-  try {
-    return element.matches(":modal");
-  } catch (_e2) {
-    return false;
-  }
-}
-const willChangeRe = /transform|translate|scale|rotate|perspective|filter/;
-const containRe = /paint|layout|strict|content/;
-const isNotNone = (value) => !!value && value !== "none";
-let isWebKitValue;
-function isContainingBlock(elementOrCss) {
-  const css = isElement(elementOrCss) ? getComputedStyle$1(elementOrCss) : elementOrCss;
-  return isNotNone(css.transform) || isNotNone(css.translate) || isNotNone(css.scale) || isNotNone(css.rotate) || isNotNone(css.perspective) || !isWebKit() && (isNotNone(css.backdropFilter) || isNotNone(css.filter)) || willChangeRe.test(css.willChange || "") || containRe.test(css.contain || "");
-}
-function getContainingBlock(element) {
-  let currentNode = getParentNode(element);
-  while (isHTMLElement(currentNode) && !isLastTraversableNode(currentNode)) {
-    if (isContainingBlock(currentNode)) {
-      return currentNode;
-    } else if (isTopLayer(currentNode)) {
-      return null;
-    }
-    currentNode = getParentNode(currentNode);
-  }
-  return null;
-}
-function isWebKit() {
-  if (isWebKitValue == null) {
-    isWebKitValue = typeof CSS !== "undefined" && CSS.supports && CSS.supports("-webkit-backdrop-filter", "none");
-  }
-  return isWebKitValue;
-}
-function isLastTraversableNode(node) {
-  return /^(html|body|#document)$/.test(getNodeName(node));
-}
-function getComputedStyle$1(element) {
-  return getWindow(element).getComputedStyle(element);
-}
-function getNodeScroll(element) {
-  if (isElement(element)) {
-    return {
-      scrollLeft: element.scrollLeft,
-      scrollTop: element.scrollTop
-    };
-  }
-  return {
-    scrollLeft: element.scrollX,
-    scrollTop: element.scrollY
-  };
-}
-function getParentNode(node) {
-  if (getNodeName(node) === "html") {
-    return node;
-  }
-  const result = (
-    // Step into the shadow DOM of the parent of a slotted node.
-    node.assignedSlot || // DOM Element detected.
-    node.parentNode || // ShadowRoot detected.
-    isShadowRoot(node) && node.host || // Fallback.
-    getDocumentElement(node)
-  );
-  return isShadowRoot(result) ? result.host : result;
-}
-function getNearestOverflowAncestor(node) {
-  const parentNode = getParentNode(node);
-  if (isLastTraversableNode(parentNode)) {
-    return node.ownerDocument ? node.ownerDocument.body : node.body;
-  }
-  if (isHTMLElement(parentNode) && isOverflowElement(parentNode)) {
-    return parentNode;
-  }
-  return getNearestOverflowAncestor(parentNode);
-}
-function getOverflowAncestors(node, list, traverseIframes) {
-  var _node$ownerDocument2;
-  if (list === void 0) {
-    list = [];
-  }
-  if (traverseIframes === void 0) {
-    traverseIframes = true;
-  }
-  const scrollableAncestor = getNearestOverflowAncestor(node);
-  const isBody = scrollableAncestor === ((_node$ownerDocument2 = node.ownerDocument) == null ? void 0 : _node$ownerDocument2.body);
-  const win = getWindow(scrollableAncestor);
-  if (isBody) {
-    const frameElement = getFrameElement(win);
-    return list.concat(win, win.visualViewport || [], isOverflowElement(scrollableAncestor) ? scrollableAncestor : [], frameElement && traverseIframes ? getOverflowAncestors(frameElement) : []);
-  } else {
-    return list.concat(scrollableAncestor, getOverflowAncestors(scrollableAncestor, [], traverseIframes));
-  }
-}
-function getFrameElement(win) {
-  return win.parent && Object.getPrototypeOf(win.parent) ? win.frameElement : null;
-}
-function getCssDimensions(element) {
-  const css = getComputedStyle$1(element);
-  let width = parseFloat(css.width) || 0;
-  let height = parseFloat(css.height) || 0;
-  const hasOffset = isHTMLElement(element);
-  const offsetWidth = hasOffset ? element.offsetWidth : width;
-  const offsetHeight = hasOffset ? element.offsetHeight : height;
-  const shouldFallback = round$1(width) !== offsetWidth || round$1(height) !== offsetHeight;
-  if (shouldFallback) {
-    width = offsetWidth;
-    height = offsetHeight;
-  }
-  return {
-    width,
-    height,
-    $: shouldFallback
-  };
-}
-function unwrapElement(element) {
-  return !isElement(element) ? element.contextElement : element;
-}
-function getScale(element) {
-  const domElement = unwrapElement(element);
-  if (!isHTMLElement(domElement)) {
-    return createCoords(1);
-  }
-  const rect = domElement.getBoundingClientRect();
-  const {
-    width,
-    height,
-    $: $2
-  } = getCssDimensions(domElement);
-  let x3 = ($2 ? round$1(rect.width) : rect.width) / width;
-  let y2 = ($2 ? round$1(rect.height) : rect.height) / height;
-  if (!x3 || !Number.isFinite(x3)) {
-    x3 = 1;
-  }
-  if (!y2 || !Number.isFinite(y2)) {
-    y2 = 1;
-  }
-  return {
-    x: x3,
-    y: y2
-  };
-}
-const noOffsets = /* @__PURE__ */ createCoords(0);
-function getVisualOffsets(element) {
-  const win = getWindow(element);
-  if (!isWebKit() || !win.visualViewport) {
-    return noOffsets;
-  }
-  return {
-    x: win.visualViewport.offsetLeft,
-    y: win.visualViewport.offsetTop
-  };
-}
-function shouldAddVisualOffsets(element, isFixed, floatingOffsetParent) {
-  if (isFixed === void 0) {
-    isFixed = false;
-  }
-  if (!floatingOffsetParent || isFixed && floatingOffsetParent !== getWindow(element)) {
-    return false;
-  }
-  return isFixed;
-}
-function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetParent) {
-  if (includeScale === void 0) {
-    includeScale = false;
-  }
-  if (isFixedStrategy === void 0) {
-    isFixedStrategy = false;
-  }
-  const clientRect = element.getBoundingClientRect();
-  const domElement = unwrapElement(element);
-  let scale2 = createCoords(1);
-  if (includeScale) {
-    if (offsetParent) {
-      if (isElement(offsetParent)) {
-        scale2 = getScale(offsetParent);
-      }
-    } else {
-      scale2 = getScale(element);
-    }
-  }
-  const visualOffsets = shouldAddVisualOffsets(domElement, isFixedStrategy, offsetParent) ? getVisualOffsets(domElement) : createCoords(0);
-  let x3 = (clientRect.left + visualOffsets.x) / scale2.x;
-  let y2 = (clientRect.top + visualOffsets.y) / scale2.y;
-  let width = clientRect.width / scale2.x;
-  let height = clientRect.height / scale2.y;
-  if (domElement) {
-    const win = getWindow(domElement);
-    const offsetWin = offsetParent && isElement(offsetParent) ? getWindow(offsetParent) : offsetParent;
-    let currentWin = win;
-    let currentIFrame = getFrameElement(currentWin);
-    while (currentIFrame && offsetParent && offsetWin !== currentWin) {
-      const iframeScale = getScale(currentIFrame);
-      const iframeRect = currentIFrame.getBoundingClientRect();
-      const css = getComputedStyle$1(currentIFrame);
-      const left = iframeRect.left + (currentIFrame.clientLeft + parseFloat(css.paddingLeft)) * iframeScale.x;
-      const top = iframeRect.top + (currentIFrame.clientTop + parseFloat(css.paddingTop)) * iframeScale.y;
-      x3 *= iframeScale.x;
-      y2 *= iframeScale.y;
-      width *= iframeScale.x;
-      height *= iframeScale.y;
-      x3 += left;
-      y2 += top;
-      currentWin = getWindow(currentIFrame);
-      currentIFrame = getFrameElement(currentWin);
-    }
-  }
-  return rectToClientRect({
-    width,
-    height,
-    x: x3,
-    y: y2
-  });
-}
-function getWindowScrollBarX(element, rect) {
-  const leftScroll = getNodeScroll(element).scrollLeft;
-  if (!rect) {
-    return getBoundingClientRect(getDocumentElement(element)).left + leftScroll;
-  }
-  return rect.left + leftScroll;
-}
-function getHTMLOffset(documentElement, scroll) {
-  const htmlRect = documentElement.getBoundingClientRect();
-  const x3 = htmlRect.left + scroll.scrollLeft - getWindowScrollBarX(documentElement, htmlRect);
-  const y2 = htmlRect.top + scroll.scrollTop;
-  return {
-    x: x3,
-    y: y2
-  };
-}
-function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
-  let {
-    elements,
-    rect,
-    offsetParent,
-    strategy
-  } = _ref;
-  const isFixed = strategy === "fixed";
-  const documentElement = getDocumentElement(offsetParent);
-  const topLayer = elements ? isTopLayer(elements.floating) : false;
-  if (offsetParent === documentElement || topLayer && isFixed) {
-    return rect;
-  }
-  let scroll = {
-    scrollLeft: 0,
-    scrollTop: 0
-  };
-  let scale2 = createCoords(1);
-  const offsets = createCoords(0);
-  const isOffsetParentAnElement = isHTMLElement(offsetParent);
-  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
-    if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) {
-      scroll = getNodeScroll(offsetParent);
-    }
-    if (isOffsetParentAnElement) {
-      const offsetRect = getBoundingClientRect(offsetParent);
-      scale2 = getScale(offsetParent);
-      offsets.x = offsetRect.x + offsetParent.clientLeft;
-      offsets.y = offsetRect.y + offsetParent.clientTop;
-    }
-  }
-  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
-  return {
-    width: rect.width * scale2.x,
-    height: rect.height * scale2.y,
-    x: rect.x * scale2.x - scroll.scrollLeft * scale2.x + offsets.x + htmlOffset.x,
-    y: rect.y * scale2.y - scroll.scrollTop * scale2.y + offsets.y + htmlOffset.y
-  };
-}
-function getClientRects(element) {
-  return Array.from(element.getClientRects());
-}
-function getDocumentRect(element) {
-  const html = getDocumentElement(element);
-  const scroll = getNodeScroll(element);
-  const body = element.ownerDocument.body;
-  const width = max$3(html.scrollWidth, html.clientWidth, body.scrollWidth, body.clientWidth);
-  const height = max$3(html.scrollHeight, html.clientHeight, body.scrollHeight, body.clientHeight);
-  let x3 = -scroll.scrollLeft + getWindowScrollBarX(element);
-  const y2 = -scroll.scrollTop;
-  if (getComputedStyle$1(body).direction === "rtl") {
-    x3 += max$3(html.clientWidth, body.clientWidth) - width;
-  }
-  return {
-    width,
-    height,
-    x: x3,
-    y: y2
-  };
-}
-const SCROLLBAR_MAX = 25;
-function getViewportRect(element, strategy) {
-  const win = getWindow(element);
-  const html = getDocumentElement(element);
-  const visualViewport = win.visualViewport;
-  let width = html.clientWidth;
-  let height = html.clientHeight;
-  let x3 = 0;
-  let y2 = 0;
-  if (visualViewport) {
-    width = visualViewport.width;
-    height = visualViewport.height;
-    const visualViewportBased = isWebKit();
-    if (!visualViewportBased || visualViewportBased && strategy === "fixed") {
-      x3 = visualViewport.offsetLeft;
-      y2 = visualViewport.offsetTop;
-    }
-  }
-  const windowScrollbarX = getWindowScrollBarX(html);
-  if (windowScrollbarX <= 0) {
-    const doc = html.ownerDocument;
-    const body = doc.body;
-    const bodyStyles = getComputedStyle(body);
-    const bodyMarginInline = doc.compatMode === "CSS1Compat" ? parseFloat(bodyStyles.marginLeft) + parseFloat(bodyStyles.marginRight) || 0 : 0;
-    const clippingStableScrollbarWidth = Math.abs(html.clientWidth - body.clientWidth - bodyMarginInline);
-    if (clippingStableScrollbarWidth <= SCROLLBAR_MAX) {
-      width -= clippingStableScrollbarWidth;
-    }
-  } else if (windowScrollbarX <= SCROLLBAR_MAX) {
-    width += windowScrollbarX;
-  }
-  return {
-    width,
-    height,
-    x: x3,
-    y: y2
-  };
-}
-function getInnerBoundingClientRect(element, strategy) {
-  const clientRect = getBoundingClientRect(element, true, strategy === "fixed");
-  const top = clientRect.top + element.clientTop;
-  const left = clientRect.left + element.clientLeft;
-  const scale2 = isHTMLElement(element) ? getScale(element) : createCoords(1);
-  const width = element.clientWidth * scale2.x;
-  const height = element.clientHeight * scale2.y;
-  const x3 = left * scale2.x;
-  const y2 = top * scale2.y;
-  return {
-    width,
-    height,
-    x: x3,
-    y: y2
-  };
-}
-function getClientRectFromClippingAncestor(element, clippingAncestor, strategy) {
-  let rect;
-  if (clippingAncestor === "viewport") {
-    rect = getViewportRect(element, strategy);
-  } else if (clippingAncestor === "document") {
-    rect = getDocumentRect(getDocumentElement(element));
-  } else if (isElement(clippingAncestor)) {
-    rect = getInnerBoundingClientRect(clippingAncestor, strategy);
-  } else {
-    const visualOffsets = getVisualOffsets(element);
-    rect = {
-      x: clippingAncestor.x - visualOffsets.x,
-      y: clippingAncestor.y - visualOffsets.y,
-      width: clippingAncestor.width,
-      height: clippingAncestor.height
-    };
-  }
-  return rectToClientRect(rect);
-}
-function hasFixedPositionAncestor(element, stopNode) {
-  const parentNode = getParentNode(element);
-  if (parentNode === stopNode || !isElement(parentNode) || isLastTraversableNode(parentNode)) {
-    return false;
-  }
-  return getComputedStyle$1(parentNode).position === "fixed" || hasFixedPositionAncestor(parentNode, stopNode);
-}
-function getClippingElementAncestors(element, cache) {
-  const cachedResult = cache.get(element);
-  if (cachedResult) {
-    return cachedResult;
-  }
-  let result = getOverflowAncestors(element, [], false).filter((el) => isElement(el) && getNodeName(el) !== "body");
-  let currentContainingBlockComputedStyle = null;
-  const elementIsFixed = getComputedStyle$1(element).position === "fixed";
-  let currentNode = elementIsFixed ? getParentNode(element) : element;
-  while (isElement(currentNode) && !isLastTraversableNode(currentNode)) {
-    const computedStyle = getComputedStyle$1(currentNode);
-    const currentNodeIsContaining = isContainingBlock(currentNode);
-    if (!currentNodeIsContaining && computedStyle.position === "fixed") {
-      currentContainingBlockComputedStyle = null;
-    }
-    const shouldDropCurrentNode = elementIsFixed ? !currentNodeIsContaining && !currentContainingBlockComputedStyle : !currentNodeIsContaining && computedStyle.position === "static" && !!currentContainingBlockComputedStyle && (currentContainingBlockComputedStyle.position === "absolute" || currentContainingBlockComputedStyle.position === "fixed") || isOverflowElement(currentNode) && !currentNodeIsContaining && hasFixedPositionAncestor(element, currentNode);
-    if (shouldDropCurrentNode) {
-      result = result.filter((ancestor) => ancestor !== currentNode);
-    } else {
-      currentContainingBlockComputedStyle = computedStyle;
-    }
-    currentNode = getParentNode(currentNode);
-  }
-  cache.set(element, result);
-  return result;
-}
-function getClippingRect(_ref) {
-  let {
-    element,
-    boundary,
-    rootBoundary,
-    strategy
-  } = _ref;
-  const elementClippingAncestors = boundary === "clippingAncestors" ? isTopLayer(element) ? [] : getClippingElementAncestors(element, this._c) : [].concat(boundary);
-  const clippingAncestors = [...elementClippingAncestors, rootBoundary];
-  const firstRect = getClientRectFromClippingAncestor(element, clippingAncestors[0], strategy);
-  let top = firstRect.top;
-  let right = firstRect.right;
-  let bottom = firstRect.bottom;
-  let left = firstRect.left;
-  for (let i = 1; i < clippingAncestors.length; i++) {
-    const rect = getClientRectFromClippingAncestor(element, clippingAncestors[i], strategy);
-    top = max$3(rect.top, top);
-    right = min$3(rect.right, right);
-    bottom = min$3(rect.bottom, bottom);
-    left = max$3(rect.left, left);
-  }
-  return {
-    width: right - left,
-    height: bottom - top,
-    x: left,
-    y: top
-  };
-}
-function getDimensions(element) {
-  const {
-    width,
-    height
-  } = getCssDimensions(element);
-  return {
-    width,
-    height
-  };
-}
-function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
-  const isOffsetParentAnElement = isHTMLElement(offsetParent);
-  const documentElement = getDocumentElement(offsetParent);
-  const isFixed = strategy === "fixed";
-  const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
-  let scroll = {
-    scrollLeft: 0,
-    scrollTop: 0
-  };
-  const offsets = createCoords(0);
-  function setLeftRTLScrollbarOffset() {
-    offsets.x = getWindowScrollBarX(documentElement);
-  }
-  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
-    if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) {
-      scroll = getNodeScroll(offsetParent);
-    }
-    if (isOffsetParentAnElement) {
-      const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
-      offsets.x = offsetRect.x + offsetParent.clientLeft;
-      offsets.y = offsetRect.y + offsetParent.clientTop;
-    } else if (documentElement) {
-      setLeftRTLScrollbarOffset();
-    }
-  }
-  if (isFixed && !isOffsetParentAnElement && documentElement) {
-    setLeftRTLScrollbarOffset();
-  }
-  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
-  const x3 = rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x;
-  const y2 = rect.top + scroll.scrollTop - offsets.y - htmlOffset.y;
-  return {
-    x: x3,
-    y: y2,
-    width: rect.width,
-    height: rect.height
-  };
-}
-function isStaticPositioned(element) {
-  return getComputedStyle$1(element).position === "static";
-}
-function getTrueOffsetParent(element, polyfill2) {
-  if (!isHTMLElement(element) || getComputedStyle$1(element).position === "fixed") {
-    return null;
-  }
-  if (polyfill2) {
-    return polyfill2(element);
-  }
-  let rawOffsetParent = element.offsetParent;
-  if (getDocumentElement(element) === rawOffsetParent) {
-    rawOffsetParent = rawOffsetParent.ownerDocument.body;
-  }
-  return rawOffsetParent;
-}
-function getOffsetParent(element, polyfill2) {
-  const win = getWindow(element);
-  if (isTopLayer(element)) {
-    return win;
-  }
-  if (!isHTMLElement(element)) {
-    let svgOffsetParent = getParentNode(element);
-    while (svgOffsetParent && !isLastTraversableNode(svgOffsetParent)) {
-      if (isElement(svgOffsetParent) && !isStaticPositioned(svgOffsetParent)) {
-        return svgOffsetParent;
-      }
-      svgOffsetParent = getParentNode(svgOffsetParent);
-    }
-    return win;
-  }
-  let offsetParent = getTrueOffsetParent(element, polyfill2);
-  while (offsetParent && isTableElement(offsetParent) && isStaticPositioned(offsetParent)) {
-    offsetParent = getTrueOffsetParent(offsetParent, polyfill2);
-  }
-  if (offsetParent && isLastTraversableNode(offsetParent) && isStaticPositioned(offsetParent) && !isContainingBlock(offsetParent)) {
-    return win;
-  }
-  return offsetParent || getContainingBlock(element) || win;
-}
-const getElementRects = async function(data) {
-  const getOffsetParentFn = this.getOffsetParent || getOffsetParent;
-  const getDimensionsFn = this.getDimensions;
-  const floatingDimensions = await getDimensionsFn(data.floating);
-  return {
-    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
-    floating: {
-      x: 0,
-      y: 0,
-      width: floatingDimensions.width,
-      height: floatingDimensions.height
-    }
-  };
-};
-function isRTL(element) {
-  return getComputedStyle$1(element).direction === "rtl";
-}
-const platform = {
-  convertOffsetParentRelativeRectToViewportRelativeRect,
-  getDocumentElement,
-  getClippingRect,
-  getOffsetParent,
-  getElementRects,
-  getClientRects,
-  getDimensions,
-  getScale,
-  isElement,
-  isRTL
-};
-function rectsAreEqual(a2, b2) {
-  return a2.x === b2.x && a2.y === b2.y && a2.width === b2.width && a2.height === b2.height;
-}
-function observeMove(element, onMove) {
-  let io = null;
-  let timeoutId;
-  const root2 = getDocumentElement(element);
-  function cleanup() {
-    var _io;
-    clearTimeout(timeoutId);
-    (_io = io) == null || _io.disconnect();
-    io = null;
-  }
-  function refresh(skip, threshold2) {
-    if (skip === void 0) {
-      skip = false;
-    }
-    if (threshold2 === void 0) {
-      threshold2 = 1;
-    }
-    cleanup();
-    const elementRectForRootMargin = element.getBoundingClientRect();
-    const {
-      left,
-      top,
-      width,
-      height
-    } = elementRectForRootMargin;
-    if (!skip) {
-      onMove();
-    }
-    if (!width || !height) {
-      return;
-    }
-    const insetTop = floor(top);
-    const insetRight = floor(root2.clientWidth - (left + width));
-    const insetBottom = floor(root2.clientHeight - (top + height));
-    const insetLeft = floor(left);
-    const rootMargin = -insetTop + "px " + -insetRight + "px " + -insetBottom + "px " + -insetLeft + "px";
-    const options = {
-      rootMargin,
-      threshold: max$3(0, min$3(1, threshold2)) || 1
-    };
-    let isFirstUpdate = true;
-    function handleObserve(entries) {
-      const ratio = entries[0].intersectionRatio;
-      if (ratio !== threshold2) {
-        if (!isFirstUpdate) {
-          return refresh();
-        }
-        if (!ratio) {
-          timeoutId = setTimeout(() => {
-            refresh(false, 1e-7);
-          }, 1e3);
-        } else {
-          refresh(false, ratio);
-        }
-      }
-      if (ratio === 1 && !rectsAreEqual(elementRectForRootMargin, element.getBoundingClientRect())) {
-        refresh();
-      }
-      isFirstUpdate = false;
-    }
-    try {
-      io = new IntersectionObserver(handleObserve, {
-        ...options,
-        // Handle <iframe>s
-        root: root2.ownerDocument
-      });
-    } catch (_e2) {
-      io = new IntersectionObserver(handleObserve, options);
-    }
-    io.observe(element);
-  }
-  refresh(true);
-  return cleanup;
-}
-function autoUpdate(reference, floating, update, options) {
-  if (options === void 0) {
-    options = {};
-  }
-  const {
-    ancestorScroll = true,
-    ancestorResize = true,
-    elementResize = typeof ResizeObserver === "function",
-    layoutShift = typeof IntersectionObserver === "function",
-    animationFrame = false
-  } = options;
-  const referenceEl = unwrapElement(reference);
-  const ancestors = ancestorScroll || ancestorResize ? [...referenceEl ? getOverflowAncestors(referenceEl) : [], ...floating ? getOverflowAncestors(floating) : []] : [];
-  ancestors.forEach((ancestor) => {
-    ancestorScroll && ancestor.addEventListener("scroll", update, {
-      passive: true
-    });
-    ancestorResize && ancestor.addEventListener("resize", update);
-  });
-  const cleanupIo = referenceEl && layoutShift ? observeMove(referenceEl, update) : null;
-  let reobserveFrame = -1;
-  let resizeObserver = null;
-  if (elementResize) {
-    resizeObserver = new ResizeObserver((_ref) => {
-      let [firstEntry] = _ref;
-      if (firstEntry && firstEntry.target === referenceEl && resizeObserver && floating) {
-        resizeObserver.unobserve(floating);
-        cancelAnimationFrame(reobserveFrame);
-        reobserveFrame = requestAnimationFrame(() => {
-          var _resizeObserver;
-          (_resizeObserver = resizeObserver) == null || _resizeObserver.observe(floating);
-        });
-      }
-      update();
-    });
-    if (referenceEl && !animationFrame) {
-      resizeObserver.observe(referenceEl);
-    }
-    if (floating) {
-      resizeObserver.observe(floating);
-    }
-  }
-  let frameId;
-  let prevRefRect = animationFrame ? getBoundingClientRect(reference) : null;
-  if (animationFrame) {
-    frameLoop();
-  }
-  function frameLoop() {
-    const nextRefRect = getBoundingClientRect(reference);
-    if (prevRefRect && !rectsAreEqual(prevRefRect, nextRefRect)) {
-      update();
-    }
-    prevRefRect = nextRefRect;
-    frameId = requestAnimationFrame(frameLoop);
-  }
-  update();
-  return () => {
-    var _resizeObserver2;
-    ancestors.forEach((ancestor) => {
-      ancestorScroll && ancestor.removeEventListener("scroll", update);
-      ancestorResize && ancestor.removeEventListener("resize", update);
-    });
-    cleanupIo == null || cleanupIo();
-    (_resizeObserver2 = resizeObserver) == null || _resizeObserver2.disconnect();
-    resizeObserver = null;
-    if (animationFrame) {
-      cancelAnimationFrame(frameId);
-    }
-  };
-}
-const offset$1 = offset$2;
-const shift$1 = shift$2;
-const flip$1 = flip$2;
-const size$1 = size$2;
-const hide$1 = hide$2;
-const arrow$2 = arrow$3;
-const limitShift$1 = limitShift$2;
-const computePosition = (reference, floating, options) => {
-  const cache = /* @__PURE__ */ new Map();
-  const mergedOptions = {
-    platform,
-    ...options
-  };
-  const platformWithCache = {
-    ...mergedOptions.platform,
-    _c: cache
-  };
-  return computePosition$1(reference, floating, {
-    ...mergedOptions,
-    platform: platformWithCache
-  });
-};
-var isClient = typeof document !== "undefined";
-var noop$3 = function noop() {
-};
-var index = isClient ? reactExports.useLayoutEffect : noop$3;
-function deepEqual$1(a2, b2) {
-  if (a2 === b2) {
-    return true;
-  }
-  if (typeof a2 !== typeof b2) {
-    return false;
-  }
-  if (typeof a2 === "function" && a2.toString() === b2.toString()) {
-    return true;
-  }
-  let length;
-  let i;
-  let keys2;
-  if (a2 && b2 && typeof a2 === "object") {
-    if (Array.isArray(a2)) {
-      length = a2.length;
-      if (length !== b2.length) return false;
-      for (i = length; i-- !== 0; ) {
-        if (!deepEqual$1(a2[i], b2[i])) {
-          return false;
-        }
-      }
-      return true;
-    }
-    keys2 = Object.keys(a2);
-    length = keys2.length;
-    if (length !== Object.keys(b2).length) {
-      return false;
-    }
-    for (i = length; i-- !== 0; ) {
-      if (!{}.hasOwnProperty.call(b2, keys2[i])) {
-        return false;
-      }
-    }
-    for (i = length; i-- !== 0; ) {
-      const key = keys2[i];
-      if (key === "_owner" && a2.$$typeof) {
-        continue;
-      }
-      if (!deepEqual$1(a2[key], b2[key])) {
-        return false;
-      }
-    }
-    return true;
-  }
-  return a2 !== a2 && b2 !== b2;
-}
-function getDPR(element) {
-  if (typeof window === "undefined") {
-    return 1;
-  }
-  const win = element.ownerDocument.defaultView || window;
-  return win.devicePixelRatio || 1;
-}
-function roundByDPR(element, value) {
-  const dpr = getDPR(element);
-  return Math.round(value * dpr) / dpr;
-}
-function useLatestRef(value) {
-  const ref = reactExports.useRef(value);
-  index(() => {
-    ref.current = value;
-  });
-  return ref;
-}
-function useFloating(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  const {
-    placement = "bottom",
-    strategy = "absolute",
-    middleware = [],
-    platform: platform2,
-    elements: {
-      reference: externalReference,
-      floating: externalFloating
-    } = {},
-    transform = true,
-    whileElementsMounted,
-    open
-  } = options;
-  const [data, setData] = reactExports.useState({
-    x: 0,
-    y: 0,
-    strategy,
-    placement,
-    middlewareData: {},
-    isPositioned: false
-  });
-  const [latestMiddleware, setLatestMiddleware] = reactExports.useState(middleware);
-  if (!deepEqual$1(latestMiddleware, middleware)) {
-    setLatestMiddleware(middleware);
-  }
-  const [_reference, _setReference] = reactExports.useState(null);
-  const [_floating, _setFloating] = reactExports.useState(null);
-  const setReference = reactExports.useCallback((node) => {
-    if (node !== referenceRef.current) {
-      referenceRef.current = node;
-      _setReference(node);
-    }
-  }, []);
-  const setFloating = reactExports.useCallback((node) => {
-    if (node !== floatingRef.current) {
-      floatingRef.current = node;
-      _setFloating(node);
-    }
-  }, []);
-  const referenceEl = externalReference || _reference;
-  const floatingEl = externalFloating || _floating;
-  const referenceRef = reactExports.useRef(null);
-  const floatingRef = reactExports.useRef(null);
-  const dataRef = reactExports.useRef(data);
-  const hasWhileElementsMounted = whileElementsMounted != null;
-  const whileElementsMountedRef = useLatestRef(whileElementsMounted);
-  const platformRef = useLatestRef(platform2);
-  const openRef = useLatestRef(open);
-  const update = reactExports.useCallback(() => {
-    if (!referenceRef.current || !floatingRef.current) {
-      return;
-    }
-    const config2 = {
-      placement,
-      strategy,
-      middleware: latestMiddleware
-    };
-    if (platformRef.current) {
-      config2.platform = platformRef.current;
-    }
-    computePosition(referenceRef.current, floatingRef.current, config2).then((data2) => {
-      const fullData = {
-        ...data2,
-        // The floating element's position may be recomputed while it's closed
-        // but still mounted (such as when transitioning out). To ensure
-        // `isPositioned` will be `false` initially on the next open, avoid
-        // setting it to `true` when `open === false` (must be specified).
-        isPositioned: openRef.current !== false
-      };
-      if (isMountedRef.current && !deepEqual$1(dataRef.current, fullData)) {
-        dataRef.current = fullData;
-        reactDomExports.flushSync(() => {
-          setData(fullData);
-        });
-      }
-    });
-  }, [latestMiddleware, placement, strategy, platformRef, openRef]);
-  index(() => {
-    if (open === false && dataRef.current.isPositioned) {
-      dataRef.current.isPositioned = false;
-      setData((data2) => ({
-        ...data2,
-        isPositioned: false
-      }));
-    }
-  }, [open]);
-  const isMountedRef = reactExports.useRef(false);
-  index(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-  index(() => {
-    if (referenceEl) referenceRef.current = referenceEl;
-    if (floatingEl) floatingRef.current = floatingEl;
-    if (referenceEl && floatingEl) {
-      if (whileElementsMountedRef.current) {
-        return whileElementsMountedRef.current(referenceEl, floatingEl, update);
-      }
-      update();
-    }
-  }, [referenceEl, floatingEl, update, whileElementsMountedRef, hasWhileElementsMounted]);
-  const refs = reactExports.useMemo(() => ({
-    reference: referenceRef,
-    floating: floatingRef,
-    setReference,
-    setFloating
-  }), [setReference, setFloating]);
-  const elements = reactExports.useMemo(() => ({
-    reference: referenceEl,
-    floating: floatingEl
-  }), [referenceEl, floatingEl]);
-  const floatingStyles = reactExports.useMemo(() => {
-    const initialStyles = {
-      position: strategy,
-      left: 0,
-      top: 0
-    };
-    if (!elements.floating) {
-      return initialStyles;
-    }
-    const x3 = roundByDPR(elements.floating, data.x);
-    const y2 = roundByDPR(elements.floating, data.y);
-    if (transform) {
-      return {
-        ...initialStyles,
-        transform: "translate(" + x3 + "px, " + y2 + "px)",
-        ...getDPR(elements.floating) >= 1.5 && {
-          willChange: "transform"
-        }
-      };
-    }
-    return {
-      position: strategy,
-      left: x3,
-      top: y2
-    };
-  }, [strategy, transform, elements.floating, data.x, data.y]);
-  return reactExports.useMemo(() => ({
-    ...data,
-    update,
-    refs,
-    elements,
-    floatingStyles
-  }), [data, update, refs, elements, floatingStyles]);
-}
-const arrow$1 = (options) => {
-  function isRef(value) {
-    return {}.hasOwnProperty.call(value, "current");
-  }
-  return {
-    name: "arrow",
-    options,
-    fn(state) {
-      const {
-        element,
-        padding
-      } = typeof options === "function" ? options(state) : options;
-      if (element && isRef(element)) {
-        if (element.current != null) {
-          return arrow$2({
-            element: element.current,
-            padding
-          }).fn(state);
-        }
-        return {};
-      }
-      if (element) {
-        return arrow$2({
-          element,
-          padding
-        }).fn(state);
-      }
-      return {};
-    }
-  };
-};
-const offset = (options, deps) => {
-  const result = offset$1(options);
-  return {
-    name: result.name,
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-const shift = (options, deps) => {
-  const result = shift$1(options);
-  return {
-    name: result.name,
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-const limitShift = (options, deps) => {
-  const result = limitShift$1(options);
-  return {
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-const flip = (options, deps) => {
-  const result = flip$1(options);
-  return {
-    name: result.name,
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-const size = (options, deps) => {
-  const result = size$1(options);
-  return {
-    name: result.name,
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-const hide = (options, deps) => {
-  const result = hide$1(options);
-  return {
-    name: result.name,
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-const arrow = (options, deps) => {
-  const result = arrow$1(options);
-  return {
-    name: result.name,
-    fn: result.fn,
-    options: [options, deps]
-  };
-};
-var NAME$1 = "Arrow";
-var Arrow$1 = reactExports.forwardRef((props, forwardedRef) => {
-  const { children, width = 10, height = 5, ...arrowProps } = props;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Primitive.svg,
-    {
-      ...arrowProps,
-      ref: forwardedRef,
-      width,
-      height,
-      viewBox: "0 0 30 10",
-      preserveAspectRatio: "none",
-      children: props.asChild ? children : /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "0,0 30,0 15,10" })
-    }
-  );
-});
-Arrow$1.displayName = NAME$1;
-var Root$4 = Arrow$1;
-function useSize(element) {
-  const [size2, setSize] = reactExports.useState(void 0);
-  useLayoutEffect2(() => {
-    if (element) {
-      setSize({ width: element.offsetWidth, height: element.offsetHeight });
-      const resizeObserver = new ResizeObserver((entries) => {
-        if (!Array.isArray(entries)) {
-          return;
-        }
-        if (!entries.length) {
-          return;
-        }
-        const entry = entries[0];
-        let width;
-        let height;
-        if ("borderBoxSize" in entry) {
-          const borderSizeEntry = entry["borderBoxSize"];
-          const borderSize = Array.isArray(borderSizeEntry) ? borderSizeEntry[0] : borderSizeEntry;
-          width = borderSize["inlineSize"];
-          height = borderSize["blockSize"];
-        } else {
-          width = element.offsetWidth;
-          height = element.offsetHeight;
-        }
-        setSize({ width, height });
-      });
-      resizeObserver.observe(element, { box: "border-box" });
-      return () => resizeObserver.unobserve(element);
-    } else {
-      setSize(void 0);
-    }
-  }, [element]);
-  return size2;
-}
-var POPPER_NAME = "Popper";
-var [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME);
-var [PopperProvider, usePopperContext] = createPopperContext(POPPER_NAME);
-var Popper = (props) => {
-  const { __scopePopper, children } = props;
-  const [anchor, setAnchor] = reactExports.useState(null);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PopperProvider, { scope: __scopePopper, anchor, onAnchorChange: setAnchor, children });
-};
-Popper.displayName = POPPER_NAME;
-var ANCHOR_NAME = "PopperAnchor";
-var PopperAnchor = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopePopper, virtualRef, ...anchorProps } = props;
-    const context = usePopperContext(ANCHOR_NAME, __scopePopper);
-    const ref = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, ref);
-    const anchorRef = reactExports.useRef(null);
-    reactExports.useEffect(() => {
-      const previousAnchor = anchorRef.current;
-      anchorRef.current = (virtualRef == null ? void 0 : virtualRef.current) || ref.current;
-      if (previousAnchor !== anchorRef.current) {
-        context.onAnchorChange(anchorRef.current);
-      }
-    });
-    return virtualRef ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...anchorProps, ref: composedRefs });
-  }
-);
-PopperAnchor.displayName = ANCHOR_NAME;
-var CONTENT_NAME$4 = "PopperContent";
-var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME$4);
-var PopperContent = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    var _a2, _b2, _c2, _d2, _e2, _f2;
-    const {
-      __scopePopper,
-      side = "bottom",
-      sideOffset = 0,
-      align = "center",
-      alignOffset = 0,
-      arrowPadding = 0,
-      avoidCollisions = true,
-      collisionBoundary = [],
-      collisionPadding: collisionPaddingProp = 0,
-      sticky = "partial",
-      hideWhenDetached = false,
-      updatePositionStrategy = "optimized",
-      onPlaced,
-      ...contentProps
-    } = props;
-    const context = usePopperContext(CONTENT_NAME$4, __scopePopper);
-    const [content, setContent] = reactExports.useState(null);
-    const composedRefs = useComposedRefs(forwardedRef, (node) => setContent(node));
-    const [arrow$12, setArrow] = reactExports.useState(null);
-    const arrowSize = useSize(arrow$12);
-    const arrowWidth = (arrowSize == null ? void 0 : arrowSize.width) ?? 0;
-    const arrowHeight = (arrowSize == null ? void 0 : arrowSize.height) ?? 0;
-    const desiredPlacement = side + (align !== "center" ? "-" + align : "");
-    const collisionPadding = typeof collisionPaddingProp === "number" ? collisionPaddingProp : { top: 0, right: 0, bottom: 0, left: 0, ...collisionPaddingProp };
-    const boundary = Array.isArray(collisionBoundary) ? collisionBoundary : [collisionBoundary];
-    const hasExplicitBoundaries = boundary.length > 0;
-    const detectOverflowOptions = {
-      padding: collisionPadding,
-      boundary: boundary.filter(isNotNull),
-      // with `strategy: 'fixed'`, this is the only way to get it to respect boundaries
-      altBoundary: hasExplicitBoundaries
-    };
-    const { refs, floatingStyles, placement, isPositioned, middlewareData } = useFloating({
-      // default to `fixed` strategy so users don't have to pick and we also avoid focus scroll issues
-      strategy: "fixed",
-      placement: desiredPlacement,
-      whileElementsMounted: (...args) => {
-        const cleanup = autoUpdate(...args, {
-          animationFrame: updatePositionStrategy === "always"
-        });
-        return cleanup;
-      },
-      elements: {
-        reference: context.anchor
-      },
-      middleware: [
-        offset({ mainAxis: sideOffset + arrowHeight, alignmentAxis: alignOffset }),
-        avoidCollisions && shift({
-          mainAxis: true,
-          crossAxis: false,
-          limiter: sticky === "partial" ? limitShift() : void 0,
-          ...detectOverflowOptions
-        }),
-        avoidCollisions && flip({ ...detectOverflowOptions }),
-        size({
-          ...detectOverflowOptions,
-          apply: ({ elements, rects, availableWidth, availableHeight }) => {
-            const { width: anchorWidth, height: anchorHeight } = rects.reference;
-            const contentStyle = elements.floating.style;
-            contentStyle.setProperty("--radix-popper-available-width", `${availableWidth}px`);
-            contentStyle.setProperty("--radix-popper-available-height", `${availableHeight}px`);
-            contentStyle.setProperty("--radix-popper-anchor-width", `${anchorWidth}px`);
-            contentStyle.setProperty("--radix-popper-anchor-height", `${anchorHeight}px`);
-          }
-        }),
-        arrow$12 && arrow({ element: arrow$12, padding: arrowPadding }),
-        transformOrigin({ arrowWidth, arrowHeight }),
-        hideWhenDetached && hide({ strategy: "referenceHidden", ...detectOverflowOptions })
-      ]
-    });
-    const [placedSide, placedAlign] = getSideAndAlignFromPlacement(placement);
-    const handlePlaced = useCallbackRef$1(onPlaced);
-    useLayoutEffect2(() => {
-      if (isPositioned) {
-        handlePlaced == null ? void 0 : handlePlaced();
-      }
-    }, [isPositioned, handlePlaced]);
-    const arrowX = (_a2 = middlewareData.arrow) == null ? void 0 : _a2.x;
-    const arrowY = (_b2 = middlewareData.arrow) == null ? void 0 : _b2.y;
-    const cannotCenterArrow = ((_c2 = middlewareData.arrow) == null ? void 0 : _c2.centerOffset) !== 0;
-    const [contentZIndex, setContentZIndex] = reactExports.useState();
-    useLayoutEffect2(() => {
-      if (content) setContentZIndex(window.getComputedStyle(content).zIndex);
-    }, [content]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "div",
-      {
-        ref: refs.setFloating,
-        "data-radix-popper-content-wrapper": "",
-        style: {
-          ...floatingStyles,
-          transform: isPositioned ? floatingStyles.transform : "translate(0, -200%)",
-          // keep off the page when measuring
-          minWidth: "max-content",
-          zIndex: contentZIndex,
-          ["--radix-popper-transform-origin"]: [
-            (_d2 = middlewareData.transformOrigin) == null ? void 0 : _d2.x,
-            (_e2 = middlewareData.transformOrigin) == null ? void 0 : _e2.y
-          ].join(" "),
-          // hide the content if using the hide middleware and should be hidden
-          // set visibility to hidden and disable pointer events so the UI behaves
-          // as if the PopperContent isn't there at all
-          ...((_f2 = middlewareData.hide) == null ? void 0 : _f2.referenceHidden) && {
-            visibility: "hidden",
-            pointerEvents: "none"
-          }
-        },
-        dir: props.dir,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          PopperContentProvider,
-          {
-            scope: __scopePopper,
-            placedSide,
-            onArrowChange: setArrow,
-            arrowX,
-            arrowY,
-            shouldHideArrow: cannotCenterArrow,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Primitive.div,
-              {
-                "data-side": placedSide,
-                "data-align": placedAlign,
-                ...contentProps,
-                ref: composedRefs,
-                style: {
-                  ...contentProps.style,
-                  // if the PopperContent hasn't been placed yet (not all measurements done)
-                  // we prevent animations so that users's animation don't kick in too early referring wrong sides
-                  animation: !isPositioned ? "none" : void 0
-                }
-              }
-            )
-          }
-        )
-      }
-    );
-  }
-);
-PopperContent.displayName = CONTENT_NAME$4;
-var ARROW_NAME$1 = "PopperArrow";
-var OPPOSITE_SIDE = {
-  top: "bottom",
-  right: "left",
-  bottom: "top",
-  left: "right"
-};
-var PopperArrow = reactExports.forwardRef(function PopperArrow2(props, forwardedRef) {
-  const { __scopePopper, ...arrowProps } = props;
-  const contentContext = useContentContext(ARROW_NAME$1, __scopePopper);
-  const baseSide = OPPOSITE_SIDE[contentContext.placedSide];
-  return (
-    // we have to use an extra wrapper because `ResizeObserver` (used by `useSize`)
-    // doesn't report size as we'd expect on SVG elements.
-    // it reports their bounding box which is effectively the largest path inside the SVG.
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "span",
-      {
-        ref: contentContext.onArrowChange,
-        style: {
-          position: "absolute",
-          left: contentContext.arrowX,
-          top: contentContext.arrowY,
-          [baseSide]: 0,
-          transformOrigin: {
-            top: "",
-            right: "0 0",
-            bottom: "center 0",
-            left: "100% 0"
-          }[contentContext.placedSide],
-          transform: {
-            top: "translateY(100%)",
-            right: "translateY(50%) rotate(90deg) translateX(-50%)",
-            bottom: `rotate(180deg)`,
-            left: "translateY(50%) rotate(-90deg) translateX(50%)"
-          }[contentContext.placedSide],
-          visibility: contentContext.shouldHideArrow ? "hidden" : void 0
-        },
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Root$4,
-          {
-            ...arrowProps,
-            ref: forwardedRef,
-            style: {
-              ...arrowProps.style,
-              // ensures the element can be measured correctly (mostly for if SVG)
-              display: "block"
-            }
-          }
-        )
-      }
-    )
-  );
-});
-PopperArrow.displayName = ARROW_NAME$1;
-function isNotNull(value) {
-  return value !== null;
-}
-var transformOrigin = (options) => ({
-  name: "transformOrigin",
-  options,
-  fn(data) {
-    var _a2, _b2, _c2;
-    const { placement, rects, middlewareData } = data;
-    const cannotCenterArrow = ((_a2 = middlewareData.arrow) == null ? void 0 : _a2.centerOffset) !== 0;
-    const isArrowHidden = cannotCenterArrow;
-    const arrowWidth = isArrowHidden ? 0 : options.arrowWidth;
-    const arrowHeight = isArrowHidden ? 0 : options.arrowHeight;
-    const [placedSide, placedAlign] = getSideAndAlignFromPlacement(placement);
-    const noArrowAlign = { start: "0%", center: "50%", end: "100%" }[placedAlign];
-    const arrowXCenter = (((_b2 = middlewareData.arrow) == null ? void 0 : _b2.x) ?? 0) + arrowWidth / 2;
-    const arrowYCenter = (((_c2 = middlewareData.arrow) == null ? void 0 : _c2.y) ?? 0) + arrowHeight / 2;
-    let x3 = "";
-    let y2 = "";
-    if (placedSide === "bottom") {
-      x3 = isArrowHidden ? noArrowAlign : `${arrowXCenter}px`;
-      y2 = `${-arrowHeight}px`;
-    } else if (placedSide === "top") {
-      x3 = isArrowHidden ? noArrowAlign : `${arrowXCenter}px`;
-      y2 = `${rects.floating.height + arrowHeight}px`;
-    } else if (placedSide === "right") {
-      x3 = `${-arrowHeight}px`;
-      y2 = isArrowHidden ? noArrowAlign : `${arrowYCenter}px`;
-    } else if (placedSide === "left") {
-      x3 = `${rects.floating.width + arrowHeight}px`;
-      y2 = isArrowHidden ? noArrowAlign : `${arrowYCenter}px`;
-    }
-    return { data: { x: x3, y: y2 } };
-  }
-});
-function getSideAndAlignFromPlacement(placement) {
-  const [side, align = "center"] = placement.split("-");
-  return [side, align];
-}
-var Root2$1 = Popper;
-var Anchor = PopperAnchor;
-var Content$1 = PopperContent;
-var Arrow = PopperArrow;
-var PORTAL_NAME$3 = "Portal";
-var Portal$2 = reactExports.forwardRef((props, forwardedRef) => {
-  var _a2;
-  const { container: containerProp, ...portalProps } = props;
-  const [mounted, setMounted] = reactExports.useState(false);
-  useLayoutEffect2(() => setMounted(true), []);
-  const container = containerProp || mounted && ((_a2 = globalThis == null ? void 0 : globalThis.document) == null ? void 0 : _a2.body);
-  return container ? ReactDOM$2.createPortal(/* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...portalProps, ref: forwardedRef }), container) : null;
-});
-Portal$2.displayName = PORTAL_NAME$3;
-function useStateMachine(initialState, machine) {
-  return reactExports.useReducer((state, event) => {
-    const nextState = machine[state][event];
-    return nextState ?? state;
-  }, initialState);
-}
-var Presence = (props) => {
-  const { present, children } = props;
-  const presence = usePresence(present);
-  const child = typeof children === "function" ? children({ present: presence.isPresent }) : reactExports.Children.only(children);
-  const ref = useComposedRefs(presence.ref, getElementRef(child));
-  const forceMount = typeof children === "function";
-  return forceMount || presence.isPresent ? reactExports.cloneElement(child, { ref }) : null;
-};
-Presence.displayName = "Presence";
-function usePresence(present) {
-  const [node, setNode] = reactExports.useState();
-  const stylesRef = reactExports.useRef(null);
-  const prevPresentRef = reactExports.useRef(present);
-  const prevAnimationNameRef = reactExports.useRef("none");
-  const initialState = present ? "mounted" : "unmounted";
-  const [state, send] = useStateMachine(initialState, {
-    mounted: {
-      UNMOUNT: "unmounted",
-      ANIMATION_OUT: "unmountSuspended"
-    },
-    unmountSuspended: {
-      MOUNT: "mounted",
-      ANIMATION_END: "unmounted"
-    },
-    unmounted: {
-      MOUNT: "mounted"
-    }
-  });
-  reactExports.useEffect(() => {
-    const currentAnimationName = getAnimationName(stylesRef.current);
-    prevAnimationNameRef.current = state === "mounted" ? currentAnimationName : "none";
-  }, [state]);
-  useLayoutEffect2(() => {
-    const styles = stylesRef.current;
-    const wasPresent = prevPresentRef.current;
-    const hasPresentChanged = wasPresent !== present;
-    if (hasPresentChanged) {
-      const prevAnimationName = prevAnimationNameRef.current;
-      const currentAnimationName = getAnimationName(styles);
-      if (present) {
-        send("MOUNT");
-      } else if (currentAnimationName === "none" || (styles == null ? void 0 : styles.display) === "none") {
-        send("UNMOUNT");
-      } else {
-        const isAnimating = prevAnimationName !== currentAnimationName;
-        if (wasPresent && isAnimating) {
-          send("ANIMATION_OUT");
-        } else {
-          send("UNMOUNT");
-        }
-      }
-      prevPresentRef.current = present;
-    }
-  }, [present, send]);
-  useLayoutEffect2(() => {
-    if (node) {
-      let timeoutId;
-      const ownerWindow = node.ownerDocument.defaultView ?? window;
-      const handleAnimationEnd = (event) => {
-        const currentAnimationName = getAnimationName(stylesRef.current);
-        const isCurrentAnimation = currentAnimationName.includes(CSS.escape(event.animationName));
-        if (event.target === node && isCurrentAnimation) {
-          send("ANIMATION_END");
-          if (!prevPresentRef.current) {
-            const currentFillMode = node.style.animationFillMode;
-            node.style.animationFillMode = "forwards";
-            timeoutId = ownerWindow.setTimeout(() => {
-              if (node.style.animationFillMode === "forwards") {
-                node.style.animationFillMode = currentFillMode;
-              }
-            });
-          }
-        }
-      };
-      const handleAnimationStart = (event) => {
-        if (event.target === node) {
-          prevAnimationNameRef.current = getAnimationName(stylesRef.current);
-        }
-      };
-      node.addEventListener("animationstart", handleAnimationStart);
-      node.addEventListener("animationcancel", handleAnimationEnd);
-      node.addEventListener("animationend", handleAnimationEnd);
-      return () => {
-        ownerWindow.clearTimeout(timeoutId);
-        node.removeEventListener("animationstart", handleAnimationStart);
-        node.removeEventListener("animationcancel", handleAnimationEnd);
-        node.removeEventListener("animationend", handleAnimationEnd);
-      };
-    } else {
-      send("ANIMATION_END");
-    }
-  }, [node, send]);
-  return {
-    isPresent: ["mounted", "unmountSuspended"].includes(state),
-    ref: reactExports.useCallback((node2) => {
-      stylesRef.current = node2 ? getComputedStyle(node2) : null;
-      setNode(node2);
-    }, [])
-  };
-}
-function getAnimationName(styles) {
-  return (styles == null ? void 0 : styles.animationName) || "none";
-}
-function getElementRef(element) {
-  var _a2, _b2;
-  let getter = (_a2 = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a2.get;
-  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.ref;
-  }
-  getter = (_b2 = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b2.get;
-  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
-  if (mayWarn) {
-    return element.props.ref;
-  }
-  return element.props.ref || element.ref;
-}
-var useInsertionEffect = React$5[" useInsertionEffect ".trim().toString()] || useLayoutEffect2;
-function useControllableState({
-  prop,
-  defaultProp,
-  onChange = () => {
-  },
-  caller
-}) {
-  const [uncontrolledProp, setUncontrolledProp, onChangeRef] = useUncontrolledState({
-    defaultProp,
-    onChange
-  });
-  const isControlled = prop !== void 0;
-  const value = isControlled ? prop : uncontrolledProp;
-  {
-    const isControlledRef = reactExports.useRef(prop !== void 0);
-    reactExports.useEffect(() => {
-      const wasControlled = isControlledRef.current;
-      if (wasControlled !== isControlled) {
-        const from = wasControlled ? "controlled" : "uncontrolled";
-        const to = isControlled ? "controlled" : "uncontrolled";
-        console.warn(
-          `${caller} is changing from ${from} to ${to}. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled value for the lifetime of the component.`
-        );
-      }
-      isControlledRef.current = isControlled;
-    }, [isControlled, caller]);
-  }
-  const setValue = reactExports.useCallback(
-    (nextValue) => {
-      var _a2;
-      if (isControlled) {
-        const value2 = isFunction$4(nextValue) ? nextValue(prop) : nextValue;
-        if (value2 !== prop) {
-          (_a2 = onChangeRef.current) == null ? void 0 : _a2.call(onChangeRef, value2);
-        }
-      } else {
-        setUncontrolledProp(nextValue);
-      }
-    },
-    [isControlled, prop, setUncontrolledProp, onChangeRef]
-  );
-  return [value, setValue];
-}
-function useUncontrolledState({
-  defaultProp,
-  onChange
-}) {
-  const [value, setValue] = reactExports.useState(defaultProp);
-  const prevValueRef = reactExports.useRef(value);
-  const onChangeRef = reactExports.useRef(onChange);
-  useInsertionEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-  reactExports.useEffect(() => {
-    var _a2;
-    if (prevValueRef.current !== value) {
-      (_a2 = onChangeRef.current) == null ? void 0 : _a2.call(onChangeRef, value);
-      prevValueRef.current = value;
-    }
-  }, [value, prevValueRef]);
-  return [value, setValue, onChangeRef];
-}
-function isFunction$4(value) {
-  return typeof value === "function";
-}
-var VISUALLY_HIDDEN_STYLES = Object.freeze({
-  // See: https://github.com/twbs/bootstrap/blob/main/scss/mixins/_visually-hidden.scss
-  position: "absolute",
-  border: 0,
-  width: 1,
-  height: 1,
-  padding: 0,
-  margin: -1,
-  overflow: "hidden",
-  clip: "rect(0, 0, 0, 0)",
-  whiteSpace: "nowrap",
-  wordWrap: "normal"
-});
-var NAME = "VisuallyHidden";
-var VisuallyHidden = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.span,
-      {
-        ...props,
-        ref: forwardedRef,
-        style: { ...VISUALLY_HIDDEN_STYLES, ...props.style }
-      }
-    );
-  }
-);
-VisuallyHidden.displayName = NAME;
-var Root$3 = VisuallyHidden;
-var [createTooltipContext] = createContextScope("Tooltip", [
-  createPopperScope
-]);
-var usePopperScope = createPopperScope();
-var PROVIDER_NAME = "TooltipProvider";
-var DEFAULT_DELAY_DURATION = 700;
-var TOOLTIP_OPEN = "tooltip.open";
-var [TooltipProviderContextProvider, useTooltipProviderContext] = createTooltipContext(PROVIDER_NAME);
-var TooltipProvider$1 = (props) => {
-  const {
-    __scopeTooltip,
-    delayDuration = DEFAULT_DELAY_DURATION,
-    skipDelayDuration = 300,
-    disableHoverableContent = false,
-    children
-  } = props;
-  const isOpenDelayedRef = reactExports.useRef(true);
-  const isPointerInTransitRef = reactExports.useRef(false);
-  const skipDelayTimerRef = reactExports.useRef(0);
-  reactExports.useEffect(() => {
-    const skipDelayTimer = skipDelayTimerRef.current;
-    return () => window.clearTimeout(skipDelayTimer);
-  }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    TooltipProviderContextProvider,
-    {
-      scope: __scopeTooltip,
-      isOpenDelayedRef,
-      delayDuration,
-      onOpen: reactExports.useCallback(() => {
-        window.clearTimeout(skipDelayTimerRef.current);
-        isOpenDelayedRef.current = false;
-      }, []),
-      onClose: reactExports.useCallback(() => {
-        window.clearTimeout(skipDelayTimerRef.current);
-        skipDelayTimerRef.current = window.setTimeout(
-          () => isOpenDelayedRef.current = true,
-          skipDelayDuration
-        );
-      }, [skipDelayDuration]),
-      isPointerInTransitRef,
-      onPointerInTransitChange: reactExports.useCallback((inTransit) => {
-        isPointerInTransitRef.current = inTransit;
-      }, []),
-      disableHoverableContent,
-      children
-    }
-  );
-};
-TooltipProvider$1.displayName = PROVIDER_NAME;
-var TOOLTIP_NAME = "Tooltip";
-var [TooltipContextProvider, useTooltipContext] = createTooltipContext(TOOLTIP_NAME);
-var Tooltip$2 = (props) => {
-  const {
-    __scopeTooltip,
-    children,
-    open: openProp,
-    defaultOpen,
-    onOpenChange,
-    disableHoverableContent: disableHoverableContentProp,
-    delayDuration: delayDurationProp
-  } = props;
-  const providerContext = useTooltipProviderContext(TOOLTIP_NAME, props.__scopeTooltip);
-  const popperScope = usePopperScope(__scopeTooltip);
-  const [trigger, setTrigger] = reactExports.useState(null);
-  const contentId = useId();
-  const openTimerRef = reactExports.useRef(0);
-  const disableHoverableContent = disableHoverableContentProp ?? providerContext.disableHoverableContent;
-  const delayDuration = delayDurationProp ?? providerContext.delayDuration;
-  const wasOpenDelayedRef = reactExports.useRef(false);
-  const [open, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen ?? false,
-    onChange: (open2) => {
-      if (open2) {
-        providerContext.onOpen();
-        document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN));
-      } else {
-        providerContext.onClose();
-      }
-      onOpenChange == null ? void 0 : onOpenChange(open2);
-    },
-    caller: TOOLTIP_NAME
-  });
-  const stateAttribute = reactExports.useMemo(() => {
-    return open ? wasOpenDelayedRef.current ? "delayed-open" : "instant-open" : "closed";
-  }, [open]);
-  const handleOpen = reactExports.useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = 0;
-    wasOpenDelayedRef.current = false;
-    setOpen(true);
-  }, [setOpen]);
-  const handleClose = reactExports.useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = 0;
-    setOpen(false);
-  }, [setOpen]);
-  const handleDelayedOpen = reactExports.useCallback(() => {
-    window.clearTimeout(openTimerRef.current);
-    openTimerRef.current = window.setTimeout(() => {
-      wasOpenDelayedRef.current = true;
-      setOpen(true);
-      openTimerRef.current = 0;
-    }, delayDuration);
-  }, [delayDuration, setOpen]);
-  reactExports.useEffect(() => {
-    return () => {
-      if (openTimerRef.current) {
-        window.clearTimeout(openTimerRef.current);
-        openTimerRef.current = 0;
-      }
-    };
-  }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$1, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    TooltipContextProvider,
-    {
-      scope: __scopeTooltip,
-      contentId,
-      open,
-      stateAttribute,
-      trigger,
-      onTriggerChange: setTrigger,
-      onTriggerEnter: reactExports.useCallback(() => {
-        if (providerContext.isOpenDelayedRef.current) handleDelayedOpen();
-        else handleOpen();
-      }, [providerContext.isOpenDelayedRef, handleDelayedOpen, handleOpen]),
-      onTriggerLeave: reactExports.useCallback(() => {
-        if (disableHoverableContent) {
-          handleClose();
-        } else {
-          window.clearTimeout(openTimerRef.current);
-          openTimerRef.current = 0;
-        }
-      }, [handleClose, disableHoverableContent]),
-      onOpen: handleOpen,
-      onClose: handleClose,
-      disableHoverableContent,
-      children
-    }
-  ) });
-};
-Tooltip$2.displayName = TOOLTIP_NAME;
-var TRIGGER_NAME$3 = "TooltipTrigger";
-var TooltipTrigger$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeTooltip, ...triggerProps } = props;
-    const context = useTooltipContext(TRIGGER_NAME$3, __scopeTooltip);
-    const providerContext = useTooltipProviderContext(TRIGGER_NAME$3, __scopeTooltip);
-    const popperScope = usePopperScope(__scopeTooltip);
-    const ref = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
-    const isPointerDownRef = reactExports.useRef(false);
-    const hasPointerMoveOpenedRef = reactExports.useRef(false);
-    const handlePointerUp = reactExports.useCallback(() => isPointerDownRef.current = false, []);
-    reactExports.useEffect(() => {
-      return () => document.removeEventListener("pointerup", handlePointerUp);
-    }, [handlePointerUp]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor, { asChild: true, ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.button,
-      {
-        "aria-describedby": context.open ? context.contentId : void 0,
-        "data-state": context.stateAttribute,
-        ...triggerProps,
-        ref: composedRefs,
-        onPointerMove: composeEventHandlers(props.onPointerMove, (event) => {
-          if (event.pointerType === "touch") return;
-          if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
-            context.onTriggerEnter();
-            hasPointerMoveOpenedRef.current = true;
-          }
-        }),
-        onPointerLeave: composeEventHandlers(props.onPointerLeave, () => {
-          context.onTriggerLeave();
-          hasPointerMoveOpenedRef.current = false;
-        }),
-        onPointerDown: composeEventHandlers(props.onPointerDown, () => {
-          if (context.open) {
-            context.onClose();
-          }
-          isPointerDownRef.current = true;
-          document.addEventListener("pointerup", handlePointerUp, { once: true });
-        }),
-        onFocus: composeEventHandlers(props.onFocus, () => {
-          if (!isPointerDownRef.current) context.onOpen();
-        }),
-        onBlur: composeEventHandlers(props.onBlur, context.onClose),
-        onClick: composeEventHandlers(props.onClick, context.onClose)
-      }
-    ) });
-  }
-);
-TooltipTrigger$1.displayName = TRIGGER_NAME$3;
-var PORTAL_NAME$2 = "TooltipPortal";
-var [PortalProvider$1, usePortalContext$1] = createTooltipContext(PORTAL_NAME$2, {
-  forceMount: void 0
-});
-var TooltipPortal = (props) => {
-  const { __scopeTooltip, forceMount, children, container } = props;
-  const context = useTooltipContext(PORTAL_NAME$2, __scopeTooltip);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider$1, { scope: __scopeTooltip, forceMount, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$2, { asChild: true, container, children }) }) });
-};
-TooltipPortal.displayName = PORTAL_NAME$2;
-var CONTENT_NAME$3 = "TooltipContent";
-var TooltipContent$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const portalContext = usePortalContext$1(CONTENT_NAME$3, props.__scopeTooltip);
-    const { forceMount = portalContext.forceMount, side = "top", ...contentProps } = props;
-    const context = useTooltipContext(CONTENT_NAME$3, props.__scopeTooltip);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.disableHoverableContent ? /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { side, ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentHoverable, { side, ...contentProps, ref: forwardedRef }) });
-  }
-);
-var TooltipContentHoverable = reactExports.forwardRef((props, forwardedRef) => {
-  const context = useTooltipContext(CONTENT_NAME$3, props.__scopeTooltip);
-  const providerContext = useTooltipProviderContext(CONTENT_NAME$3, props.__scopeTooltip);
-  const ref = reactExports.useRef(null);
-  const composedRefs = useComposedRefs(forwardedRef, ref);
-  const [pointerGraceArea, setPointerGraceArea] = reactExports.useState(null);
-  const { trigger, onClose } = context;
-  const content = ref.current;
-  const { onPointerInTransitChange } = providerContext;
-  const handleRemoveGraceArea = reactExports.useCallback(() => {
-    setPointerGraceArea(null);
-    onPointerInTransitChange(false);
-  }, [onPointerInTransitChange]);
-  const handleCreateGraceArea = reactExports.useCallback(
-    (event, hoverTarget) => {
-      const currentTarget = event.currentTarget;
-      const exitPoint = { x: event.clientX, y: event.clientY };
-      const exitSide = getExitSideFromRect(exitPoint, currentTarget.getBoundingClientRect());
-      const paddedExitPoints = getPaddedExitPoints(exitPoint, exitSide);
-      const hoverTargetPoints = getPointsFromRect(hoverTarget.getBoundingClientRect());
-      const graceArea = getHull([...paddedExitPoints, ...hoverTargetPoints]);
-      setPointerGraceArea(graceArea);
-      onPointerInTransitChange(true);
-    },
-    [onPointerInTransitChange]
-  );
-  reactExports.useEffect(() => {
-    return () => handleRemoveGraceArea();
-  }, [handleRemoveGraceArea]);
-  reactExports.useEffect(() => {
-    if (trigger && content) {
-      const handleTriggerLeave = (event) => handleCreateGraceArea(event, content);
-      const handleContentLeave = (event) => handleCreateGraceArea(event, trigger);
-      trigger.addEventListener("pointerleave", handleTriggerLeave);
-      content.addEventListener("pointerleave", handleContentLeave);
-      return () => {
-        trigger.removeEventListener("pointerleave", handleTriggerLeave);
-        content.removeEventListener("pointerleave", handleContentLeave);
-      };
-    }
-  }, [trigger, content, handleCreateGraceArea, handleRemoveGraceArea]);
-  reactExports.useEffect(() => {
-    if (pointerGraceArea) {
-      const handleTrackPointerGrace = (event) => {
-        const target = event.target;
-        const pointerPosition = { x: event.clientX, y: event.clientY };
-        const hasEnteredTarget = (trigger == null ? void 0 : trigger.contains(target)) || (content == null ? void 0 : content.contains(target));
-        const isPointerOutsideGraceArea = !isPointInPolygon(pointerPosition, pointerGraceArea);
-        if (hasEnteredTarget) {
-          handleRemoveGraceArea();
-        } else if (isPointerOutsideGraceArea) {
-          handleRemoveGraceArea();
-          onClose();
-        }
-      };
-      document.addEventListener("pointermove", handleTrackPointerGrace);
-      return () => document.removeEventListener("pointermove", handleTrackPointerGrace);
-    }
-  }, [trigger, content, pointerGraceArea, onClose, handleRemoveGraceArea]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { ...props, ref: composedRefs });
-});
-var [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = createTooltipContext(TOOLTIP_NAME, { isInside: false });
-var Slottable$1 = /* @__PURE__ */ createSlottable("TooltipContent");
-var TooltipContentImpl = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const {
-      __scopeTooltip,
-      children,
-      "aria-label": ariaLabel,
-      onEscapeKeyDown,
-      onPointerDownOutside,
-      ...contentProps
-    } = props;
-    const context = useTooltipContext(CONTENT_NAME$3, __scopeTooltip);
-    const popperScope = usePopperScope(__scopeTooltip);
-    const { onClose } = context;
-    reactExports.useEffect(() => {
-      document.addEventListener(TOOLTIP_OPEN, onClose);
-      return () => document.removeEventListener(TOOLTIP_OPEN, onClose);
-    }, [onClose]);
-    reactExports.useEffect(() => {
-      if (context.trigger) {
-        const handleScroll2 = (event) => {
-          const target = event.target;
-          if (target == null ? void 0 : target.contains(context.trigger)) onClose();
-        };
-        window.addEventListener("scroll", handleScroll2, { capture: true });
-        return () => window.removeEventListener("scroll", handleScroll2, { capture: true });
-      }
-    }, [context.trigger, onClose]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      DismissableLayer,
-      {
-        asChild: true,
-        disableOutsidePointerEvents: false,
-        onEscapeKeyDown,
-        onPointerDownOutside,
-        onFocusOutside: (event) => event.preventDefault(),
-        onDismiss: onClose,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Content$1,
-          {
-            "data-state": context.stateAttribute,
-            ...popperScope,
-            ...contentProps,
-            ref: forwardedRef,
-            style: {
-              ...contentProps.style,
-              // re-namespace exposed content custom properties
-              ...{
-                "--radix-tooltip-content-transform-origin": "var(--radix-popper-transform-origin)",
-                "--radix-tooltip-content-available-width": "var(--radix-popper-available-width)",
-                "--radix-tooltip-content-available-height": "var(--radix-popper-available-height)",
-                "--radix-tooltip-trigger-width": "var(--radix-popper-anchor-width)",
-                "--radix-tooltip-trigger-height": "var(--radix-popper-anchor-height)"
-              }
-            },
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable$1, { children }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(VisuallyHiddenContentContextProvider, { scope: __scopeTooltip, isInside: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root$3, { id: context.contentId, role: "tooltip", children: ariaLabel || children }) })
-            ]
-          }
-        )
-      }
-    );
-  }
-);
-TooltipContent$1.displayName = CONTENT_NAME$3;
-var ARROW_NAME = "TooltipArrow";
-var TooltipArrow = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeTooltip, ...arrowProps } = props;
-    const popperScope = usePopperScope(__scopeTooltip);
-    const visuallyHiddenContentContext = useVisuallyHiddenContentContext(
-      ARROW_NAME,
-      __scopeTooltip
-    );
-    return visuallyHiddenContentContext.isInside ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow, { ...popperScope, ...arrowProps, ref: forwardedRef });
-  }
-);
-TooltipArrow.displayName = ARROW_NAME;
-function getExitSideFromRect(point2, rect) {
-  const top = Math.abs(rect.top - point2.y);
-  const bottom = Math.abs(rect.bottom - point2.y);
-  const right = Math.abs(rect.right - point2.x);
-  const left = Math.abs(rect.left - point2.x);
-  switch (Math.min(top, bottom, right, left)) {
-    case left:
-      return "left";
-    case right:
-      return "right";
-    case top:
-      return "top";
-    case bottom:
-      return "bottom";
-    default:
-      throw new Error("unreachable");
-  }
-}
-function getPaddedExitPoints(exitPoint, exitSide, padding = 5) {
-  const paddedExitPoints = [];
-  switch (exitSide) {
-    case "top":
-      paddedExitPoints.push(
-        { x: exitPoint.x - padding, y: exitPoint.y + padding },
-        { x: exitPoint.x + padding, y: exitPoint.y + padding }
-      );
-      break;
-    case "bottom":
-      paddedExitPoints.push(
-        { x: exitPoint.x - padding, y: exitPoint.y - padding },
-        { x: exitPoint.x + padding, y: exitPoint.y - padding }
-      );
-      break;
-    case "left":
-      paddedExitPoints.push(
-        { x: exitPoint.x + padding, y: exitPoint.y - padding },
-        { x: exitPoint.x + padding, y: exitPoint.y + padding }
-      );
-      break;
-    case "right":
-      paddedExitPoints.push(
-        { x: exitPoint.x - padding, y: exitPoint.y - padding },
-        { x: exitPoint.x - padding, y: exitPoint.y + padding }
-      );
-      break;
-  }
-  return paddedExitPoints;
-}
-function getPointsFromRect(rect) {
-  const { top, right, bottom, left } = rect;
-  return [
-    { x: left, y: top },
-    { x: right, y: top },
-    { x: right, y: bottom },
-    { x: left, y: bottom }
-  ];
-}
-function isPointInPolygon(point2, polygon) {
-  const { x: x3, y: y2 } = point2;
-  let inside = false;
-  for (let i = 0, j2 = polygon.length - 1; i < polygon.length; j2 = i++) {
-    const ii = polygon[i];
-    const jj = polygon[j2];
-    const xi = ii.x;
-    const yi = ii.y;
-    const xj = jj.x;
-    const yj = jj.y;
-    const intersect = yi > y2 !== yj > y2 && x3 < (xj - xi) * (y2 - yi) / (yj - yi) + xi;
-    if (intersect) inside = !inside;
-  }
-  return inside;
-}
-function getHull(points) {
-  const newPoints = points.slice();
-  newPoints.sort((a2, b2) => {
-    if (a2.x < b2.x) return -1;
-    else if (a2.x > b2.x) return 1;
-    else if (a2.y < b2.y) return -1;
-    else if (a2.y > b2.y) return 1;
-    else return 0;
-  });
-  return getHullPresorted(newPoints);
-}
-function getHullPresorted(points) {
-  if (points.length <= 1) return points.slice();
-  const upperHull = [];
-  for (let i = 0; i < points.length; i++) {
-    const p2 = points[i];
-    while (upperHull.length >= 2) {
-      const q2 = upperHull[upperHull.length - 1];
-      const r2 = upperHull[upperHull.length - 2];
-      if ((q2.x - r2.x) * (p2.y - r2.y) >= (q2.y - r2.y) * (p2.x - r2.x)) upperHull.pop();
-      else break;
-    }
-    upperHull.push(p2);
-  }
-  upperHull.pop();
-  const lowerHull = [];
-  for (let i = points.length - 1; i >= 0; i--) {
-    const p2 = points[i];
-    while (lowerHull.length >= 2) {
-      const q2 = lowerHull[lowerHull.length - 1];
-      const r2 = lowerHull[lowerHull.length - 2];
-      if ((q2.x - r2.x) * (p2.y - r2.y) >= (q2.y - r2.y) * (p2.x - r2.x)) lowerHull.pop();
-      else break;
-    }
-    lowerHull.push(p2);
-  }
-  lowerHull.pop();
-  if (upperHull.length === 1 && lowerHull.length === 1 && upperHull[0].x === lowerHull[0].x && upperHull[0].y === lowerHull[0].y) {
-    return upperHull;
-  } else {
-    return upperHull.concat(lowerHull);
-  }
-}
-var Provider = TooltipProvider$1;
-var Root3 = Tooltip$2;
-var Trigger$1 = TooltipTrigger$1;
-var Portal$1 = TooltipPortal;
-var Content2$1 = TooltipContent$1;
-var Arrow2 = TooltipArrow;
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Provider,
-    {
-      "data-slot": "tooltip-provider",
-      delayDuration,
-      ...props
-    }
-  );
-}
-function Tooltip$1({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root3, { "data-slot": "tooltip", ...props }) });
-}
-function TooltipTrigger({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$1, { "data-slot": "tooltip-trigger", ...props });
-}
-function TooltipContent({
-  className,
-  sideOffset = 0,
-  children,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    Content2$1,
-    {
-      "data-slot": "tooltip-content",
-      sideOffset,
-      className: cn(
-        "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
-        className
-      ),
-      ...props,
-      children: [
-        children,
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow2, { className: "bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" })
-      ]
-    }
-  ) });
-}
-const CURRENT_PRICE_STALE_MS = 10 * 60 * 1e3;
-const HISTORICAL_PRICES_ENABLED = false;
-function useIcpPrice() {
-  const { actor, isFetching } = useBackendActor();
-  return useQuery({
-    queryKey: ["icp-price", "current"],
-    queryFn: async () => {
-      if (!actor) throw new Error("Backend actor not ready");
-      return actor.getCurrentIcpPrice();
-    },
-    enabled: !!actor && !isFetching,
-    refetchOnMount: true,
-    staleTime: CURRENT_PRICE_STALE_MS
-  });
-}
-function useHistoricalPrices(dates) {
-  useBackendActor();
-  return useQuery({
-    queryKey: ["icp-price", "historical", dates],
-    queryFn: async () => {
-      return /* @__PURE__ */ new Map();
-    },
-    // When the flag is off, disable the query entirely so it never
-    // fetches and `isFetching` stays false (consumers treat that as
-    // "settled"). The queryFn guard above is a belt-and-suspenders.
-    enabled: HISTORICAL_PRICES_ENABLED,
-    staleTime: Number.POSITIVE_INFINITY
-  });
-}
-const PORTFOLIO_KEY = ["portfolio-stats"];
-const statsKey = (id2) => ["neuron-stats", id2];
-const rewardsKey = (id2) => ["rewards", id2];
-function useRewardHistory(neuronId) {
-  const { actor, isFetching } = useBackendActor();
-  return useQuery({
-    queryKey: ["rewards", neuronId ?? "none"],
-    queryFn: async () => {
-      if (!actor || !neuronId) return [];
-      return actor.getRewardHistory(BigInt(neuronId));
-    },
-    enabled: !!actor && !isFetching && !!neuronId
-  });
-}
-function useSyncStatus(neuronId) {
-  const { actor, isFetching } = useBackendActor();
-  return useQuery({
-    queryKey: ["sync-status", neuronId ?? "none"],
-    queryFn: async () => {
-      if (!actor || !neuronId) throw new Error("No actor or neuron id");
-      return actor.getSyncStatus(BigInt(neuronId));
-    },
-    enabled: !!actor && !isFetching && !!neuronId
-  });
-}
-function useEditSnapshot() {
-  const queryClient2 = useQueryClient();
-  const { actor } = useBackendActor();
-  return useMutation({
-    mutationFn: async (vars) => {
-      if (!actor) throw new Error("Backend actor not ready");
-      return actor.editSnapshot(
-        vars.neuronId,
-        vars.timestamp,
-        vars.newTimestamp,
-        vars.newMaturityE8s
-      );
-    },
-    onSuccess: (_data, vars) => {
-      const id2 = vars.neuronId.toString();
-      void queryClient2.invalidateQueries({ queryKey: rewardsKey(id2) });
-      void queryClient2.invalidateQueries({ queryKey: statsKey(id2) });
-      void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
-    }
-  });
-}
-function useDeleteSnapshot() {
-  const queryClient2 = useQueryClient();
-  const { actor } = useBackendActor();
-  return useMutation({
-    mutationFn: async (vars) => {
-      if (!actor) throw new Error("Backend actor not ready");
-      return actor.deleteSnapshot(vars.neuronId, vars.timestamp);
-    },
-    onSuccess: (_data, vars) => {
-      const id2 = vars.neuronId.toString();
-      void queryClient2.invalidateQueries({ queryKey: rewardsKey(id2) });
-      void queryClient2.invalidateQueries({ queryKey: statsKey(id2) });
-      void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
-    }
-  });
-}
-function useNeuronStats(neuronId) {
-  const { actor, isFetching } = useBackendActor();
-  return useQuery({
-    queryKey: ["neuron-stats", neuronId ?? "none"],
-    queryFn: async () => {
-      if (!actor || !neuronId) throw new Error("No actor or neuron id");
-      return actor.getNeuronStats(BigInt(neuronId));
-    },
-    enabled: !!actor && !isFetching && !!neuronId
-  });
-}
-function usePortfolioStats() {
-  const { actor, isFetching } = useBackendActor();
-  return useQuery({
-    queryKey: ["portfolio-stats"],
-    queryFn: async () => {
-      if (!actor) throw new Error("Backend actor not ready");
-      return actor.getPortfolioStats();
-    },
-    enabled: !!actor && !isFetching
-  });
-}
-function escapeCsvField(value) {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
-function eventLabel(eventType) {
-  if (eventType === "mergedToStake") return "mergedToStake";
-  if (eventType === "externalTopUp") return "externalTopUp";
-  switch (eventType) {
-    case EventType.normalGrowth:
-      return "normalGrowth";
-    case EventType.disburseOrSpawn:
-      return "disburseOrSpawn";
-    case EventType.firstReading:
-      return "firstReading";
-    default:
-      return EventType[eventType] ?? "unknown";
-  }
-}
-function classifyEvent(eventType) {
-  if (eventType === "externalTopUp") return "capital";
-  if (eventType === "mergedToStake") return "reclassify";
-  switch (eventType) {
-    case EventType.normalGrowth:
-      return "reward";
-    case EventType.disburseOrSpawn:
-      return "withdrawal";
-    case EventType.firstReading:
-      return "firstReading";
-    default:
-      return "unknown";
-  }
-}
-function maturityBalance(reward) {
-  const combined = reward.unstakedMaturityE8s + reward.stakedMaturityE8s;
-  return formatIcp(combined, 8, false);
-}
-function deltaIcp(reward) {
-  return formatIcp(reward.deltaE8s, 8, false);
-}
-function stakeDeltaIcp(reward) {
-  return formatIcp(reward.stakeDeltaE8s, 8, false);
-}
-function dateKeyFromTimestamp(ns) {
-  if (ns == null) return null;
-  const ms2 = typeof ns === "number" ? ns : Number(ns / 1000000n);
-  if (!Number.isFinite(ms2) || ms2 <= 0) return null;
-  const date2 = new Date(ms2);
-  if (Number.isNaN(date2.getTime())) return null;
-  const yyyy = date2.getUTCFullYear();
-  const mm = String(date2.getUTCMonth() + 1).padStart(2, "0");
-  const dd = String(date2.getUTCDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-function formatPriceValue(value) {
-  if (value == null || Number.isNaN(value)) return "";
-  return String(value);
-}
-function priceColumns(reward, priceMap) {
-  if (!priceMap) return ["", "", "", ""];
-  const key = dateKeyFromTimestamp(reward.timestamp);
-  if (!key) return ["", "", "", ""];
-  const price = priceMap.get(key);
-  if (!price) return ["", "", "", ""];
-  const icp = Number(reward.deltaE8s) / Number(E8S_PER_ICP);
-  const rewardValueUsd = icp * price.usd;
-  const rewardValuePln = icp * price.pln;
-  return [
-    formatPriceValue(price.usd),
-    formatPriceValue(price.pln),
-    formatPriceValue(rewardValueUsd),
-    formatPriceValue(rewardValuePln)
-  ];
-}
-const HEADER = [
-  "date",
-  "maturity balance",
-  "delta",
-  "event type",
-  "classification",
-  "stakeDelta",
-  "priceUsd",
-  "pricePln",
-  "rewardValueUsd",
-  "rewardValuePln"
-];
-function rewardsToCsv(rewards, priceMap) {
-  const rows = rewards.map((r2) => {
-    const [priceUsd, pricePln, rewardValueUsd, rewardValuePln] = priceColumns(
-      r2,
-      priceMap
-    );
-    return [
-      formatTimestamp(r2.timestamp),
-      maturityBalance(r2),
-      deltaIcp(r2),
-      eventLabel(r2.eventType),
-      classifyEvent(r2.eventType),
-      stakeDeltaIcp(r2),
-      priceUsd,
-      pricePln,
-      rewardValueUsd,
-      rewardValuePln
-    ].map(escapeCsvField).join(",");
-  });
-  return [HEADER.join(","), ...rows].join("\n");
-}
-function rewardsToCombinedCsv(groups, priceMap) {
-  const header = ["neuronId", ...HEADER].join(",");
-  const rows = [];
-  for (const group of groups) {
-    const neuronId = group.neuronId.toString();
-    for (const r2 of group.rewards) {
-      const [priceUsd, pricePln, rewardValueUsd, rewardValuePln] = priceColumns(
-        r2,
-        priceMap
-      );
-      rows.push(
-        [
-          neuronId,
-          formatTimestamp(r2.timestamp),
-          maturityBalance(r2),
-          deltaIcp(r2),
-          eventLabel(r2.eventType),
-          classifyEvent(r2.eventType),
-          stakeDeltaIcp(r2),
-          priceUsd,
-          pricePln,
-          rewardValueUsd,
-          rewardValuePln
-        ].map(escapeCsvField).join(",")
-      );
-    }
-  }
-  return [header, ...rows].join("\n");
-}
-function classifyWtnEvent(eventType) {
-  switch (eventType) {
-    case WtnEventType.capitalAdded:
-      return "capital";
-    case WtnEventType.withdrawal:
-      return "withdrawal";
-    case WtnEventType.organicGrowth:
-      return "reward";
-    default:
-      return "unknown";
-  }
-}
-function formatWtnIcp$1(value) {
-  if (value == null || Number.isNaN(value)) return "";
-  return String(value);
-}
-const WTN_HEADER = [
-  "date",
-  "nicpHeld",
-  "totalIcpPaid",
-  "redeemableIcpValue",
-  "classification"
-];
-function wtnSnapshotsToCsv(snapshots) {
-  const rows = snapshots.map(
-    (s2) => [
-      formatTimestamp(s2.date),
-      formatWtnIcp$1(s2.nicpHeld),
-      formatWtnIcp$1(s2.totalIcpPaid),
-      formatWtnIcp$1(s2.redeemableIcpValue),
-      classifyWtnEvent(s2.eventType)
-    ].map(escapeCsvField).join(",")
-  );
-  return [WTN_HEADER.join(","), ...rows].join("\n");
-}
-const WTN_COMBINED_HEADER = [
-  "id",
-  "type",
-  "date",
-  "nicpHeld",
-  "totalIcpPaid",
-  "redeemableIcpValue",
-  "classification"
-];
-function wtnSnapshotsToCombinedCsv(groups) {
-  const header = WTN_COMBINED_HEADER.join(",");
-  const rows = [];
-  for (const group of groups) {
-    const positionId = group.positionId.toString();
-    for (const s2 of group.snapshots) {
-      rows.push(
-        [
-          positionId,
-          "WTN",
-          formatTimestamp(s2.date),
-          formatWtnIcp$1(s2.nicpHeld),
-          formatWtnIcp$1(s2.totalIcpPaid),
-          formatWtnIcp$1(s2.redeemableIcpValue),
-          classifyWtnEvent(s2.eventType)
-        ].map(escapeCsvField).join(",")
-      );
-    }
-  }
-  return [header, ...rows].join("\n");
-}
-function neuronRewardsToCombinedTypedRows(groups) {
-  const rows = [];
-  for (const group of groups) {
-    const neuronId = group.neuronId.toString();
-    for (const r2 of group.rewards) {
-      rows.push(
-        [
-          neuronId,
-          "NNS",
-          formatTimestamp(r2.timestamp),
-          "",
-          "",
-          "",
-          classifyEvent(r2.eventType)
-        ].map(escapeCsvField).join(",")
-      );
-    }
-  }
-  return rows;
-}
-function downloadCsv(filename, content) {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.style.display = "none";
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
-}
-function DashboardPage() {
-  const { data: neurons, isLoading: neuronsLoading } = useNeurons();
-  const { data: wtnPositions, isLoading: wtnLoading } = useWtnPositions();
-  const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
-  const priceQuery = useIcpPrice();
-  const syncAll = useSyncAllNeurons();
-  const { actor } = useBackendActor();
-  const navigate = useNavigate();
-  const [isExporting, setIsExporting] = reactExports.useState(false);
-  const neuronCount = (neurons == null ? void 0 : neurons.length) ?? 0;
-  const wtnCount = (wtnPositions == null ? void 0 : wtnPositions.length) ?? 0;
-  const isEmpty = !neuronsLoading && !wtnLoading && neuronCount === 0 && wtnCount === 0;
-  const handleSyncAll = () => {
-    syncAll.mutate(void 0, {
-      onSuccess: (results) => {
-        const failed = results.filter(
-          (r2) => r2.status === "failed"
-        );
-        const needsHotkey = results.some(
-          (r2) => r2.status === "hotkeyRequired"
-        );
-        if (failed.length > 0) {
-          ue.error(
-            `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`
-          );
-        } else if (needsHotkey) {
-          ue.warning("Synced — some neurons need a hotkey to fully sync");
-        } else {
-          ue.success("Synced all neurons with NNS governance");
-        }
-      },
-      onError: (err) => ue.error(err.message)
-    });
-  };
-  const handleRefreshPrice = () => {
-    priceQuery.refetch();
-  };
-  const handleExportCsv = async () => {
-    if (!actor || !neurons || neurons.length === 0 && (!wtnPositions || wtnPositions.length === 0))
-      return;
-    setIsExporting(true);
-    try {
-      const groups = await Promise.all(
-        neurons.map(async (neuron) => {
-          const rewards = await actor.getRewardHistory(
-            neuron.id
-          );
-          return { neuronId: neuron.id, rewards };
-        })
-      );
-      const nonEmpty = groups.filter((g2) => g2.rewards.length > 0);
-      const wtnGroups = await Promise.all(
-        (wtnPositions ?? []).map(async (position) => {
-          const snapshots = await actor.getWtnSnapshots(
-            position.id
-          );
-          return { positionId: position.id, snapshots };
-        })
-      );
-      const wtnNonEmpty = wtnGroups.filter((g2) => g2.snapshots.length > 0);
-      if (nonEmpty.length === 0 && wtnNonEmpty.length === 0) {
-        ue.info("No reward snapshots to export yet");
-        return;
-      }
-      const dateSet = /* @__PURE__ */ new Set();
-      for (const g2 of nonEmpty) {
-        for (const r2 of g2.rewards) {
-          const ms2 = Number(r2.timestamp / 1000000n);
-          if (!Number.isFinite(ms2) || ms2 <= 0) continue;
-          const d2 = new Date(ms2);
-          if (Number.isNaN(d2.getTime())) continue;
-          const pad2 = (n2) => String(n2).padStart(2, "0");
-          dateSet.add(
-            `${d2.getUTCFullYear()}-${pad2(d2.getUTCMonth() + 1)}-${pad2(d2.getUTCDate())}`
-          );
-        }
-      }
-      const priceMap = /* @__PURE__ */ new Map();
-      if (HISTORICAL_PRICES_ENABLED) ;
-      const nnsCsv = rewardsToCombinedCsv(groups, priceMap);
-      const wtnCsv = wtnSnapshotsToCombinedCsv(wtnNonEmpty);
-      let csv;
-      if (wtnNonEmpty.length > 0 && nonEmpty.length > 0) {
-        const nnsTypedRows = neuronRewardsToCombinedTypedRows(groups);
-        const wtnRows = wtnCsv.split("\n").slice(1);
-        csv = [
-          "id,type,date,nicpHeld,totalIcpPaid,redeemableIcpValue,classification",
-          ...nnsTypedRows,
-          ...wtnRows
-        ].join("\n");
-      } else if (wtnNonEmpty.length > 0) {
-        csv = wtnCsv;
-      } else {
-        csv = nnsCsv;
-      }
-      downloadCsv("portfolio-export.csv", csv);
-      const totalPositions = nonEmpty.length + wtnNonEmpty.length;
-      ue.success(
-        `Exported ${totalPositions} position${totalPositions === 1 ? "" : "s"} to CSV`
-      );
-    } catch (err) {
-      ue.error(err instanceof Error ? err.message : "Failed to export CSV");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "div",
-      {
-        "aria-hidden": true,
-        className: "pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40",
-        style: {
-          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.12) 0%, oklch(var(--background) / 0) 70%)"
-        }
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-2xl font-semibold tracking-tight sm:text-3xl", children: "Portfolio" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1 text-sm", children: "Track staked ICP, maturity growth, and governance rewards across your NNS neurons." })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              variant: "outline",
-              onClick: handleSyncAll,
-              disabled: syncAll.isPending || isEmpty,
-              "data-ocid": "dashboard.refresh_all",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  RefreshCw,
-                  {
-                    className: syncAll.isPending ? "size-4 animate-spin" : "size-4"
-                  }
-                ),
-                "Refresh All"
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { delayDuration: 300, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip$1, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              Button,
-              {
-                variant: "outline",
-                onClick: handleExportCsv,
-                disabled: isExporting || isEmpty || neuronsLoading,
-                "data-ocid": "dashboard.export_csv",
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Download,
-                    {
-                      className: isExporting ? "size-4 animate-spin" : "size-4"
-                    }
-                  ),
-                  "Export CSV"
-                ]
-              }
-            ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: isEmpty ? "Add a neuron or WTN position before exporting" : "Download all neurons' and WTN positions' histories as one CSV" })
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              onClick: () => navigate({ to: "/add-neuron" }),
-              "data-ocid": "dashboard.add_neuron",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "size-4" }),
-                "Add Neuron"
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Button,
-            {
-              variant: "outline",
-              onClick: () => navigate({ to: "/add-wtn" }),
-              "data-ocid": "dashboard.add_wtn",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-4" }),
-                "Add WTN Neuron"
-              ]
-            }
-          )
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-8", "data-ocid": "dashboard.portfolio_summary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        PortfolioSummary,
-        {
-          totalStaked: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
-          totalCapitalContributed: (portfolio == null ? void 0 : portfolio.totalCapitalContributedE8s) ?? null,
-          totalMaturity: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
-          blendedApy: (portfolio == null ? void 0 : portfolio.blendedApy) ?? null,
-          rewardsThisMonth: (portfolio == null ? void 0 : portfolio.totalRewardsThisMonthE8s) ?? null,
-          neuronCount: (portfolio == null ? void 0 : portfolio.neuronCount) ?? null,
-          loading: portfolioLoading
-        }
-      ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-6", "data-ocid": "dashboard.portfolio_value", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        PortfolioValuation,
-        {
-          totalStakedE8s: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
-          totalMaturityE8s: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
-          priceQuery,
-          onRefreshPrice: handleRefreshPrice,
-          loading: portfolioLoading
-        }
-      ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-10", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground font-display text-lg font-semibold tracking-tight", children: "Positions" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono", children: ((neurons == null ? void 0 : neurons.length) ?? 0) + ((wtnPositions == null ? void 0 : wtnPositions.length) ?? 0) })
-        ] }),
-        neuronsLoading || wtnLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(NeuronGridSkeleton, {}) : isEmpty ? /* @__PURE__ */ jsxRuntimeExports.jsx(EmptyState, { onAdd: () => navigate({ to: "/add-neuron" }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", children: [
-          neurons == null ? void 0 : neurons.map((neuron, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-            NeuronCard,
-            {
-              neuron,
-              index: i
-            },
-            neuron.id.toString()
-          )),
-          wtnPositions == null ? void 0 : wtnPositions.map((position, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-            WtnCard,
-            {
-              position,
-              index: ((neurons == null ? void 0 : neurons.length) ?? 0) + i
-            },
-            `wtn-${position.id.toString()}`
-          ))
-        ] })
-      ] })
-    ] })
-  ] });
-}
-function PortfolioSummary({
-  totalStaked,
-  totalCapitalContributed,
-  totalMaturity,
-  blendedApy,
-  rewardsThisMonth,
-  neuronCount,
-  loading
-}) {
-  const stats = [
-    {
-      label: "Total Staked",
-      value: formatIcp(totalStaked, 2),
-      icon: Wallet,
-      accent: "text-primary",
-      hint: !loading && neuronCount != null ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}` : null
-    },
-    {
-      label: "Total Capital Contributed",
-      value: formatIcp(totalCapitalContributed, 2),
-      icon: Landmark,
-      accent: "text-muted-foreground",
-      hint: "Initial stakes + top-ups"
-    },
-    {
-      label: "Total Maturity",
-      value: formatIcp(totalMaturity, 2),
-      icon: Coins,
-      accent: "text-accent",
-      hint: "Withdrawable + staked"
-    },
-    {
-      label: "Blended APY",
-      value: formatApy(blendedApy),
-      icon: TrendingUp,
-      accent: blendedApy != null && blendedApy > 0 ? "text-primary" : "text-muted-foreground",
-      hint: blendedApy === 0 ? "Insufficient history" : null
-    },
-    {
-      label: "Earned This Month",
-      value: formatIcp(rewardsThisMonth, 2),
-      icon: Sparkles,
-      accent: "text-primary",
-      hint: "ICP rewards this month"
-    }
-  ];
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: stat.label }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(stat.icon, { className: cn("size-4", stat.accent) })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3", children: [
-      loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-32" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-2xl font-semibold tracking-tight", children: stat.value }),
-      stat.hint && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1 font-mono text-xs", children: stat.hint })
-    ] })
-  ] }, stat.label)) });
-}
-function PortfolioValuation({
-  totalStakedE8s,
-  totalMaturityE8s,
-  priceQuery,
-  onRefreshPrice,
-  loading
-}) {
-  const price = priceQuery.data ?? null;
-  const priceLoading = priceQuery.isLoading;
-  const priceStale = (price == null ? void 0 : price.cached) === true;
-  const totalE8s = totalStakedE8s != null && totalMaturityE8s != null ? totalStakedE8s + totalMaturityE8s : null;
-  const icpAmount = totalE8s != null ? Number(totalE8s / E8S_PER_ICP) + Number(totalE8s % E8S_PER_ICP) / Number(E8S_PER_ICP) : null;
-  const usdValue = icpAmount != null && (price == null ? void 0 : price.usd) != null ? icpAmount * price.usd : null;
-  const plnValue = icpAmount != null && (price == null ? void 0 : price.pln) != null ? icpAmount * price.pln : null;
-  const showValueLoading = loading || priceLoading;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "bg-card/60 border-border/60 overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: "Current Portfolio Value" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1", children: [
-        showValueLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-9 w-40" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-3xl font-semibold tracking-tight", children: formatUsd(usdValue) }),
-        !showValueLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value-pill", "data-ocid": "dashboard.value.pln", children: formatPln(plnValue) })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1.5 font-mono text-xs", children: icpAmount != null ? `${formatIcpCompact(totalE8s)} total` : "—" })
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-start gap-2 lg:items-end", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "span",
-          {
-            className: cn(
-              priceStale ? "price-stale" : "price-badge",
-              priceLoading && "opacity-60"
-            ),
-            "data-ocid": "dashboard.price_badge",
-            title: (price == null ? void 0 : price.timestamp) != null ? `Last updated ${formatTimestampDateTime(price.timestamp)}` : void 0,
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "span",
-                {
-                  className: cn(
-                    "size-1.5 rounded-full",
-                    priceStale ? "bg-warning" : "bg-success"
-                  ),
-                  style: { backgroundColor: "currentColor" }
-                }
-              ),
-              priceLoading ? "Loading price…" : price ? `ICP ${formatUsd(price.usd)} · ${formatPln(price.pln)}` : "Price unavailable"
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Button,
-          {
-            variant: "outline",
-            size: "sm",
-            onClick: onRefreshPrice,
-            disabled: priceQuery.isFetching,
-            "data-ocid": "dashboard.refresh_price",
-            "aria-label": "Refresh ICP price",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                RefreshCw,
-                {
-                  className: priceQuery.isFetching ? "size-4 animate-spin" : "size-4"
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "Refresh price" })
-            ]
-          }
-        )
-      ] }),
-      (price == null ? void 0 : price.timestamp) != null && !priceLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px]", children: [
-        "Updated ",
-        formatTimestampDateTime(price.timestamp),
-        priceStale ? " · cached" : ""
-      ] })
-    ] })
-  ] }) }) });
-}
-function NeuronCard({ neuron, index: index2 }) {
-  const idStr = neuron.id.toString();
-  const { data: stats } = useNeuronStats(idStr);
-  const { data: syncStatus } = useSyncStatus(idStr);
-  const { data: syncError } = useSyncError(
-    syncStatus === "failed" ? idStr : null
-  );
-  const maturityE8s = (stats == null ? void 0 : stats.totalRewardsE8s) ?? 0n;
-  const maturityPercent = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    motion.div,
-    {
-      initial: { opacity: 0, y: 12 },
-      animate: { opacity: 1, y: 0 },
-      transition: { duration: 0.3, delay: index2 * 0.06 },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Link,
-        {
-          to: "/neuron-detail/$neuronId",
-          params: { neuronId: idStr },
-          "data-ocid": `dashboard.neuron.item.${index2 + 1}`,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 transition-smooth hover:border-primary/40 hover:shadow-elevated h-full", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5 min-w-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrainCircuit, { className: "size-4.5" }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "font-mono text-sm font-semibold truncate", children: neuron.name || shortenNeuronId(neuron.id) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px] truncate", children: shortenPrincipal(neuron.ownerId.toString(), 8) })
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                SyncStatusBadge$1,
-                {
-                  status: syncStatus ?? null,
-                  errorReason: syncError ?? null
-                }
-              )
-            ] }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Maturity" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(maturityE8s) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "span",
-                    {
-                      className: cn(
-                        "font-mono text-xs",
-                        maturityPercent >= 0 ? "text-primary" : "text-destructive"
-                      ),
-                      children: formatPercent(maturityPercent)
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(neuron.startDate) })
-              ] })
-            ] })
-          ] })
-        }
-      )
-    }
-  );
-}
-function WtnCard({
-  position,
-  index: index2
-}) {
-  const idStr = position.id.toString();
-  const { data: stats } = useWtnStats(idStr);
-  const redeemableIcp = (stats == null ? void 0 : stats.redeemableIcpValue) ?? 0;
-  const totalEarned = (stats == null ? void 0 : stats.totalEarned) ?? 0;
-  const percentReturn = (stats == null ? void 0 : stats.percentReturn) ?? 0;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    motion.div,
-    {
-      initial: { opacity: 0, y: 12 },
-      animate: { opacity: 1, y: 0 },
-      transition: { duration: 0.3, delay: index2 * 0.06 },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Link,
-        {
-          to: "/wtn-detail/$positionId",
-          params: { positionId: idStr },
-          "data-ocid": `dashboard.wtn.item.${index2 + 1}`,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 transition-smooth hover:border-accent/40 hover:shadow-elevated h-full", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5 min-w-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-4.5" }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "font-mono text-sm font-semibold truncate", children: position.name || `WTN #${idStr}` }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px] truncate", children: shortenPrincipal(position.ownerId.toString(), 8) })
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                Badge,
-                {
-                  variant: "outline",
-                  className: "border-accent/40 bg-accent/10 text-accent text-[10px]",
-                  "data-ocid": `dashboard.wtn.badge.${index2 + 1}`,
-                  children: "WTN"
-                }
-              )
-            ] }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Redeemable" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(
-                    BigInt(Math.trunc(redeemableIcp * Number(E8S_PER_ICP)))
-                  ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "span",
-                    {
-                      className: cn(
-                        "font-mono text-xs",
-                        percentReturn >= 0 ? "text-primary" : "text-destructive"
-                      ),
-                      children: formatPercent(percentReturn)
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px] mt-1", children: [
-                  "Earned",
-                  " ",
-                  formatIcpCompact(
-                    BigInt(Math.trunc(totalEarned * Number(E8S_PER_ICP)))
-                  ),
-                  " ",
-                  "ICP"
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(position.startDate) })
-              ] })
-            ] })
-          ] })
-        }
-      )
-    }
-  );
-}
-function SyncStatusBadge$1({
-  status,
-  errorReason
-}) {
-  if (status === "failed") {
-    const label = errorReason ? `Sync failed: ${errorReason}` : "Sync failed";
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Badge,
-      {
-        variant: "outline",
-        className: "border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[10px] max-w-[180px] truncate",
-        "data-ocid": "dashboard.neuron.status.failed",
-        title: label,
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-destructive size-1.5 rounded-full" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: label })
-        ]
-      }
-    );
-  }
-  if (status === "hotkeyRequired") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Badge,
-      {
-        variant: "outline",
-        className: "border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]",
-        "data-ocid": "dashboard.neuron.status.hotkey_required",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent size-1.5 rounded-full" }),
-          "Hotkey required"
-        ]
-      }
-    );
-  }
-  if (status === "synced") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Badge,
-      {
-        variant: "outline",
-        className: "border-primary/30 bg-primary/5 text-primary gap-1 text-[10px]",
-        "data-ocid": "dashboard.neuron.status.synced",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary size-1.5 rounded-full" }),
-          "Synced"
-        ]
-      }
-    );
-  }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    Badge,
-    {
-      variant: "outline",
-      className: "border-border bg-muted text-muted-foreground gap-1 text-[10px]",
-      "data-ocid": "dashboard.neuron.status.pending",
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-muted-foreground size-1.5 rounded-full" }),
-        "Pending"
-      ]
-    }
-  );
-}
-function NeuronGridSkeleton() {
-  const cards = [0, 1, 2];
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", children: cards.map((n2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-10 w-full" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-2/3" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-4 w-1/2" })
-    ] })
-  ] }, `skeleton-card-${n2}`)) });
-}
-function EmptyState({ onAdd }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "div",
-    {
-      className: "bg-muted/30 border-border/60 flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center",
-      "data-ocid": "dashboard.empty_state",
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary/10 text-primary mb-4 flex size-14 items-center justify-center rounded-2xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrainCircuit, { className: "size-7" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-foreground font-display text-lg font-semibold", children: "No neurons tracked yet" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-2 max-w-sm text-sm", children: "Add your first NNS neuron to start tracking staked ICP, maturity growth, and governance reward events." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Button,
-          {
-            onClick: onAdd,
-            className: "mt-6",
-            "data-ocid": "dashboard.empty_state.add_neuron",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "size-4" }),
-              "Add your first neuron"
-            ]
-          }
-        )
-      ]
-    }
-  );
-}
-var AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
-var AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
-var EVENT_OPTIONS = { bubbles: false, cancelable: true };
-var FOCUS_SCOPE_NAME = "FocusScope";
-var FocusScope = reactExports.forwardRef((props, forwardedRef) => {
-  const {
-    loop = false,
-    trapped = false,
-    onMountAutoFocus: onMountAutoFocusProp,
-    onUnmountAutoFocus: onUnmountAutoFocusProp,
-    ...scopeProps
-  } = props;
-  const [container, setContainer] = reactExports.useState(null);
-  const onMountAutoFocus = useCallbackRef$1(onMountAutoFocusProp);
-  const onUnmountAutoFocus = useCallbackRef$1(onUnmountAutoFocusProp);
-  const lastFocusedElementRef = reactExports.useRef(null);
-  const composedRefs = useComposedRefs(forwardedRef, (node) => setContainer(node));
-  const focusScope = reactExports.useRef({
-    paused: false,
-    pause() {
-      this.paused = true;
-    },
-    resume() {
-      this.paused = false;
-    }
-  }).current;
-  reactExports.useEffect(() => {
-    if (trapped) {
-      let handleFocusIn2 = function(event) {
-        if (focusScope.paused || !container) return;
-        const target = event.target;
-        if (container.contains(target)) {
-          lastFocusedElementRef.current = target;
-        } else {
-          focus(lastFocusedElementRef.current, { select: true });
-        }
-      }, handleFocusOut2 = function(event) {
-        if (focusScope.paused || !container) return;
-        const relatedTarget = event.relatedTarget;
-        if (relatedTarget === null) return;
-        if (!container.contains(relatedTarget)) {
-          focus(lastFocusedElementRef.current, { select: true });
-        }
-      }, handleMutations2 = function(mutations) {
-        const focusedElement = document.activeElement;
-        if (focusedElement !== document.body) return;
-        for (const mutation of mutations) {
-          if (mutation.removedNodes.length > 0) focus(container);
-        }
-      };
-      document.addEventListener("focusin", handleFocusIn2);
-      document.addEventListener("focusout", handleFocusOut2);
-      const mutationObserver = new MutationObserver(handleMutations2);
-      if (container) mutationObserver.observe(container, { childList: true, subtree: true });
-      return () => {
-        document.removeEventListener("focusin", handleFocusIn2);
-        document.removeEventListener("focusout", handleFocusOut2);
-        mutationObserver.disconnect();
-      };
-    }
-  }, [trapped, container, focusScope.paused]);
-  reactExports.useEffect(() => {
-    if (container) {
-      focusScopesStack.add(focusScope);
-      const previouslyFocusedElement = document.activeElement;
-      const hasFocusedCandidate = container.contains(previouslyFocusedElement);
-      if (!hasFocusedCandidate) {
-        const mountEvent = new CustomEvent(AUTOFOCUS_ON_MOUNT, EVENT_OPTIONS);
-        container.addEventListener(AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
-        container.dispatchEvent(mountEvent);
-        if (!mountEvent.defaultPrevented) {
-          focusFirst(removeLinks(getTabbableCandidates(container)), { select: true });
-          if (document.activeElement === previouslyFocusedElement) {
-            focus(container);
-          }
-        }
-      }
-      return () => {
-        container.removeEventListener(AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
-        setTimeout(() => {
-          const unmountEvent = new CustomEvent(AUTOFOCUS_ON_UNMOUNT, EVENT_OPTIONS);
-          container.addEventListener(AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
-          container.dispatchEvent(unmountEvent);
-          if (!unmountEvent.defaultPrevented) {
-            focus(previouslyFocusedElement ?? document.body, { select: true });
-          }
-          container.removeEventListener(AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
-          focusScopesStack.remove(focusScope);
-        }, 0);
-      };
-    }
-  }, [container, onMountAutoFocus, onUnmountAutoFocus, focusScope]);
-  const handleKeyDown = reactExports.useCallback(
-    (event) => {
-      if (!loop && !trapped) return;
-      if (focusScope.paused) return;
-      const isTabKey = event.key === "Tab" && !event.altKey && !event.ctrlKey && !event.metaKey;
-      const focusedElement = document.activeElement;
-      if (isTabKey && focusedElement) {
-        const container2 = event.currentTarget;
-        const [first, last2] = getTabbableEdges(container2);
-        const hasTabbableElementsInside = first && last2;
-        if (!hasTabbableElementsInside) {
-          if (focusedElement === container2) event.preventDefault();
-        } else {
-          if (!event.shiftKey && focusedElement === last2) {
-            event.preventDefault();
-            if (loop) focus(first, { select: true });
-          } else if (event.shiftKey && focusedElement === first) {
-            event.preventDefault();
-            if (loop) focus(last2, { select: true });
-          }
-        }
-      }
-    },
-    [loop, trapped, focusScope.paused]
-  );
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { tabIndex: -1, ...scopeProps, ref: composedRefs, onKeyDown: handleKeyDown });
-});
-FocusScope.displayName = FOCUS_SCOPE_NAME;
-function focusFirst(candidates, { select = false } = {}) {
-  const previouslyFocusedElement = document.activeElement;
-  for (const candidate of candidates) {
-    focus(candidate, { select });
-    if (document.activeElement !== previouslyFocusedElement) return;
-  }
-}
-function getTabbableEdges(container) {
-  const candidates = getTabbableCandidates(container);
-  const first = findVisible(candidates, container);
-  const last2 = findVisible(candidates.reverse(), container);
-  return [first, last2];
-}
-function getTabbableCandidates(container) {
-  const nodes = [];
-  const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
-    acceptNode: (node) => {
-      const isHiddenInput = node.tagName === "INPUT" && node.type === "hidden";
-      if (node.disabled || node.hidden || isHiddenInput) return NodeFilter.FILTER_SKIP;
-      return node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-    }
-  });
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  return nodes;
-}
-function findVisible(elements, container) {
-  for (const element of elements) {
-    if (!isHidden(element, { upTo: container })) return element;
-  }
-}
-function isHidden(node, { upTo }) {
-  if (getComputedStyle(node).visibility === "hidden") return true;
-  while (node) {
-    if (upTo !== void 0 && node === upTo) return false;
-    if (getComputedStyle(node).display === "none") return true;
-    node = node.parentElement;
-  }
-  return false;
-}
-function isSelectableInput(element) {
-  return element instanceof HTMLInputElement && "select" in element;
-}
-function focus(element, { select = false } = {}) {
-  if (element && element.focus) {
-    const previouslyFocusedElement = document.activeElement;
-    element.focus({ preventScroll: true });
-    if (element !== previouslyFocusedElement && isSelectableInput(element) && select)
-      element.select();
-  }
-}
-var focusScopesStack = createFocusScopesStack();
-function createFocusScopesStack() {
-  let stack = [];
-  return {
-    add(focusScope) {
-      const activeFocusScope = stack[0];
-      if (focusScope !== activeFocusScope) {
-        activeFocusScope == null ? void 0 : activeFocusScope.pause();
-      }
-      stack = arrayRemove(stack, focusScope);
-      stack.unshift(focusScope);
-    },
-    remove(focusScope) {
-      var _a2;
-      stack = arrayRemove(stack, focusScope);
-      (_a2 = stack[0]) == null ? void 0 : _a2.resume();
-    }
-  };
-}
-function arrayRemove(array2, item) {
-  const updatedArray = [...array2];
-  const index2 = updatedArray.indexOf(item);
-  if (index2 !== -1) {
-    updatedArray.splice(index2, 1);
-  }
-  return updatedArray;
-}
-function removeLinks(items) {
-  return items.filter((item) => item.tagName !== "A");
-}
-var count = 0;
-function useFocusGuards() {
-  reactExports.useEffect(() => {
-    const edgeGuards = document.querySelectorAll("[data-radix-focus-guard]");
-    document.body.insertAdjacentElement("afterbegin", edgeGuards[0] ?? createFocusGuard());
-    document.body.insertAdjacentElement("beforeend", edgeGuards[1] ?? createFocusGuard());
-    count++;
-    return () => {
-      if (count === 1) {
-        document.querySelectorAll("[data-radix-focus-guard]").forEach((node) => node.remove());
-      }
-      count--;
-    };
-  }, []);
-}
-function createFocusGuard() {
-  const element = document.createElement("span");
-  element.setAttribute("data-radix-focus-guard", "");
-  element.tabIndex = 0;
-  element.style.outline = "none";
-  element.style.opacity = "0";
-  element.style.position = "fixed";
-  element.style.pointerEvents = "none";
-  return element;
-}
-var __assign = function() {
-  __assign = Object.assign || function __assign2(t2) {
-    for (var s2, i = 1, n2 = arguments.length; i < n2; i++) {
-      s2 = arguments[i];
-      for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2)) t2[p2] = s2[p2];
-    }
-    return t2;
-  };
-  return __assign.apply(this, arguments);
-};
-function __rest(s2, e3) {
-  var t2 = {};
-  for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2) && e3.indexOf(p2) < 0)
-    t2[p2] = s2[p2];
-  if (s2 != null && typeof Object.getOwnPropertySymbols === "function")
-    for (var i = 0, p2 = Object.getOwnPropertySymbols(s2); i < p2.length; i++) {
-      if (e3.indexOf(p2[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s2, p2[i]))
-        t2[p2[i]] = s2[p2[i]];
-    }
-  return t2;
-}
-function __spreadArray(to, from, pack) {
-  if (pack || arguments.length === 2) for (var i = 0, l2 = from.length, ar; i < l2; i++) {
-    if (ar || !(i in from)) {
-      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-      ar[i] = from[i];
-    }
-  }
-  return to.concat(ar || Array.prototype.slice.call(from));
-}
-typeof SuppressedError === "function" ? SuppressedError : function(error, suppressed, message) {
-  var e3 = new Error(message);
-  return e3.name = "SuppressedError", e3.error = error, e3.suppressed = suppressed, e3;
-};
-var zeroRightClassName = "right-scroll-bar-position";
-var fullWidthClassName = "width-before-scroll-bar";
-var noScrollbarsClassName = "with-scroll-bars-hidden";
-var removedBarSizeVariable = "--removed-body-scroll-bar-size";
-function assignRef(ref, value) {
-  if (typeof ref === "function") {
-    ref(value);
-  } else if (ref) {
-    ref.current = value;
-  }
-  return ref;
-}
-function useCallbackRef(initialValue, callback) {
-  var ref = reactExports.useState(function() {
-    return {
-      // value
-      value: initialValue,
-      // last callback
-      callback,
-      // "memoized" public interface
-      facade: {
-        get current() {
-          return ref.value;
-        },
-        set current(value) {
-          var last2 = ref.value;
-          if (last2 !== value) {
-            ref.value = value;
-            ref.callback(value, last2);
-          }
-        }
-      }
-    };
-  })[0];
-  ref.callback = callback;
-  return ref.facade;
-}
-var useIsomorphicLayoutEffect = typeof window !== "undefined" ? reactExports.useLayoutEffect : reactExports.useEffect;
-var currentValues = /* @__PURE__ */ new WeakMap();
-function useMergeRefs(refs, defaultValue) {
-  var callbackRef = useCallbackRef(null, function(newValue) {
-    return refs.forEach(function(ref) {
-      return assignRef(ref, newValue);
-    });
-  });
-  useIsomorphicLayoutEffect(function() {
-    var oldValue = currentValues.get(callbackRef);
-    if (oldValue) {
-      var prevRefs_1 = new Set(oldValue);
-      var nextRefs_1 = new Set(refs);
-      var current_1 = callbackRef.current;
-      prevRefs_1.forEach(function(ref) {
-        if (!nextRefs_1.has(ref)) {
-          assignRef(ref, null);
-        }
-      });
-      nextRefs_1.forEach(function(ref) {
-        if (!prevRefs_1.has(ref)) {
-          assignRef(ref, current_1);
-        }
-      });
-    }
-    currentValues.set(callbackRef, refs);
-  }, [refs]);
-  return callbackRef;
-}
-function ItoI(a2) {
-  return a2;
-}
-function innerCreateMedium(defaults2, middleware) {
-  if (middleware === void 0) {
-    middleware = ItoI;
-  }
-  var buffer = [];
-  var assigned = false;
-  var medium = {
-    read: function() {
-      if (assigned) {
-        throw new Error("Sidecar: could not `read` from an `assigned` medium. `read` could be used only with `useMedium`.");
-      }
-      if (buffer.length) {
-        return buffer[buffer.length - 1];
-      }
-      return defaults2;
-    },
-    useMedium: function(data) {
-      var item = middleware(data, assigned);
-      buffer.push(item);
-      return function() {
-        buffer = buffer.filter(function(x3) {
-          return x3 !== item;
-        });
-      };
-    },
-    assignSyncMedium: function(cb) {
-      assigned = true;
-      while (buffer.length) {
-        var cbs = buffer;
-        buffer = [];
-        cbs.forEach(cb);
-      }
-      buffer = {
-        push: function(x3) {
-          return cb(x3);
-        },
-        filter: function() {
-          return buffer;
-        }
-      };
-    },
-    assignMedium: function(cb) {
-      assigned = true;
-      var pendingQueue = [];
-      if (buffer.length) {
-        var cbs = buffer;
-        buffer = [];
-        cbs.forEach(cb);
-        pendingQueue = buffer;
-      }
-      var executeQueue = function() {
-        var cbs2 = pendingQueue;
-        pendingQueue = [];
-        cbs2.forEach(cb);
-      };
-      var cycle = function() {
-        return Promise.resolve().then(executeQueue);
-      };
-      cycle();
-      buffer = {
-        push: function(x3) {
-          pendingQueue.push(x3);
-          cycle();
-        },
-        filter: function(filter2) {
-          pendingQueue = pendingQueue.filter(filter2);
-          return buffer;
-        }
-      };
-    }
-  };
-  return medium;
-}
-function createSidecarMedium(options) {
-  if (options === void 0) {
-    options = {};
-  }
-  var medium = innerCreateMedium(null);
-  medium.options = __assign({ async: true, ssr: false }, options);
-  return medium;
-}
-var SideCar$1 = function(_a2) {
-  var sideCar = _a2.sideCar, rest = __rest(_a2, ["sideCar"]);
-  if (!sideCar) {
-    throw new Error("Sidecar: please provide `sideCar` property to import the right car");
-  }
-  var Target = sideCar.read();
-  if (!Target) {
-    throw new Error("Sidecar medium not found");
-  }
-  return reactExports.createElement(Target, __assign({}, rest));
-};
-SideCar$1.isSideCarExport = true;
-function exportSidecar(medium, exported) {
-  medium.useMedium(exported);
-  return SideCar$1;
-}
-var effectCar = createSidecarMedium();
-var nothing = function() {
-  return;
-};
-var RemoveScroll = reactExports.forwardRef(function(props, parentRef) {
-  var ref = reactExports.useRef(null);
-  var _a2 = reactExports.useState({
-    onScrollCapture: nothing,
-    onWheelCapture: nothing,
-    onTouchMoveCapture: nothing
-  }), callbacks = _a2[0], setCallbacks = _a2[1];
-  var forwardProps = props.forwardProps, children = props.children, className = props.className, removeScrollBar = props.removeScrollBar, enabled = props.enabled, shards = props.shards, sideCar = props.sideCar, noRelative = props.noRelative, noIsolation = props.noIsolation, inert = props.inert, allowPinchZoom = props.allowPinchZoom, _b2 = props.as, Container = _b2 === void 0 ? "div" : _b2, gapMode = props.gapMode, rest = __rest(props, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noRelative", "noIsolation", "inert", "allowPinchZoom", "as", "gapMode"]);
-  var SideCar2 = sideCar;
-  var containerRef = useMergeRefs([ref, parentRef]);
-  var containerProps = __assign(__assign({}, rest), callbacks);
-  return reactExports.createElement(
-    reactExports.Fragment,
-    null,
-    enabled && reactExports.createElement(SideCar2, { sideCar: effectCar, removeScrollBar, shards, noRelative, noIsolation, inert, setCallbacks, allowPinchZoom: !!allowPinchZoom, lockRef: ref, gapMode }),
-    forwardProps ? reactExports.cloneElement(reactExports.Children.only(children), __assign(__assign({}, containerProps), { ref: containerRef })) : reactExports.createElement(Container, __assign({}, containerProps, { className, ref: containerRef }), children)
-  );
-});
-RemoveScroll.defaultProps = {
-  enabled: true,
-  removeScrollBar: true,
-  inert: false
-};
-RemoveScroll.classNames = {
-  fullWidth: fullWidthClassName,
-  zeroRight: zeroRightClassName
-};
-var getNonce = function() {
-  if (typeof __webpack_nonce__ !== "undefined") {
-    return __webpack_nonce__;
-  }
-  return void 0;
-};
-function makeStyleTag() {
-  if (!document)
-    return null;
-  var tag = document.createElement("style");
-  tag.type = "text/css";
-  var nonce = getNonce();
-  if (nonce) {
-    tag.setAttribute("nonce", nonce);
-  }
-  return tag;
-}
-function injectStyles(tag, css) {
-  if (tag.styleSheet) {
-    tag.styleSheet.cssText = css;
-  } else {
-    tag.appendChild(document.createTextNode(css));
-  }
-}
-function insertStyleTag(tag) {
-  var head = document.head || document.getElementsByTagName("head")[0];
-  head.appendChild(tag);
-}
-var stylesheetSingleton = function() {
-  var counter = 0;
-  var stylesheet = null;
-  return {
-    add: function(style2) {
-      if (counter == 0) {
-        if (stylesheet = makeStyleTag()) {
-          injectStyles(stylesheet, style2);
-          insertStyleTag(stylesheet);
-        }
-      }
-      counter++;
-    },
-    remove: function() {
-      counter--;
-      if (!counter && stylesheet) {
-        stylesheet.parentNode && stylesheet.parentNode.removeChild(stylesheet);
-        stylesheet = null;
-      }
-    }
-  };
-};
-var styleHookSingleton = function() {
-  var sheet = stylesheetSingleton();
-  return function(styles, isDynamic) {
-    reactExports.useEffect(function() {
-      sheet.add(styles);
-      return function() {
-        sheet.remove();
-      };
-    }, [styles && isDynamic]);
-  };
-};
-var styleSingleton = function() {
-  var useStyle2 = styleHookSingleton();
-  var Sheet = function(_a2) {
-    var styles = _a2.styles, dynamic = _a2.dynamic;
-    useStyle2(styles, dynamic);
-    return null;
-  };
-  return Sheet;
-};
-var zeroGap = {
-  left: 0,
-  top: 0,
-  right: 0,
-  gap: 0
-};
-var parse = function(x3) {
-  return parseInt(x3 || "", 10) || 0;
-};
-var getOffset$1 = function(gapMode) {
-  var cs = window.getComputedStyle(document.body);
-  var left = cs[gapMode === "padding" ? "paddingLeft" : "marginLeft"];
-  var top = cs[gapMode === "padding" ? "paddingTop" : "marginTop"];
-  var right = cs[gapMode === "padding" ? "paddingRight" : "marginRight"];
-  return [parse(left), parse(top), parse(right)];
-};
-var getGapWidth = function(gapMode) {
-  if (gapMode === void 0) {
-    gapMode = "margin";
-  }
-  if (typeof window === "undefined") {
-    return zeroGap;
-  }
-  var offsets = getOffset$1(gapMode);
-  var documentWidth = document.documentElement.clientWidth;
-  var windowWidth = window.innerWidth;
-  return {
-    left: offsets[0],
-    top: offsets[1],
-    right: offsets[2],
-    gap: Math.max(0, windowWidth - documentWidth + offsets[2] - offsets[0])
-  };
-};
-var Style = styleSingleton();
-var lockAttribute = "data-scroll-locked";
-var getStyles = function(_a2, allowRelative, gapMode, important) {
-  var left = _a2.left, top = _a2.top, right = _a2.right, gap = _a2.gap;
-  if (gapMode === void 0) {
-    gapMode = "margin";
-  }
-  return "\n  .".concat(noScrollbarsClassName, " {\n   overflow: hidden ").concat(important, ";\n   padding-right: ").concat(gap, "px ").concat(important, ";\n  }\n  body[").concat(lockAttribute, "] {\n    overflow: hidden ").concat(important, ";\n    overscroll-behavior: contain;\n    ").concat([
-    allowRelative && "position: relative ".concat(important, ";"),
-    gapMode === "margin" && "\n    padding-left: ".concat(left, "px;\n    padding-top: ").concat(top, "px;\n    padding-right: ").concat(right, "px;\n    margin-left:0;\n    margin-top:0;\n    margin-right: ").concat(gap, "px ").concat(important, ";\n    "),
-    gapMode === "padding" && "padding-right: ".concat(gap, "px ").concat(important, ";")
-  ].filter(Boolean).join(""), "\n  }\n  \n  .").concat(zeroRightClassName, " {\n    right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " {\n    margin-right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(zeroRightClassName, " .").concat(zeroRightClassName, " {\n    right: 0 ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " .").concat(fullWidthClassName, " {\n    margin-right: 0 ").concat(important, ";\n  }\n  \n  body[").concat(lockAttribute, "] {\n    ").concat(removedBarSizeVariable, ": ").concat(gap, "px;\n  }\n");
-};
-var getCurrentUseCounter = function() {
-  var counter = parseInt(document.body.getAttribute(lockAttribute) || "0", 10);
-  return isFinite(counter) ? counter : 0;
-};
-var useLockAttribute = function() {
-  reactExports.useEffect(function() {
-    document.body.setAttribute(lockAttribute, (getCurrentUseCounter() + 1).toString());
-    return function() {
-      var newCounter = getCurrentUseCounter() - 1;
-      if (newCounter <= 0) {
-        document.body.removeAttribute(lockAttribute);
-      } else {
-        document.body.setAttribute(lockAttribute, newCounter.toString());
-      }
-    };
-  }, []);
-};
-var RemoveScrollBar = function(_a2) {
-  var noRelative = _a2.noRelative, noImportant = _a2.noImportant, _b2 = _a2.gapMode, gapMode = _b2 === void 0 ? "margin" : _b2;
-  useLockAttribute();
-  var gap = reactExports.useMemo(function() {
-    return getGapWidth(gapMode);
-  }, [gapMode]);
-  return reactExports.createElement(Style, { styles: getStyles(gap, !noRelative, gapMode, !noImportant ? "!important" : "") });
-};
-var passiveSupported = false;
-if (typeof window !== "undefined") {
-  try {
-    var options = Object.defineProperty({}, "passive", {
-      get: function() {
-        passiveSupported = true;
-        return true;
-      }
-    });
-    window.addEventListener("test", options, options);
-    window.removeEventListener("test", options, options);
-  } catch (err) {
-    passiveSupported = false;
-  }
-}
-var nonPassive = passiveSupported ? { passive: false } : false;
-var alwaysContainsScroll = function(node) {
-  return node.tagName === "TEXTAREA";
-};
-var elementCanBeScrolled = function(node, overflow) {
-  if (!(node instanceof Element)) {
-    return false;
-  }
-  var styles = window.getComputedStyle(node);
-  return (
-    // not-not-scrollable
-    styles[overflow] !== "hidden" && // contains scroll inside self
-    !(styles.overflowY === styles.overflowX && !alwaysContainsScroll(node) && styles[overflow] === "visible")
-  );
-};
-var elementCouldBeVScrolled = function(node) {
-  return elementCanBeScrolled(node, "overflowY");
-};
-var elementCouldBeHScrolled = function(node) {
-  return elementCanBeScrolled(node, "overflowX");
-};
-var locationCouldBeScrolled = function(axis, node) {
-  var ownerDocument = node.ownerDocument;
-  var current = node;
-  do {
-    if (typeof ShadowRoot !== "undefined" && current instanceof ShadowRoot) {
-      current = current.host;
-    }
-    var isScrollable = elementCouldBeScrolled(axis, current);
-    if (isScrollable) {
-      var _a2 = getScrollVariables(axis, current), scrollHeight = _a2[1], clientHeight = _a2[2];
-      if (scrollHeight > clientHeight) {
-        return true;
-      }
-    }
-    current = current.parentNode;
-  } while (current && current !== ownerDocument.body);
-  return false;
-};
-var getVScrollVariables = function(_a2) {
-  var scrollTop = _a2.scrollTop, scrollHeight = _a2.scrollHeight, clientHeight = _a2.clientHeight;
-  return [
-    scrollTop,
-    scrollHeight,
-    clientHeight
-  ];
-};
-var getHScrollVariables = function(_a2) {
-  var scrollLeft = _a2.scrollLeft, scrollWidth = _a2.scrollWidth, clientWidth = _a2.clientWidth;
-  return [
-    scrollLeft,
-    scrollWidth,
-    clientWidth
-  ];
-};
-var elementCouldBeScrolled = function(axis, node) {
-  return axis === "v" ? elementCouldBeVScrolled(node) : elementCouldBeHScrolled(node);
-};
-var getScrollVariables = function(axis, node) {
-  return axis === "v" ? getVScrollVariables(node) : getHScrollVariables(node);
-};
-var getDirectionFactor = function(axis, direction) {
-  return axis === "h" && direction === "rtl" ? -1 : 1;
-};
-var handleScroll = function(axis, endTarget, event, sourceDelta, noOverscroll) {
-  var directionFactor = getDirectionFactor(axis, window.getComputedStyle(endTarget).direction);
-  var delta = directionFactor * sourceDelta;
-  var target = event.target;
-  var targetInLock = endTarget.contains(target);
-  var shouldCancelScroll = false;
-  var isDeltaPositive = delta > 0;
-  var availableScroll = 0;
-  var availableScrollTop = 0;
-  do {
-    if (!target) {
-      break;
-    }
-    var _a2 = getScrollVariables(axis, target), position = _a2[0], scroll_1 = _a2[1], capacity = _a2[2];
-    var elementScroll = scroll_1 - capacity - directionFactor * position;
-    if (position || elementScroll) {
-      if (elementCouldBeScrolled(axis, target)) {
-        availableScroll += elementScroll;
-        availableScrollTop += position;
-      }
-    }
-    var parent_1 = target.parentNode;
-    target = parent_1 && parent_1.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? parent_1.host : parent_1;
-  } while (
-    // portaled content
-    !targetInLock && target !== document.body || // self content
-    targetInLock && (endTarget.contains(target) || endTarget === target)
-  );
-  if (isDeltaPositive && (Math.abs(availableScroll) < 1 || false)) {
-    shouldCancelScroll = true;
-  } else if (!isDeltaPositive && (Math.abs(availableScrollTop) < 1 || false)) {
-    shouldCancelScroll = true;
-  }
-  return shouldCancelScroll;
-};
-var getTouchXY = function(event) {
-  return "changedTouches" in event ? [event.changedTouches[0].clientX, event.changedTouches[0].clientY] : [0, 0];
-};
-var getDeltaXY = function(event) {
-  return [event.deltaX, event.deltaY];
-};
-var extractRef = function(ref) {
-  return ref && "current" in ref ? ref.current : ref;
-};
-var deltaCompare = function(x3, y2) {
-  return x3[0] === y2[0] && x3[1] === y2[1];
-};
-var generateStyle = function(id2) {
-  return "\n  .block-interactivity-".concat(id2, " {pointer-events: none;}\n  .allow-interactivity-").concat(id2, " {pointer-events: all;}\n");
-};
-var idCounter$1 = 0;
-var lockStack = [];
-function RemoveScrollSideCar(props) {
-  var shouldPreventQueue = reactExports.useRef([]);
-  var touchStartRef = reactExports.useRef([0, 0]);
-  var activeAxis = reactExports.useRef();
-  var id2 = reactExports.useState(idCounter$1++)[0];
-  var Style2 = reactExports.useState(styleSingleton)[0];
-  var lastProps = reactExports.useRef(props);
-  reactExports.useEffect(function() {
-    lastProps.current = props;
-  }, [props]);
-  reactExports.useEffect(function() {
-    if (props.inert) {
-      document.body.classList.add("block-interactivity-".concat(id2));
-      var allow_1 = __spreadArray([props.lockRef.current], (props.shards || []).map(extractRef), true).filter(Boolean);
-      allow_1.forEach(function(el) {
-        return el.classList.add("allow-interactivity-".concat(id2));
-      });
-      return function() {
-        document.body.classList.remove("block-interactivity-".concat(id2));
-        allow_1.forEach(function(el) {
-          return el.classList.remove("allow-interactivity-".concat(id2));
-        });
-      };
-    }
-    return;
-  }, [props.inert, props.lockRef.current, props.shards]);
-  var shouldCancelEvent = reactExports.useCallback(function(event, parent) {
-    if ("touches" in event && event.touches.length === 2 || event.type === "wheel" && event.ctrlKey) {
-      return !lastProps.current.allowPinchZoom;
-    }
-    var touch = getTouchXY(event);
-    var touchStart = touchStartRef.current;
-    var deltaX = "deltaX" in event ? event.deltaX : touchStart[0] - touch[0];
-    var deltaY = "deltaY" in event ? event.deltaY : touchStart[1] - touch[1];
-    var currentAxis;
-    var target = event.target;
-    var moveDirection = Math.abs(deltaX) > Math.abs(deltaY) ? "h" : "v";
-    if ("touches" in event && moveDirection === "h" && target.type === "range") {
-      return false;
-    }
-    var selection = window.getSelection();
-    var anchorNode = selection && selection.anchorNode;
-    var isTouchingSelection = anchorNode ? anchorNode === target || anchorNode.contains(target) : false;
-    if (isTouchingSelection) {
-      return false;
-    }
-    var canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
-    if (!canBeScrolledInMainDirection) {
-      return true;
-    }
-    if (canBeScrolledInMainDirection) {
-      currentAxis = moveDirection;
-    } else {
-      currentAxis = moveDirection === "v" ? "h" : "v";
-      canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
-    }
-    if (!canBeScrolledInMainDirection) {
-      return false;
-    }
-    if (!activeAxis.current && "changedTouches" in event && (deltaX || deltaY)) {
-      activeAxis.current = currentAxis;
-    }
-    if (!currentAxis) {
-      return true;
-    }
-    var cancelingAxis = activeAxis.current || currentAxis;
-    return handleScroll(cancelingAxis, parent, event, cancelingAxis === "h" ? deltaX : deltaY);
-  }, []);
-  var shouldPrevent = reactExports.useCallback(function(_event) {
-    var event = _event;
-    if (!lockStack.length || lockStack[lockStack.length - 1] !== Style2) {
-      return;
-    }
-    var delta = "deltaY" in event ? getDeltaXY(event) : getTouchXY(event);
-    var sourceEvent = shouldPreventQueue.current.filter(function(e3) {
-      return e3.name === event.type && (e3.target === event.target || event.target === e3.shadowParent) && deltaCompare(e3.delta, delta);
-    })[0];
-    if (sourceEvent && sourceEvent.should) {
-      if (event.cancelable) {
-        event.preventDefault();
-      }
-      return;
-    }
-    if (!sourceEvent) {
-      var shardNodes = (lastProps.current.shards || []).map(extractRef).filter(Boolean).filter(function(node) {
-        return node.contains(event.target);
-      });
-      var shouldStop = shardNodes.length > 0 ? shouldCancelEvent(event, shardNodes[0]) : !lastProps.current.noIsolation;
-      if (shouldStop) {
-        if (event.cancelable) {
-          event.preventDefault();
-        }
-      }
-    }
-  }, []);
-  var shouldCancel = reactExports.useCallback(function(name, delta, target, should) {
-    var event = { name, delta, target, should, shadowParent: getOutermostShadowParent(target) };
-    shouldPreventQueue.current.push(event);
-    setTimeout(function() {
-      shouldPreventQueue.current = shouldPreventQueue.current.filter(function(e3) {
-        return e3 !== event;
-      });
-    }, 1);
-  }, []);
-  var scrollTouchStart = reactExports.useCallback(function(event) {
-    touchStartRef.current = getTouchXY(event);
-    activeAxis.current = void 0;
-  }, []);
-  var scrollWheel = reactExports.useCallback(function(event) {
-    shouldCancel(event.type, getDeltaXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
-  }, []);
-  var scrollTouchMove = reactExports.useCallback(function(event) {
-    shouldCancel(event.type, getTouchXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
-  }, []);
-  reactExports.useEffect(function() {
-    lockStack.push(Style2);
-    props.setCallbacks({
-      onScrollCapture: scrollWheel,
-      onWheelCapture: scrollWheel,
-      onTouchMoveCapture: scrollTouchMove
-    });
-    document.addEventListener("wheel", shouldPrevent, nonPassive);
-    document.addEventListener("touchmove", shouldPrevent, nonPassive);
-    document.addEventListener("touchstart", scrollTouchStart, nonPassive);
-    return function() {
-      lockStack = lockStack.filter(function(inst) {
-        return inst !== Style2;
-      });
-      document.removeEventListener("wheel", shouldPrevent, nonPassive);
-      document.removeEventListener("touchmove", shouldPrevent, nonPassive);
-      document.removeEventListener("touchstart", scrollTouchStart, nonPassive);
-    };
-  }, []);
-  var removeScrollBar = props.removeScrollBar, inert = props.inert;
-  return reactExports.createElement(
-    reactExports.Fragment,
-    null,
-    inert ? reactExports.createElement(Style2, { styles: generateStyle(id2) }) : null,
-    removeScrollBar ? reactExports.createElement(RemoveScrollBar, { noRelative: props.noRelative, gapMode: props.gapMode }) : null
-  );
-}
-function getOutermostShadowParent(node) {
-  var shadowParent = null;
-  while (node !== null) {
-    if (node instanceof ShadowRoot) {
-      shadowParent = node.host;
-      node = node.host;
-    }
-    node = node.parentNode;
-  }
-  return shadowParent;
-}
-const SideCar = exportSidecar(effectCar, RemoveScrollSideCar);
-var ReactRemoveScroll = reactExports.forwardRef(function(props, ref) {
-  return reactExports.createElement(RemoveScroll, __assign({}, props, { ref, sideCar: SideCar }));
-});
-ReactRemoveScroll.classNames = RemoveScroll.classNames;
-var getDefaultParent = function(originalTarget) {
-  if (typeof document === "undefined") {
-    return null;
-  }
-  var sampleTarget = Array.isArray(originalTarget) ? originalTarget[0] : originalTarget;
-  return sampleTarget.ownerDocument.body;
-};
-var counterMap = /* @__PURE__ */ new WeakMap();
-var uncontrolledNodes = /* @__PURE__ */ new WeakMap();
-var markerMap = {};
-var lockCount = 0;
-var unwrapHost = function(node) {
-  return node && (node.host || unwrapHost(node.parentNode));
-};
-var correctTargets = function(parent, targets) {
-  return targets.map(function(target) {
-    if (parent.contains(target)) {
-      return target;
-    }
-    var correctedTarget = unwrapHost(target);
-    if (correctedTarget && parent.contains(correctedTarget)) {
-      return correctedTarget;
-    }
-    console.error("aria-hidden", target, "in not contained inside", parent, ". Doing nothing");
-    return null;
-  }).filter(function(x3) {
-    return Boolean(x3);
-  });
-};
-var applyAttributeToOthers = function(originalTarget, parentNode, markerName, controlAttribute) {
-  var targets = correctTargets(parentNode, Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
-  if (!markerMap[markerName]) {
-    markerMap[markerName] = /* @__PURE__ */ new WeakMap();
-  }
-  var markerCounter = markerMap[markerName];
-  var hiddenNodes = [];
-  var elementsToKeep = /* @__PURE__ */ new Set();
-  var elementsToStop = new Set(targets);
-  var keep = function(el) {
-    if (!el || elementsToKeep.has(el)) {
-      return;
-    }
-    elementsToKeep.add(el);
-    keep(el.parentNode);
-  };
-  targets.forEach(keep);
-  var deep = function(parent) {
-    if (!parent || elementsToStop.has(parent)) {
-      return;
-    }
-    Array.prototype.forEach.call(parent.children, function(node) {
-      if (elementsToKeep.has(node)) {
-        deep(node);
-      } else {
-        try {
-          var attr = node.getAttribute(controlAttribute);
-          var alreadyHidden = attr !== null && attr !== "false";
-          var counterValue = (counterMap.get(node) || 0) + 1;
-          var markerValue = (markerCounter.get(node) || 0) + 1;
-          counterMap.set(node, counterValue);
-          markerCounter.set(node, markerValue);
-          hiddenNodes.push(node);
-          if (counterValue === 1 && alreadyHidden) {
-            uncontrolledNodes.set(node, true);
-          }
-          if (markerValue === 1) {
-            node.setAttribute(markerName, "true");
-          }
-          if (!alreadyHidden) {
-            node.setAttribute(controlAttribute, "true");
-          }
-        } catch (e3) {
-          console.error("aria-hidden: cannot operate on ", node, e3);
-        }
-      }
-    });
-  };
-  deep(parentNode);
-  elementsToKeep.clear();
-  lockCount++;
-  return function() {
-    hiddenNodes.forEach(function(node) {
-      var counterValue = counterMap.get(node) - 1;
-      var markerValue = markerCounter.get(node) - 1;
-      counterMap.set(node, counterValue);
-      markerCounter.set(node, markerValue);
-      if (!counterValue) {
-        if (!uncontrolledNodes.has(node)) {
-          node.removeAttribute(controlAttribute);
-        }
-        uncontrolledNodes.delete(node);
-      }
-      if (!markerValue) {
-        node.removeAttribute(markerName);
-      }
-    });
-    lockCount--;
-    if (!lockCount) {
-      counterMap = /* @__PURE__ */ new WeakMap();
-      counterMap = /* @__PURE__ */ new WeakMap();
-      uncontrolledNodes = /* @__PURE__ */ new WeakMap();
-      markerMap = {};
-    }
-  };
-};
-var hideOthers = function(originalTarget, parentNode, markerName) {
-  if (markerName === void 0) {
-    markerName = "data-aria-hidden";
-  }
-  var targets = Array.from(Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
-  var activeParentNode = getDefaultParent(originalTarget);
-  if (!activeParentNode) {
-    return function() {
-      return null;
-    };
-  }
-  targets.push.apply(targets, Array.from(activeParentNode.querySelectorAll("[aria-live], script")));
-  return applyAttributeToOthers(targets, activeParentNode, markerName, "aria-hidden");
-};
-var DIALOG_NAME = "Dialog";
-var [createDialogContext, createDialogScope] = createContextScope(DIALOG_NAME);
-var [DialogProvider, useDialogContext] = createDialogContext(DIALOG_NAME);
-var Dialog$1 = (props) => {
-  const {
-    __scopeDialog,
-    children,
-    open: openProp,
-    defaultOpen,
-    onOpenChange,
-    modal = true
-  } = props;
-  const triggerRef = reactExports.useRef(null);
-  const contentRef = reactExports.useRef(null);
-  const [open, setOpen] = useControllableState({
-    prop: openProp,
-    defaultProp: defaultOpen ?? false,
-    onChange: onOpenChange,
-    caller: DIALOG_NAME
-  });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    DialogProvider,
-    {
-      scope: __scopeDialog,
-      triggerRef,
-      contentRef,
-      contentId: useId(),
-      titleId: useId(),
-      descriptionId: useId(),
-      open,
-      onOpenChange: setOpen,
-      onOpenToggle: reactExports.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
-      modal,
-      children
-    }
-  );
-};
-Dialog$1.displayName = DIALOG_NAME;
-var TRIGGER_NAME$2 = "DialogTrigger";
-var DialogTrigger = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeDialog, ...triggerProps } = props;
-    const context = useDialogContext(TRIGGER_NAME$2, __scopeDialog);
-    const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.button,
-      {
-        type: "button",
-        "aria-haspopup": "dialog",
-        "aria-expanded": context.open,
-        "aria-controls": context.contentId,
-        "data-state": getState$2(context.open),
-        ...triggerProps,
-        ref: composedTriggerRef,
-        onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
-      }
-    );
-  }
-);
-DialogTrigger.displayName = TRIGGER_NAME$2;
-var PORTAL_NAME$1 = "DialogPortal";
-var [PortalProvider, usePortalContext] = createDialogContext(PORTAL_NAME$1, {
-  forceMount: void 0
-});
-var DialogPortal$1 = (props) => {
-  const { __scopeDialog, forceMount, children, container } = props;
-  const context = useDialogContext(PORTAL_NAME$1, __scopeDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider, { scope: __scopeDialog, forceMount, children: reactExports.Children.map(children, (child) => /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$2, { asChild: true, container, children: child }) })) });
-};
-DialogPortal$1.displayName = PORTAL_NAME$1;
-var OVERLAY_NAME$1 = "DialogOverlay";
-var DialogOverlay$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const portalContext = usePortalContext(OVERLAY_NAME$1, props.__scopeDialog);
-    const { forceMount = portalContext.forceMount, ...overlayProps } = props;
-    const context = useDialogContext(OVERLAY_NAME$1, props.__scopeDialog);
-    return context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(DialogOverlayImpl, { ...overlayProps, ref: forwardedRef }) }) : null;
-  }
-);
-DialogOverlay$1.displayName = OVERLAY_NAME$1;
-var Slot = /* @__PURE__ */ createSlot("DialogOverlay.RemoveScroll");
-var DialogOverlayImpl = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeDialog, ...overlayProps } = props;
-    const context = useDialogContext(OVERLAY_NAME$1, __scopeDialog);
-    return (
-      // Make sure `Content` is scrollable even when it doesn't live inside `RemoveScroll`
-      // ie. when `Overlay` and `Content` are siblings
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ReactRemoveScroll, { as: Slot, allowPinchZoom: true, shards: [context.contentRef], children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Primitive.div,
-        {
-          "data-state": getState$2(context.open),
-          ...overlayProps,
-          ref: forwardedRef,
-          style: { pointerEvents: "auto", ...overlayProps.style }
-        }
-      ) })
-    );
-  }
-);
-var CONTENT_NAME$2 = "DialogContent";
-var DialogContent$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const portalContext = usePortalContext(CONTENT_NAME$2, props.__scopeDialog);
-    const { forceMount = portalContext.forceMount, ...contentProps } = props;
-    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentNonModal, { ...contentProps, ref: forwardedRef }) });
-  }
-);
-DialogContent$1.displayName = CONTENT_NAME$2;
-var DialogContentModal = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
-    const contentRef = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, context.contentRef, contentRef);
-    reactExports.useEffect(() => {
-      const content = contentRef.current;
-      if (content) return hideOthers(content);
-    }, []);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      DialogContentImpl,
-      {
-        ...props,
-        ref: composedRefs,
-        trapFocus: context.open,
-        disableOutsidePointerEvents: true,
-        onCloseAutoFocus: composeEventHandlers(props.onCloseAutoFocus, (event) => {
-          var _a2;
-          event.preventDefault();
-          (_a2 = context.triggerRef.current) == null ? void 0 : _a2.focus();
-        }),
-        onPointerDownOutside: composeEventHandlers(props.onPointerDownOutside, (event) => {
-          const originalEvent = event.detail.originalEvent;
-          const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true;
-          const isRightClick = originalEvent.button === 2 || ctrlLeftClick;
-          if (isRightClick) event.preventDefault();
-        }),
-        onFocusOutside: composeEventHandlers(
-          props.onFocusOutside,
-          (event) => event.preventDefault()
-        )
-      }
-    );
-  }
-);
-var DialogContentNonModal = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
-    const hasInteractedOutsideRef = reactExports.useRef(false);
-    const hasPointerDownOutsideRef = reactExports.useRef(false);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      DialogContentImpl,
-      {
-        ...props,
-        ref: forwardedRef,
-        trapFocus: false,
-        disableOutsidePointerEvents: false,
-        onCloseAutoFocus: (event) => {
-          var _a2, _b2;
-          (_a2 = props.onCloseAutoFocus) == null ? void 0 : _a2.call(props, event);
-          if (!event.defaultPrevented) {
-            if (!hasInteractedOutsideRef.current) (_b2 = context.triggerRef.current) == null ? void 0 : _b2.focus();
-            event.preventDefault();
-          }
-          hasInteractedOutsideRef.current = false;
-          hasPointerDownOutsideRef.current = false;
-        },
-        onInteractOutside: (event) => {
-          var _a2, _b2;
-          (_a2 = props.onInteractOutside) == null ? void 0 : _a2.call(props, event);
-          if (!event.defaultPrevented) {
-            hasInteractedOutsideRef.current = true;
-            if (event.detail.originalEvent.type === "pointerdown") {
-              hasPointerDownOutsideRef.current = true;
-            }
-          }
-          const target = event.target;
-          const targetIsTrigger = (_b2 = context.triggerRef.current) == null ? void 0 : _b2.contains(target);
-          if (targetIsTrigger) event.preventDefault();
-          if (event.detail.originalEvent.type === "focusin" && hasPointerDownOutsideRef.current) {
-            event.preventDefault();
-          }
-        }
-      }
-    );
-  }
-);
-var DialogContentImpl = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
-    const context = useDialogContext(CONTENT_NAME$2, __scopeDialog);
-    const contentRef = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, contentRef);
-    useFocusGuards();
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        FocusScope,
-        {
-          asChild: true,
-          loop: true,
-          trapped: trapFocus,
-          onMountAutoFocus: onOpenAutoFocus,
-          onUnmountAutoFocus: onCloseAutoFocus,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-            DismissableLayer,
-            {
-              role: "dialog",
-              id: context.contentId,
-              "aria-describedby": context.descriptionId,
-              "aria-labelledby": context.titleId,
-              "data-state": getState$2(context.open),
-              ...contentProps,
-              ref: composedRefs,
-              onDismiss: () => context.onOpenChange(false)
-            }
-          )
-        }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TitleWarning, { titleId: context.titleId }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning$1, { contentRef, descriptionId: context.descriptionId })
-      ] })
-    ] });
-  }
-);
-var TITLE_NAME$1 = "DialogTitle";
-var DialogTitle$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeDialog, ...titleProps } = props;
-    const context = useDialogContext(TITLE_NAME$1, __scopeDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.h2, { id: context.titleId, ...titleProps, ref: forwardedRef });
-  }
-);
-DialogTitle$1.displayName = TITLE_NAME$1;
-var DESCRIPTION_NAME$1 = "DialogDescription";
-var DialogDescription$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeDialog, ...descriptionProps } = props;
-    const context = useDialogContext(DESCRIPTION_NAME$1, __scopeDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.p, { id: context.descriptionId, ...descriptionProps, ref: forwardedRef });
-  }
-);
-DialogDescription$1.displayName = DESCRIPTION_NAME$1;
-var CLOSE_NAME = "DialogClose";
-var DialogClose = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeDialog, ...closeProps } = props;
-    const context = useDialogContext(CLOSE_NAME, __scopeDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.button,
-      {
-        type: "button",
-        ...closeProps,
-        ref: forwardedRef,
-        onClick: composeEventHandlers(props.onClick, () => context.onOpenChange(false))
-      }
-    );
-  }
-);
-DialogClose.displayName = CLOSE_NAME;
-function getState$2(open) {
-  return open ? "open" : "closed";
-}
-var TITLE_WARNING_NAME = "DialogTitleWarning";
-var [WarningProvider, useWarningContext] = createContext2(TITLE_WARNING_NAME, {
-  contentName: CONTENT_NAME$2,
-  titleName: TITLE_NAME$1,
-  docsSlug: "dialog"
-});
-var TitleWarning = ({ titleId }) => {
-  const titleWarningContext = useWarningContext(TITLE_WARNING_NAME);
-  const MESSAGE = `\`${titleWarningContext.contentName}\` requires a \`${titleWarningContext.titleName}\` for the component to be accessible for screen reader users.
-
-If you want to hide the \`${titleWarningContext.titleName}\`, you can wrap it with our VisuallyHidden component.
-
-For more information, see https://radix-ui.com/primitives/docs/components/${titleWarningContext.docsSlug}`;
-  reactExports.useEffect(() => {
-    if (titleId) {
-      const hasTitle = document.getElementById(titleId);
-      if (!hasTitle) console.error(MESSAGE);
-    }
-  }, [MESSAGE, titleId]);
-  return null;
-};
-var DESCRIPTION_WARNING_NAME = "DialogDescriptionWarning";
-var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
-  const descriptionWarningContext = useWarningContext(DESCRIPTION_WARNING_NAME);
-  const MESSAGE = `Warning: Missing \`Description\` or \`aria-describedby={undefined}\` for {${descriptionWarningContext.contentName}}.`;
-  reactExports.useEffect(() => {
-    var _a2;
-    const describedById = (_a2 = contentRef.current) == null ? void 0 : _a2.getAttribute("aria-describedby");
-    if (descriptionId && describedById) {
-      const hasDescription = document.getElementById(descriptionId);
-      if (!hasDescription) console.warn(MESSAGE);
-    }
-  }, [MESSAGE, contentRef, descriptionId]);
-  return null;
-};
-var Root$2 = Dialog$1;
-var Trigger = DialogTrigger;
-var Portal = DialogPortal$1;
-var Overlay = DialogOverlay$1;
-var Content = DialogContent$1;
-var Title = DialogTitle$1;
-var Description = DialogDescription$1;
-var Close = DialogClose;
-var ROOT_NAME = "AlertDialog";
-var [createAlertDialogContext] = createContextScope(ROOT_NAME, [
-  createDialogScope
-]);
-var useDialogScope = createDialogScope();
-var AlertDialog$1 = (props) => {
-  const { __scopeAlertDialog, ...alertDialogProps } = props;
-  const dialogScope = useDialogScope(__scopeAlertDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$2, { ...dialogScope, ...alertDialogProps, modal: true });
-};
-AlertDialog$1.displayName = ROOT_NAME;
-var TRIGGER_NAME$1 = "AlertDialogTrigger";
-var AlertDialogTrigger$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeAlertDialog, ...triggerProps } = props;
-    const dialogScope = useDialogScope(__scopeAlertDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger, { ...dialogScope, ...triggerProps, ref: forwardedRef });
-  }
-);
-AlertDialogTrigger$1.displayName = TRIGGER_NAME$1;
-var PORTAL_NAME = "AlertDialogPortal";
-var AlertDialogPortal$1 = (props) => {
-  const { __scopeAlertDialog, ...portalProps } = props;
-  const dialogScope = useDialogScope(__scopeAlertDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { ...dialogScope, ...portalProps });
-};
-AlertDialogPortal$1.displayName = PORTAL_NAME;
-var OVERLAY_NAME = "AlertDialogOverlay";
-var AlertDialogOverlay$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeAlertDialog, ...overlayProps } = props;
-    const dialogScope = useDialogScope(__scopeAlertDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Overlay, { ...dialogScope, ...overlayProps, ref: forwardedRef });
-  }
-);
-AlertDialogOverlay$1.displayName = OVERLAY_NAME;
-var CONTENT_NAME$1 = "AlertDialogContent";
-var [AlertDialogContentProvider, useAlertDialogContentContext] = createAlertDialogContext(CONTENT_NAME$1);
-var Slottable = /* @__PURE__ */ createSlottable("AlertDialogContent");
-var AlertDialogContent$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeAlertDialog, children, ...contentProps } = props;
-    const dialogScope = useDialogScope(__scopeAlertDialog);
-    const contentRef = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(forwardedRef, contentRef);
-    const cancelRef = reactExports.useRef(null);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      WarningProvider,
-      {
-        contentName: CONTENT_NAME$1,
-        titleName: TITLE_NAME,
-        docsSlug: "alert-dialog",
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogContentProvider, { scope: __scopeAlertDialog, cancelRef, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Content,
-          {
-            role: "alertdialog",
-            ...dialogScope,
-            ...contentProps,
-            ref: composedRefs,
-            onOpenAutoFocus: composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
-              var _a2;
-              event.preventDefault();
-              (_a2 = cancelRef.current) == null ? void 0 : _a2.focus({ preventScroll: true });
-            }),
-            onPointerDownOutside: (event) => event.preventDefault(),
-            onInteractOutside: (event) => event.preventDefault(),
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable, { children }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning, { contentRef })
-            ]
-          }
-        ) })
-      }
-    );
-  }
-);
-AlertDialogContent$1.displayName = CONTENT_NAME$1;
-var TITLE_NAME = "AlertDialogTitle";
-var AlertDialogTitle$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeAlertDialog, ...titleProps } = props;
-    const dialogScope = useDialogScope(__scopeAlertDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Title, { ...dialogScope, ...titleProps, ref: forwardedRef });
-  }
-);
-AlertDialogTitle$1.displayName = TITLE_NAME;
-var DESCRIPTION_NAME = "AlertDialogDescription";
-var AlertDialogDescription$1 = reactExports.forwardRef((props, forwardedRef) => {
-  const { __scopeAlertDialog, ...descriptionProps } = props;
-  const dialogScope = useDialogScope(__scopeAlertDialog);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Description, { ...dialogScope, ...descriptionProps, ref: forwardedRef });
-});
-AlertDialogDescription$1.displayName = DESCRIPTION_NAME;
-var ACTION_NAME = "AlertDialogAction";
-var AlertDialogAction$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeAlertDialog, ...actionProps } = props;
-    const dialogScope = useDialogScope(__scopeAlertDialog);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Close, { ...dialogScope, ...actionProps, ref: forwardedRef });
-  }
-);
-AlertDialogAction$1.displayName = ACTION_NAME;
-var CANCEL_NAME = "AlertDialogCancel";
-var AlertDialogCancel$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeAlertDialog, ...cancelProps } = props;
-    const { cancelRef } = useAlertDialogContentContext(CANCEL_NAME, __scopeAlertDialog);
-    const dialogScope = useDialogScope(__scopeAlertDialog);
-    const ref = useComposedRefs(forwardedRef, cancelRef);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Close, { ...dialogScope, ...cancelProps, ref });
-  }
-);
-AlertDialogCancel$1.displayName = CANCEL_NAME;
-var DescriptionWarning = ({ contentRef }) => {
-  const MESSAGE = `\`${CONTENT_NAME$1}\` requires a description for the component to be accessible for screen reader users.
-
-You can add a description to the \`${CONTENT_NAME$1}\` by passing a \`${DESCRIPTION_NAME}\` component as a child, which also benefits sighted users by adding visible context to the dialog.
-
-Alternatively, you can use your own component as a description by assigning it an \`id\` and passing the same value to the \`aria-describedby\` prop in \`${CONTENT_NAME$1}\`. If the description is confusing or duplicative for sighted users, you can use the \`@radix-ui/react-visually-hidden\` primitive as a wrapper around your description component.
-
-For more information, see https://radix-ui.com/primitives/docs/components/alert-dialog`;
-  reactExports.useEffect(() => {
-    var _a2;
-    const hasDescription = document.getElementById(
-      (_a2 = contentRef.current) == null ? void 0 : _a2.getAttribute("aria-describedby")
-    );
-    if (!hasDescription) console.warn(MESSAGE);
-  }, [MESSAGE, contentRef]);
-  return null;
-};
-var Root2 = AlertDialog$1;
-var Trigger2 = AlertDialogTrigger$1;
-var Portal2 = AlertDialogPortal$1;
-var Overlay2 = AlertDialogOverlay$1;
-var Content2 = AlertDialogContent$1;
-var Action = AlertDialogAction$1;
-var Cancel = AlertDialogCancel$1;
-var Title2 = AlertDialogTitle$1;
-var Description2 = AlertDialogDescription$1;
-function AlertDialog({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2, { "data-slot": "alert-dialog", ...props });
-}
-function AlertDialogTrigger({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger2, { "data-slot": "alert-dialog-trigger", ...props });
-}
-function AlertDialogPortal({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal2, { "data-slot": "alert-dialog-portal", ...props });
-}
-function AlertDialogOverlay({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Overlay2,
-    {
-      "data-slot": "alert-dialog-overlay",
-      className: cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
-        className
-      ),
-      ...props
-    }
-  );
-}
-function AlertDialogContent({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogPortal, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogOverlay, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Content2,
-      {
-        "data-slot": "alert-dialog-content",
-        className: cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
-          className
-        ),
-        ...props
-      }
-    )
-  ] });
-}
-function AlertDialogHeader({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "div",
-    {
-      "data-slot": "alert-dialog-header",
-      className: cn("flex flex-col gap-2 text-center sm:text-left", className),
-      ...props
-    }
-  );
-}
-function AlertDialogFooter({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "div",
-    {
-      "data-slot": "alert-dialog-footer",
-      className: cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      ),
-      ...props
-    }
-  );
-}
-function AlertDialogTitle({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Title2,
-    {
-      "data-slot": "alert-dialog-title",
-      className: cn("text-lg font-semibold", className),
-      ...props
-    }
-  );
-}
-function AlertDialogDescription({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Description2,
-    {
-      "data-slot": "alert-dialog-description",
-      className: cn("text-muted-foreground text-sm", className),
-      ...props
-    }
-  );
-}
-function AlertDialogAction({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Action,
-    {
-      className: cn(buttonVariants(), className),
-      ...props
-    }
-  );
-}
-function AlertDialogCancel({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Cancel,
-    {
-      className: cn(buttonVariants({ variant: "outline" }), className),
-      ...props
-    }
-  );
-}
-var COLLAPSIBLE_NAME = "Collapsible";
-var [createCollapsibleContext] = createContextScope(COLLAPSIBLE_NAME);
-var [CollapsibleProvider, useCollapsibleContext] = createCollapsibleContext(COLLAPSIBLE_NAME);
-var Collapsible$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const {
-      __scopeCollapsible,
-      open: openProp,
-      defaultOpen,
-      disabled,
-      onOpenChange,
-      ...collapsibleProps
-    } = props;
-    const [open, setOpen] = useControllableState({
-      prop: openProp,
-      defaultProp: defaultOpen ?? false,
-      onChange: onOpenChange,
-      caller: COLLAPSIBLE_NAME
-    });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      CollapsibleProvider,
-      {
-        scope: __scopeCollapsible,
-        disabled,
-        contentId: useId(),
-        open,
-        onOpenToggle: reactExports.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-          Primitive.div,
-          {
-            "data-state": getState$1(open),
-            "data-disabled": disabled ? "" : void 0,
-            ...collapsibleProps,
-            ref: forwardedRef
-          }
-        )
-      }
-    );
-  }
-);
-Collapsible$1.displayName = COLLAPSIBLE_NAME;
-var TRIGGER_NAME = "CollapsibleTrigger";
-var CollapsibleTrigger$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeCollapsible, ...triggerProps } = props;
-    const context = useCollapsibleContext(TRIGGER_NAME, __scopeCollapsible);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.button,
-      {
-        type: "button",
-        "aria-controls": context.contentId,
-        "aria-expanded": context.open || false,
-        "data-state": getState$1(context.open),
-        "data-disabled": context.disabled ? "" : void 0,
-        disabled: context.disabled,
-        ...triggerProps,
-        ref: forwardedRef,
-        onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
-      }
-    );
-  }
-);
-CollapsibleTrigger$1.displayName = TRIGGER_NAME;
-var CONTENT_NAME = "CollapsibleContent";
-var CollapsibleContent$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { forceMount, ...contentProps } = props;
-    const context = useCollapsibleContext(CONTENT_NAME, props.__scopeCollapsible);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: ({ present }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContentImpl, { ...contentProps, ref: forwardedRef, present }) });
-  }
-);
-CollapsibleContent$1.displayName = CONTENT_NAME;
-var CollapsibleContentImpl = reactExports.forwardRef((props, forwardedRef) => {
-  const { __scopeCollapsible, present, children, ...contentProps } = props;
-  const context = useCollapsibleContext(CONTENT_NAME, __scopeCollapsible);
-  const [isPresent, setIsPresent] = reactExports.useState(present);
-  const ref = reactExports.useRef(null);
-  const composedRefs = useComposedRefs(forwardedRef, ref);
-  const heightRef = reactExports.useRef(0);
-  const height = heightRef.current;
-  const widthRef = reactExports.useRef(0);
-  const width = widthRef.current;
-  const isOpen = context.open || isPresent;
-  const isMountAnimationPreventedRef = reactExports.useRef(isOpen);
-  const originalStylesRef = reactExports.useRef(void 0);
-  reactExports.useEffect(() => {
-    const rAF = requestAnimationFrame(() => isMountAnimationPreventedRef.current = false);
-    return () => cancelAnimationFrame(rAF);
-  }, []);
-  useLayoutEffect2(() => {
-    const node = ref.current;
-    if (node) {
-      originalStylesRef.current = originalStylesRef.current || {
-        transitionDuration: node.style.transitionDuration,
-        animationName: node.style.animationName
-      };
-      node.style.transitionDuration = "0s";
-      node.style.animationName = "none";
-      const rect = node.getBoundingClientRect();
-      heightRef.current = rect.height;
-      widthRef.current = rect.width;
-      if (!isMountAnimationPreventedRef.current) {
-        node.style.transitionDuration = originalStylesRef.current.transitionDuration;
-        node.style.animationName = originalStylesRef.current.animationName;
-      }
-      setIsPresent(present);
-    }
-  }, [context.open, present]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Primitive.div,
-    {
-      "data-state": getState$1(context.open),
-      "data-disabled": context.disabled ? "" : void 0,
-      id: context.contentId,
-      hidden: !isOpen,
-      ...contentProps,
-      ref: composedRefs,
-      style: {
-        [`--radix-collapsible-content-height`]: height ? `${height}px` : void 0,
-        [`--radix-collapsible-content-width`]: width ? `${width}px` : void 0,
-        ...props.style
-      },
-      children: isOpen && children
-    }
-  );
-});
-function getState$1(open) {
-  return open ? "open" : "closed";
-}
-var Root$1 = Collapsible$1;
-function Collapsible({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$1, { "data-slot": "collapsible", ...props });
-}
-function CollapsibleTrigger({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    CollapsibleTrigger$1,
-    {
-      "data-slot": "collapsible-trigger",
-      ...props
-    }
-  );
-}
-function CollapsibleContent({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    CollapsibleContent$1,
-    {
-      "data-slot": "collapsible-content",
-      ...props
-    }
-  );
-}
-function Dialog({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$2, { "data-slot": "dialog", ...props });
-}
-function DialogPortal({
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { "data-slot": "dialog-portal", ...props });
-}
-function DialogOverlay({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Overlay,
-    {
-      "data-slot": "dialog-overlay",
-      className: cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
-        className
-      ),
-      ...props
-    }
-  );
-}
-function DialogContent({
-  className,
-  children,
-  showCloseButton = true,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogPortal, { "data-slot": "dialog-portal", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(DialogOverlay, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Content,
-      {
-        "data-slot": "dialog-content",
-        className: cn(
-          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
-          className
-        ),
-        ...props,
-        children: [
-          children,
-          showCloseButton && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            Close,
-            {
-              "data-slot": "dialog-close",
-              className: "ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(X, {}),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "Close" })
-              ]
-            }
-          )
-        ]
-      }
-    )
-  ] });
-}
-function DialogHeader({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "div",
-    {
-      "data-slot": "dialog-header",
-      className: cn("flex flex-col gap-2 text-center sm:text-left", className),
-      ...props
-    }
-  );
-}
-function DialogFooter({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "div",
-    {
-      "data-slot": "dialog-footer",
-      className: cn(
-        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        className
-      ),
-      ...props
-    }
-  );
-}
-function DialogTitle({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Title,
-    {
-      "data-slot": "dialog-title",
-      className: cn("text-lg leading-none font-semibold", className),
-      ...props
-    }
-  );
-}
-function DialogDescription({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Description,
-    {
-      "data-slot": "dialog-description",
-      className: cn("text-muted-foreground text-sm", className),
-      ...props
-    }
-  );
-}
-function usePrevious(value) {
-  const ref = reactExports.useRef({ value, previous: value });
-  return reactExports.useMemo(() => {
-    if (ref.current.value !== value) {
-      ref.current.previous = ref.current.value;
-      ref.current.value = value;
-    }
-    return ref.current.previous;
-  }, [value]);
-}
-var SWITCH_NAME = "Switch";
-var [createSwitchContext] = createContextScope(SWITCH_NAME);
-var [SwitchProvider, useSwitchContext] = createSwitchContext(SWITCH_NAME);
-var Switch$1 = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const {
-      __scopeSwitch,
-      name,
-      checked: checkedProp,
-      defaultChecked,
-      required,
-      disabled,
-      value = "on",
-      onCheckedChange,
-      form,
-      ...switchProps
-    } = props;
-    const [button, setButton] = reactExports.useState(null);
-    const composedRefs = useComposedRefs(forwardedRef, (node) => setButton(node));
-    const hasConsumerStoppedPropagationRef = reactExports.useRef(false);
-    const isFormControl = button ? form || !!button.closest("form") : true;
-    const [checked, setChecked] = useControllableState({
-      prop: checkedProp,
-      defaultProp: defaultChecked ?? false,
-      onChange: onCheckedChange,
-      caller: SWITCH_NAME
-    });
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(SwitchProvider, { scope: __scopeSwitch, checked, disabled, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Primitive.button,
-        {
-          type: "button",
-          role: "switch",
-          "aria-checked": checked,
-          "aria-required": required,
-          "data-state": getState(checked),
-          "data-disabled": disabled ? "" : void 0,
-          disabled,
-          value,
-          ...switchProps,
-          ref: composedRefs,
-          onClick: composeEventHandlers(props.onClick, (event) => {
-            setChecked((prevChecked) => !prevChecked);
-            if (isFormControl) {
-              hasConsumerStoppedPropagationRef.current = event.isPropagationStopped();
-              if (!hasConsumerStoppedPropagationRef.current) event.stopPropagation();
-            }
-          })
-        }
-      ),
-      isFormControl && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        SwitchBubbleInput,
-        {
-          control: button,
-          bubbles: !hasConsumerStoppedPropagationRef.current,
-          name,
-          value,
-          checked,
-          required,
-          disabled,
-          form,
-          style: { transform: "translateX(-100%)" }
-        }
-      )
-    ] });
-  }
-);
-Switch$1.displayName = SWITCH_NAME;
-var THUMB_NAME = "SwitchThumb";
-var SwitchThumb = reactExports.forwardRef(
-  (props, forwardedRef) => {
-    const { __scopeSwitch, ...thumbProps } = props;
-    const context = useSwitchContext(THUMB_NAME, __scopeSwitch);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      Primitive.span,
-      {
-        "data-state": getState(context.checked),
-        "data-disabled": context.disabled ? "" : void 0,
-        ...thumbProps,
-        ref: forwardedRef
-      }
-    );
-  }
-);
-SwitchThumb.displayName = THUMB_NAME;
-var BUBBLE_INPUT_NAME = "SwitchBubbleInput";
-var SwitchBubbleInput = reactExports.forwardRef(
-  ({
-    __scopeSwitch,
-    control,
-    checked,
-    bubbles = true,
-    ...props
-  }, forwardedRef) => {
-    const ref = reactExports.useRef(null);
-    const composedRefs = useComposedRefs(ref, forwardedRef);
-    const prevChecked = usePrevious(checked);
-    const controlSize = useSize(control);
-    reactExports.useEffect(() => {
-      const input = ref.current;
-      if (!input) return;
-      const inputProto = window.HTMLInputElement.prototype;
-      const descriptor = Object.getOwnPropertyDescriptor(
-        inputProto,
-        "checked"
-      );
-      const setChecked = descriptor.set;
-      if (prevChecked !== checked && setChecked) {
-        const event = new Event("click", { bubbles });
-        setChecked.call(input, checked);
-        input.dispatchEvent(event);
-      }
-    }, [prevChecked, checked, bubbles]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "input",
-      {
-        type: "checkbox",
-        "aria-hidden": true,
-        defaultChecked: checked,
-        ...props,
-        tabIndex: -1,
-        ref: composedRefs,
-        style: {
-          ...props.style,
-          ...controlSize,
-          position: "absolute",
-          pointerEvents: "none",
-          opacity: 0,
-          margin: 0
-        }
-      }
-    );
-  }
-);
-SwitchBubbleInput.displayName = BUBBLE_INPUT_NAME;
-function getState(checked) {
-  return checked ? "checked" : "unchecked";
-}
-var Root = Switch$1;
-var Thumb = SwitchThumb;
-function Switch({
-  className,
-  ...props
-}) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    Root,
-    {
-      "data-slot": "switch",
-      className: cn(
-        "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      ),
-      ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Thumb,
-        {
-          "data-slot": "switch-thumb",
-          className: cn(
-            "bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
-          )
-        }
-      )
-    }
-  );
-}
 function Table({ className, ...props }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
     "div",
@@ -59229,19 +52889,6 @@ function TableCell({ className, ...props }) {
       "data-slot": "table-cell",
       className: cn(
         "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
-        className
-      ),
-      ...props
-    }
-  );
-}
-function Textarea({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "textarea",
-    {
-      "data-slot": "textarea",
-      className: cn(
-        "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
         className
       ),
       ...props
@@ -59329,15 +52976,15 @@ var isObject_1 = isObject$7;
 const isObject$8 = /* @__PURE__ */ getDefaultExportFromCjs(isObject_1);
 var baseGetTag$7 = _baseGetTag, isObject$6 = isObject_1;
 var asyncTag = "[object AsyncFunction]", funcTag$1 = "[object Function]", genTag = "[object GeneratorFunction]", proxyTag = "[object Proxy]";
-function isFunction$2(value) {
+function isFunction$3(value) {
   if (!isObject$6(value)) {
     return false;
   }
   var tag = baseGetTag$7(value);
   return tag == funcTag$1 || tag == genTag || tag == asyncTag || tag == proxyTag;
 }
-var isFunction_1 = isFunction$2;
-const isFunction$3 = /* @__PURE__ */ getDefaultExportFromCjs(isFunction_1);
+var isFunction_1 = isFunction$3;
+const isFunction$4 = /* @__PURE__ */ getDefaultExportFromCjs(isFunction_1);
 var root$7 = _root;
 var coreJsData$1 = root$7["__core-js_shared__"];
 var _coreJsData = coreJsData$1;
@@ -59366,7 +53013,7 @@ function toSource$2(func) {
   return "";
 }
 var _toSource = toSource$2;
-var isFunction$1 = isFunction_1, isMasked = _isMasked, isObject$5 = isObject_1, toSource$1 = _toSource;
+var isFunction$2 = isFunction_1, isMasked = _isMasked, isObject$5 = isObject_1, toSource$1 = _toSource;
 var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
 var reIsHostCtor = /^\[object .+?Constructor\]$/;
 var funcProto$1 = Function.prototype, objectProto$a = Object.prototype;
@@ -59379,7 +53026,7 @@ function baseIsNative$1(value) {
   if (!isObject$5(value) || isMasked(value)) {
     return false;
   }
-  var pattern = isFunction$1(value) ? reIsNative : reIsHostCtor;
+  var pattern = isFunction$2(value) ? reIsNative : reIsHostCtor;
   return pattern.test(toSource$1(value));
 }
 var _baseIsNative = baseIsNative$1;
@@ -59855,9 +53502,9 @@ var isNullish = function isNullish2(value) {
 var isNumOrStr = function isNumOrStr2(value) {
   return isNumber(value) || isString$1(value);
 };
-var idCounter = 0;
+var idCounter$1 = 0;
 var uniqueId = function uniqueId2(prefix2) {
-  var id2 = ++idCounter;
+  var id2 = ++idCounter$1;
   return "".concat(prefix2 || "").concat(id2);
 };
 var getPercentValue = function getPercentValue2(percent2, totalValue) {
@@ -60437,7 +54084,7 @@ var hasClipDot = function hasClipDot2(dot) {
 var isValidSpreadableProp = function isValidSpreadableProp2(property2, key, includeEvents, svgElementType) {
   var _FilteredElementKeyMa;
   var matchingElementTypeKeys = (_FilteredElementKeyMa = FilteredElementKeyMap === null || FilteredElementKeyMap === void 0 ? void 0 : FilteredElementKeyMap[svgElementType]) !== null && _FilteredElementKeyMa !== void 0 ? _FilteredElementKeyMa : [];
-  return key.startsWith("data-") || !isFunction$3(property2) && (svgElementType && matchingElementTypeKeys.includes(key) || SVGElementPropKeys.includes(key)) || includeEvents && EventKeys.includes(key);
+  return key.startsWith("data-") || !isFunction$4(property2) && (svgElementType && matchingElementTypeKeys.includes(key) || SVGElementPropKeys.includes(key)) || includeEvents && EventKeys.includes(key);
 };
 var filterProps = function filterProps2(props, includeEvents, svgElementType) {
   if (!props || typeof props === "function" || typeof props === "boolean") {
@@ -61130,7 +54777,7 @@ function Symbol$3(type, size2) {
   };
   return symbol;
 }
-function noop$2() {
+function noop$3() {
 }
 function point$2(that, x3, y2) {
   that._context.bezierCurveTo(
@@ -61195,8 +54842,8 @@ function BasisClosed(context) {
   this._context = context;
 }
 BasisClosed.prototype = {
-  areaStart: noop$2,
-  areaEnd: noop$2,
+  areaStart: noop$3,
+  areaEnd: noop$3,
   lineStart: function() {
     this._x0 = this._x1 = this._x2 = this._x3 = this._x4 = this._y0 = this._y1 = this._y2 = this._y3 = this._y4 = NaN;
     this._point = 0;
@@ -61298,8 +54945,8 @@ function LinearClosed(context) {
   this._context = context;
 }
 LinearClosed.prototype = {
-  areaStart: noop$2,
-  areaEnd: noop$2,
+  areaStart: noop$3,
+  areaEnd: noop$3,
   lineStart: function() {
     this._point = 0;
   },
@@ -61986,9 +55633,9 @@ var DefaultLegendContent = /* @__PURE__ */ function(_PureComponent) {
         if (entry.type === "none") {
           return null;
         }
-        var entryValue = !isFunction$3(entry.value) ? entry.value : null;
+        var entryValue = !isFunction$4(entry.value) ? entry.value : null;
         warn(
-          !isFunction$3(entry.value),
+          !isFunction$4(entry.value),
           `The name property is also required when using a function for the dataKey of a chart's cartesian components. Ex: <Bar name="Name of my Data"/>`
           // eslint-disable-line max-len
         );
@@ -62424,9 +56071,9 @@ function baseKeys$1(object2) {
   return result;
 }
 var _baseKeys = baseKeys$1;
-var isFunction = isFunction_1, isLength$1 = isLength_1;
+var isFunction$1 = isFunction_1, isLength$1 = isLength_1;
 function isArrayLike$5(value) {
-  return value != null && isLength$1(value.length) && !isFunction(value);
+  return value != null && isLength$1(value.length) && !isFunction$1(value);
 }
 var isArrayLike_1 = isArrayLike$5;
 var arrayLikeKeys = _arrayLikeKeys, baseKeys = _baseKeys, isArrayLike$4 = isArrayLike_1;
@@ -62761,12 +56408,12 @@ function arrayIncludesWith$1(array2, value, comparator) {
   return false;
 }
 var _arrayIncludesWith = arrayIncludesWith$1;
-function noop$1() {
+function noop$2() {
 }
-var noop_1 = noop$1;
-var Set$1 = _Set, noop2 = noop_1, setToArray$1 = _setToArray;
+var noop_1 = noop$2;
+var Set$1 = _Set, noop$1 = noop_1, setToArray$1 = _setToArray;
 var INFINITY$1 = 1 / 0;
-var createSet$1 = !(Set$1 && 1 / setToArray$1(new Set$1([, -0]))[1] == INFINITY$1) ? noop2 : function(values) {
+var createSet$1 = !(Set$1 && 1 / setToArray$1(new Set$1([, -0]))[1] == INFINITY$1) ? noop$1 : function(values) {
   return new Set$1(values);
 };
 var _createSet = createSet$1;
@@ -62823,7 +56470,7 @@ function getUniqPayload(payload, option, defaultUniqBy2) {
   if (option === true) {
     return uniqBy$1(payload, defaultUniqBy2);
   }
-  if (isFunction$3(option)) {
+  if (isFunction$4(option)) {
     return uniqBy$1(payload, option);
   }
   return payload;
@@ -64080,7 +57727,7 @@ function renderContent(content, props) {
   }
   return /* @__PURE__ */ React$4.createElement(DefaultTooltipContent, props);
 }
-var Tooltip = /* @__PURE__ */ function(_PureComponent) {
+var Tooltip$2 = /* @__PURE__ */ function(_PureComponent) {
   function Tooltip2() {
     _classCallCheck$f(this, Tooltip2);
     return _callSuper$b(this, Tooltip2, arguments);
@@ -64118,8 +57765,8 @@ var Tooltip = /* @__PURE__ */ function(_PureComponent) {
     }
   }]);
 }(reactExports.PureComponent);
-_defineProperty$y(Tooltip, "displayName", "Tooltip");
-_defineProperty$y(Tooltip, "defaultProps", {
+_defineProperty$y(Tooltip$2, "displayName", "Tooltip");
+_defineProperty$y(Tooltip$2, "defaultProps", {
   accessibilityLayer: false,
   allowEscapeViewBox: {
     x: false,
@@ -64626,7 +58273,7 @@ var getStringSize = function getStringSize2(text) {
     };
   }
 };
-var getOffset = function getOffset2(rect) {
+var getOffset$1 = function getOffset(rect) {
   return {
     top: rect.top + window.scrollY - document.documentElement.clientTop,
     left: rect.left + window.scrollX - document.documentElement.clientLeft
@@ -65294,7 +58941,7 @@ function tickStep(start, stop, count2) {
   const reverse3 = stop < start, inc = reverse3 ? tickIncrement(stop, start, count2) : tickIncrement(start, stop, count2);
   return (reverse3 ? -1 : 1) * (inc < 0 ? 1 / -inc : inc);
 }
-function max$2(values, valueof) {
+function max$3(values, valueof) {
   let max2;
   {
     for (const value of values) {
@@ -65305,7 +58952,7 @@ function max$2(values, valueof) {
   }
   return max2;
 }
-function min$2(values, valueof) {
+function min$3(values, valueof) {
   let min2;
   {
     for (const value of values) {
@@ -65358,9 +59005,9 @@ function swap(array2, i, j2) {
 function quantile$1(values, p2, valueof) {
   values = Float64Array.from(numbers(values));
   if (!(n2 = values.length) || isNaN(p2 = +p2)) return;
-  if (p2 <= 0 || n2 < 2) return min$2(values);
-  if (p2 >= 1) return max$2(values);
-  var n2, i = (n2 - 1) * p2, i0 = Math.floor(i), value0 = max$2(quickselect(values, i0).subarray(0, i0 + 1)), value1 = min$2(values.subarray(i0 + 1));
+  if (p2 <= 0 || n2 < 2) return min$3(values);
+  if (p2 >= 1) return max$3(values);
+  var n2, i = (n2 - 1) * p2, i0 = Math.floor(i), value0 = max$3(quickselect(values, i0).subarray(0, i0 + 1)), value1 = min$3(values.subarray(i0 + 1));
   return value0 + (value1 - value0) * (i - i0);
 }
 function quantileSorted(values, p2, valueof = number$2) {
@@ -67794,21 +61441,21 @@ function baseGt$1(value, other) {
 }
 var _baseGt = baseGt$1;
 var baseExtremum$1 = _baseExtremum, baseGt = _baseGt, identity$3 = identity_1;
-function max(array2) {
+function max$1(array2) {
   return array2 && array2.length ? baseExtremum$1(array2, identity$3, baseGt) : void 0;
 }
-var max_1 = max;
-const max$1 = /* @__PURE__ */ getDefaultExportFromCjs(max_1);
+var max_1 = max$1;
+const max$2 = /* @__PURE__ */ getDefaultExportFromCjs(max_1);
 function baseLt$1(value, other) {
   return value < other;
 }
 var _baseLt = baseLt$1;
 var baseExtremum = _baseExtremum, baseLt = _baseLt, identity$2 = identity_1;
-function min(array2) {
+function min$1(array2) {
   return array2 && array2.length ? baseExtremum(array2, identity$2, baseLt) : void 0;
 }
-var min_1 = min;
-const min$1 = /* @__PURE__ */ getDefaultExportFromCjs(min_1);
+var min_1 = min$1;
+const min$2 = /* @__PURE__ */ getDefaultExportFromCjs(min_1);
 var arrayMap = _arrayMap, baseIteratee$5 = _baseIteratee, baseMap = _baseMap, isArray$2 = isArray_1;
 function map$2(collection, iteratee) {
   var func = isArray$2(collection) ? arrayMap : baseMap;
@@ -67892,7 +61539,7 @@ P.dividedBy = P.div = function(y2) {
 };
 P.dividedToIntegerBy = P.idiv = function(y2) {
   var x3 = this, Ctor = x3.constructor;
-  return round(divide(x3, new Ctor(y2), 0, 1), Ctor.precision);
+  return round$1(divide(x3, new Ctor(y2), 0, 1), Ctor.precision);
 };
 P.equals = P.eq = function(y2) {
   return !this.cmp(y2);
@@ -67937,7 +61584,7 @@ P.logarithm = P.log = function(base) {
   external = false;
   r2 = divide(ln(x3, wpr), ln(base, wpr), wpr);
   external = true;
-  return round(r2, pr);
+  return round$1(r2, pr);
 };
 P.minus = P.sub = function(y2) {
   var x3 = this;
@@ -67948,7 +61595,7 @@ P.modulo = P.mod = function(y2) {
   var q2, x3 = this, Ctor = x3.constructor, pr = Ctor.precision;
   y2 = new Ctor(y2);
   if (!y2.s) throw Error(decimalError + "NaN");
-  if (!x3.s) return round(new Ctor(x3), pr);
+  if (!x3.s) return round$1(new Ctor(x3), pr);
   external = false;
   q2 = divide(x3, y2, 0, 1).times(y2);
   external = true;
@@ -68015,7 +61662,7 @@ P.squareRoot = P.sqrt = function() {
     if (digitsToString(t2.d).slice(0, wpr) === (n2 = digitsToString(r2.d)).slice(0, wpr)) {
       n2 = n2.slice(wpr - 3, wpr + 1);
       if (s2 == wpr && n2 == "4999") {
-        round(t2, pr + 1, 0);
+        round$1(t2, pr + 1, 0);
         if (t2.times(t2).eq(x3)) {
           r2 = t2;
           break;
@@ -68027,7 +61674,7 @@ P.squareRoot = P.sqrt = function() {
     }
   }
   external = true;
-  return round(r2, pr);
+  return round$1(r2, pr);
 };
 P.times = P.mul = function(y2) {
   var carry, e3, i, k2, r2, rL, t2, xdL, ydL, x3 = this, Ctor = x3.constructor, xd = x3.d, yd = (y2 = new Ctor(y2)).d;
@@ -68061,7 +61708,7 @@ P.times = P.mul = function(y2) {
   else r2.shift();
   y2.d = r2;
   y2.e = e3;
-  return external ? round(y2, Ctor.precision) : y2;
+  return external ? round$1(y2, Ctor.precision) : y2;
 };
 P.toDecimalPlaces = P.todp = function(dp, rm) {
   var x3 = this, Ctor = x3.constructor;
@@ -68070,7 +61717,7 @@ P.toDecimalPlaces = P.todp = function(dp, rm) {
   checkInt32(dp, 0, MAX_DIGITS);
   if (rm === void 0) rm = Ctor.rounding;
   else checkInt32(rm, 0, 8);
-  return round(x3, dp + getBase10Exponent(x3) + 1, rm);
+  return round$1(x3, dp + getBase10Exponent(x3) + 1, rm);
 };
 P.toExponential = function(dp, rm) {
   var str, x3 = this, Ctor = x3.constructor;
@@ -68080,7 +61727,7 @@ P.toExponential = function(dp, rm) {
     checkInt32(dp, 0, MAX_DIGITS);
     if (rm === void 0) rm = Ctor.rounding;
     else checkInt32(rm, 0, 8);
-    x3 = round(new Ctor(x3), dp + 1, rm);
+    x3 = round$1(new Ctor(x3), dp + 1, rm);
     str = toString$1(x3, true, dp + 1);
   }
   return str;
@@ -68091,13 +61738,13 @@ P.toFixed = function(dp, rm) {
   checkInt32(dp, 0, MAX_DIGITS);
   if (rm === void 0) rm = Ctor.rounding;
   else checkInt32(rm, 0, 8);
-  y2 = round(new Ctor(x3), dp + getBase10Exponent(x3) + 1, rm);
+  y2 = round$1(new Ctor(x3), dp + getBase10Exponent(x3) + 1, rm);
   str = toString$1(y2.abs(), false, dp + getBase10Exponent(y2) + 1);
   return x3.isneg() && !x3.isZero() ? "-" + str : str;
 };
 P.toInteger = P.toint = function() {
   var x3 = this, Ctor = x3.constructor;
-  return round(new Ctor(x3), getBase10Exponent(x3) + 1, Ctor.rounding);
+  return round$1(new Ctor(x3), getBase10Exponent(x3) + 1, Ctor.rounding);
 };
 P.toNumber = function() {
   return +this;
@@ -68112,7 +61759,7 @@ P.toPower = P.pow = function(y2) {
   }
   if (x3.eq(ONE)) return x3;
   pr = Ctor.precision;
-  if (y2.eq(ONE)) return round(x3, pr);
+  if (y2.eq(ONE)) return round$1(x3, pr);
   e3 = y2.e;
   k2 = y2.d.length - 1;
   yIsInt = e3 >= k2;
@@ -68134,7 +61781,7 @@ P.toPower = P.pow = function(y2) {
       truncate(x3.d, e3);
     }
     external = true;
-    return y2.s < 0 ? new Ctor(ONE).div(r2) : round(r2, pr);
+    return y2.s < 0 ? new Ctor(ONE).div(r2) : round$1(r2, pr);
   }
   sign2 = sign2 < 0 && y2.d[Math.max(e3, k2)] & 1 ? -1 : 1;
   x3.s = 1;
@@ -68154,7 +61801,7 @@ P.toPrecision = function(sd, rm) {
     checkInt32(sd, 1, MAX_DIGITS);
     if (rm === void 0) rm = Ctor.rounding;
     else checkInt32(rm, 0, 8);
-    x3 = round(new Ctor(x3), sd, rm);
+    x3 = round$1(new Ctor(x3), sd, rm);
     e3 = getBase10Exponent(x3);
     str = toString$1(x3, sd <= e3 || e3 <= Ctor.toExpNeg, sd);
   }
@@ -68170,7 +61817,7 @@ P.toSignificantDigits = P.tosd = function(sd, rm) {
     if (rm === void 0) rm = Ctor.rounding;
     else checkInt32(rm, 0, 8);
   }
-  return round(new Ctor(x3), sd, rm);
+  return round$1(new Ctor(x3), sd, rm);
 };
 P.toString = P.valueOf = P.val = P.toJSON = P[Symbol.for("nodejs.util.inspect.custom")] = function() {
   var x3 = this, e3 = getBase10Exponent(x3), Ctor = x3.constructor;
@@ -68180,7 +61827,7 @@ function add(x3, y2) {
   var carry, d2, e3, i, k2, len, xd, yd, Ctor = x3.constructor, pr = Ctor.precision;
   if (!x3.s || !y2.s) {
     if (!y2.s) y2 = new Ctor(x3);
-    return external ? round(y2, pr) : y2;
+    return external ? round$1(y2, pr) : y2;
   }
   xd = x3.d;
   yd = y2.d;
@@ -68227,7 +61874,7 @@ function add(x3, y2) {
   for (len = xd.length; xd[--len] == 0; ) xd.pop();
   y2.d = xd;
   y2.e = e3;
-  return external ? round(y2, pr) : y2;
+  return external ? round$1(y2, pr) : y2;
 }
 function checkInt32(i, min2, max2) {
   if (i !== ~~i || i < min2 || i > max2) {
@@ -68382,7 +62029,7 @@ var divide = /* @__PURE__ */ function() {
     }
     if (!qd[0]) qd.shift();
     q2.e = e3;
-    return round(q2, dp ? pr + getBase10Exponent(q2) + 1 : pr);
+    return round$1(q2, dp ? pr + getBase10Exponent(q2) + 1 : pr);
   };
 }();
 function exp(x3, sd) {
@@ -68403,13 +62050,13 @@ function exp(x3, sd) {
   denominator = pow3 = sum = new Ctor(ONE);
   Ctor.precision = wpr;
   for (; ; ) {
-    pow3 = round(pow3.times(x3), wpr);
+    pow3 = round$1(pow3.times(x3), wpr);
     denominator = denominator.times(++i);
     t2 = sum.plus(divide(pow3, denominator, wpr));
     if (digitsToString(t2.d).slice(0, wpr) === digitsToString(sum.d).slice(0, wpr)) {
-      while (k2--) sum = round(sum.times(sum), wpr);
+      while (k2--) sum = round$1(sum.times(sum), wpr);
       Ctor.precision = pr;
-      return sd == null ? (external = true, round(sum, pr)) : sum;
+      return sd == null ? (external = true, round$1(sum, pr)) : sum;
     }
     sum = t2;
   }
@@ -68425,7 +62072,7 @@ function getLn10(Ctor, sd, pr) {
     if (pr) Ctor.precision = pr;
     throw Error(decimalError + "LN10 precision limit exceeded");
   }
-  return round(new Ctor(Ctor.LN10), sd);
+  return round$1(new Ctor(Ctor.LN10), sd);
 }
 function getZeroString(k2) {
   var zs = "";
@@ -68469,20 +62116,20 @@ function ln(y2, sd) {
     t2 = getLn10(Ctor, wpr + 2, pr).times(e3 + "");
     x3 = ln(new Ctor(c0 + "." + c2.slice(1)), wpr - guard).plus(t2);
     Ctor.precision = pr;
-    return sd == null ? (external = true, round(x3, pr)) : x3;
+    return sd == null ? (external = true, round$1(x3, pr)) : x3;
   }
   sum = numerator = x3 = divide(x3.minus(ONE), x3.plus(ONE), wpr);
-  x22 = round(x3.times(x3), wpr);
+  x22 = round$1(x3.times(x3), wpr);
   denominator = 3;
   for (; ; ) {
-    numerator = round(numerator.times(x22), wpr);
+    numerator = round$1(numerator.times(x22), wpr);
     t2 = sum.plus(divide(numerator, new Ctor(denominator), wpr));
     if (digitsToString(t2.d).slice(0, wpr) === digitsToString(sum.d).slice(0, wpr)) {
       sum = sum.times(2);
       if (e3 !== 0) sum = sum.plus(getLn10(Ctor, wpr + 2, pr).times(e3 + ""));
       sum = divide(sum, new Ctor(n2), wpr);
       Ctor.precision = pr;
-      return sd == null ? (external = true, round(sum, pr)) : sum;
+      return sd == null ? (external = true, round$1(sum, pr)) : sum;
     }
     sum = t2;
     denominator += 2;
@@ -68526,7 +62173,7 @@ function parseDecimal(x3, str) {
   }
   return x3;
 }
-function round(x3, sd, rm) {
+function round$1(x3, sd, rm) {
   var i, j2, k2, n2, rd, doRound, w2, xdi, xd = x3.d;
   for (n2 = 1, k2 = xd[0]; k2 >= 10; k2 /= 10) n2++;
   i = sd - n2;
@@ -68599,7 +62246,7 @@ function subtract(x3, y2) {
   if (!x3.s || !y2.s) {
     if (y2.s) y2.s = -y2.s;
     else y2 = new Ctor(x3);
-    return external ? round(y2, pr) : y2;
+    return external ? round$1(y2, pr) : y2;
   }
   xd = x3.d;
   yd = y2.d;
@@ -68660,7 +62307,7 @@ function subtract(x3, y2) {
   if (!xd[0]) return new Ctor(0);
   y2.d = xd;
   y2.e = e3;
-  return external ? round(y2, pr) : y2;
+  return external ? round$1(y2, pr) : y2;
 }
 function toString$1(x3, isExp, sd) {
   var k2, e3 = getBase10Exponent(x3), str = digitsToString(x3.d), len = str.length;
@@ -69593,7 +63240,7 @@ function getValueByDataKey(obj, dataKey, defaultValue) {
   if (isNumOrStr(dataKey)) {
     return get$2(obj, dataKey, defaultValue);
   }
-  if (isFunction$3(dataKey)) {
+  if (isFunction$4(dataKey)) {
     return dataKey(obj);
   }
   return defaultValue;
@@ -69606,7 +63253,7 @@ function getDomainOfDataByKey(data, key, type, filterNil) {
     var domain = flattenData.filter(function(entry) {
       return isNumber(entry) || parseFloat(entry);
     });
-    return domain.length ? [min$1(domain), max$1(domain)] : [Infinity, -Infinity];
+    return domain.length ? [min$2(domain), max$2(domain)] : [Infinity, -Infinity];
   }
   var validateData = filterNil ? flattenData.filter(function(entry) {
     return !isNil$1(entry);
@@ -69852,7 +63499,7 @@ var getDomainOfErrorBars = function getDomainOfErrorBars2(data, item, dataKey, l
     return data.reduce(function(result, entry) {
       var entryValue = getValueByDataKey(entry, dataKey);
       if (isNil$1(entryValue)) return result;
-      var mainValue = Array.isArray(entryValue) ? [min$1(entryValue), max$1(entryValue)] : [entryValue, entryValue];
+      var mainValue = Array.isArray(entryValue) ? [min$2(entryValue), max$2(entryValue)] : [entryValue, entryValue];
       var errorDomain = keys2.reduce(function(prevErrorArr, k2) {
         var errorValue = getValueByDataKey(entry, k2, 0);
         var lowerValue = mainValue[0] - Math.abs(Array.isArray(errorValue) ? errorValue[0] : errorValue);
@@ -70041,7 +63688,7 @@ var parseScale = function parseScale2(axis, chartType, hasBar) {
       realScaleType: d3Scales[name] ? name : "point"
     };
   }
-  return isFunction$3(scale2) ? {
+  return isFunction$4(scale2) ? {
     scale: scale2
   } : {
     scale: point(),
@@ -70226,7 +63873,7 @@ var getTicksOfScale = function getTicksOfScale2(scale2, opts) {
       return null;
     }
     var tickValues = getNiceTickValues(domain, tickCount, allowDecimals);
-    scale2.domain([min$1(tickValues), max$1(tickValues)]);
+    scale2.domain([min$2(tickValues), max$2(tickValues)]);
     return {
       niceTicks: tickValues
     };
@@ -70293,7 +63940,7 @@ var getStackedDataOfItem = function getStackedDataOfItem2(item, stackGroups) {
 };
 var getDomainOfSingle = function getDomainOfSingle2(data) {
   return data.reduce(function(result, entry) {
-    return [min$1(entry.concat([result[0]]).filter(isNumber)), max$1(entry.concat([result[1]]).filter(isNumber))];
+    return [min$2(entry.concat([result[0]]).filter(isNumber)), max$2(entry.concat([result[1]]).filter(isNumber))];
   }, [Infinity, -Infinity]);
 };
 var getDomainOfStackGroups = function getDomainOfStackGroups2(stackGroups, startIndex, endIndex) {
@@ -70312,7 +63959,7 @@ var getDomainOfStackGroups = function getDomainOfStackGroups2(stackGroups, start
 var MIN_VALUE_REG = /^dataMin[\s]*-[\s]*([0-9]+([.]{1}[0-9]+){0,1})$/;
 var MAX_VALUE_REG = /^dataMax[\s]*\+[\s]*([0-9]+([.]{1}[0-9]+){0,1})$/;
 var parseSpecifiedDomain = function parseSpecifiedDomain2(specifiedDomain, dataDomain, allowDataOverflow) {
-  if (isFunction$3(specifiedDomain)) {
+  if (isFunction$4(specifiedDomain)) {
     return specifiedDomain(dataDomain, allowDataOverflow);
   }
   if (!Array.isArray(specifiedDomain)) {
@@ -70324,7 +63971,7 @@ var parseSpecifiedDomain = function parseSpecifiedDomain2(specifiedDomain, dataD
   } else if (MIN_VALUE_REG.test(specifiedDomain[0])) {
     var value = +MIN_VALUE_REG.exec(specifiedDomain[0])[1];
     domain[0] = dataDomain[0] - value;
-  } else if (isFunction$3(specifiedDomain[0])) {
+  } else if (isFunction$4(specifiedDomain[0])) {
     domain[0] = specifiedDomain[0](dataDomain[0]);
   } else {
     domain[0] = dataDomain[0];
@@ -70334,7 +63981,7 @@ var parseSpecifiedDomain = function parseSpecifiedDomain2(specifiedDomain, dataD
   } else if (MAX_VALUE_REG.test(specifiedDomain[1])) {
     var _value = +MAX_VALUE_REG.exec(specifiedDomain[1])[1];
     domain[1] = dataDomain[1] + _value;
-  } else if (isFunction$3(specifiedDomain[1])) {
+  } else if (isFunction$4(specifiedDomain[1])) {
     domain[1] = specifiedDomain[1](dataDomain[1]);
   } else {
     domain[1] = dataDomain[1];
@@ -70659,7 +64306,7 @@ function _extends$j() {
 var getLabel = function getLabel2(props) {
   var value = props.value, formatter = props.formatter;
   var label = isNil$1(props.children) ? value : props.children;
-  if (isFunction$3(formatter)) {
+  if (isFunction$4(formatter)) {
     return formatter(label);
   }
   return label;
@@ -70898,14 +64545,14 @@ function Label(_ref4) {
     offset: offset2
   }, restProps);
   var viewBox = props.viewBox, position = props.position, value = props.value, children = props.children, content = props.content, _props$className = props.className, className = _props$className === void 0 ? "" : _props$className, textBreakAll = props.textBreakAll;
-  if (!viewBox || isNil$1(value) && isNil$1(children) && !/* @__PURE__ */ reactExports.isValidElement(content) && !isFunction$3(content)) {
+  if (!viewBox || isNil$1(value) && isNil$1(children) && !/* @__PURE__ */ reactExports.isValidElement(content) && !isFunction$4(content)) {
     return null;
   }
   if (/* @__PURE__ */ reactExports.isValidElement(content)) {
     return /* @__PURE__ */ reactExports.cloneElement(content, props);
   }
   var label;
-  if (isFunction$3(content)) {
+  if (isFunction$4(content)) {
     label = /* @__PURE__ */ reactExports.createElement(content, props);
     if (/* @__PURE__ */ reactExports.isValidElement(label)) {
       return label;
@@ -71003,7 +64650,7 @@ var parseLabel = function parseLabel2(label, viewBox) {
       viewBox
     });
   }
-  if (isFunction$3(label)) {
+  if (isFunction$4(label)) {
     return /* @__PURE__ */ React$4.createElement(Label, {
       key: "label-implicit",
       content: label,
@@ -71204,7 +64851,7 @@ function parseLabelList(label, data) {
       data
     });
   }
-  if (/* @__PURE__ */ React$4.isValidElement(label) || isFunction$3(label)) {
+  if (/* @__PURE__ */ React$4.isValidElement(label) || isFunction$4(label)) {
     return /* @__PURE__ */ React$4.createElement(LabelList, {
       key: "labelList-implicit",
       data,
@@ -71550,7 +65197,7 @@ var getY = function getY2(p2) {
   return p2.y;
 };
 var getCurveFactory = function getCurveFactory2(type, layout2) {
-  if (isFunction$3(type)) {
+  if (isFunction$4(type)) {
     return type;
   }
   var name = "curve".concat(upperFirst$1(type));
@@ -72070,7 +65717,7 @@ function createIsEqual({ circular, comparator, createState: createState2, equals
     return comparator(a2, b2, state);
   };
 }
-const deepEqual = createCustomEqual();
+const deepEqual$1 = createCustomEqual();
 createCustomEqual({ strict: true });
 createCustomEqual({ circular: true });
 createCustomEqual({
@@ -72937,7 +66584,7 @@ var Animate = /* @__PURE__ */ function(_PureComponent) {
         }
         return;
       }
-      if (deepEqual(prevProps.to, to) && prevProps.canBegin && prevProps.isActive) {
+      if (deepEqual$1(prevProps.to, to) && prevProps.canBegin && prevProps.isActive) {
         return;
       }
       var isTriggered = !prevProps.canBegin || !prevProps.isActive;
@@ -73851,7 +67498,7 @@ function Shape(_ref2) {
   var shape;
   if (/* @__PURE__ */ reactExports.isValidElement(option)) {
     shape = /* @__PURE__ */ reactExports.cloneElement(option, _objectSpread$e(_objectSpread$e({}, props), getPropsFromShapeOption(option)));
-  } else if (isFunction$3(option)) {
+  } else if (isFunction$4(option)) {
     shape = option(props);
   } else if (isPlainObject$1(option) && !isBoolean$1(option)) {
     var nextProps = propTransformer(option, props);
@@ -74315,7 +67962,7 @@ var Brush = /* @__PURE__ */ function(_PureComponent) {
     value: function getTextOfTick(index2) {
       var _this$props3 = this.props, data = _this$props3.data, tickFormatter = _this$props3.tickFormatter, dataKey = _this$props3.dataKey;
       var text = getValueByDataKey(data[index2], dataKey, index2);
-      return isFunction$3(tickFormatter) ? tickFormatter(text, index2) : text;
+      return isFunction$4(tickFormatter) ? tickFormatter(text, index2) : text;
     }
   }, {
     key: "attachDragEndListener",
@@ -74603,7 +68250,7 @@ var Brush = /* @__PURE__ */ function(_PureComponent) {
       var rectangle;
       if (/* @__PURE__ */ React$4.isValidElement(option)) {
         rectangle = /* @__PURE__ */ React$4.cloneElement(option, props);
-      } else if (isFunction$3(option)) {
+      } else if (isFunction$4(option)) {
         rectangle = option(props);
       } else {
         rectangle = Brush2.renderDefaultTraveller(props);
@@ -75989,7 +69636,7 @@ var renderLine = function renderLine2(option, props) {
   var line;
   if (/* @__PURE__ */ React$4.isValidElement(option)) {
     line = /* @__PURE__ */ React$4.cloneElement(option, props);
-  } else if (isFunction$3(option)) {
+  } else if (isFunction$4(option)) {
     line = option(props);
   } else {
     line = /* @__PURE__ */ React$4.createElement("line", _extends$8({}, props, {
@@ -76321,7 +69968,7 @@ _defineProperty$a(ReferenceDot, "renderDot", function(option, props) {
   var dot;
   if (/* @__PURE__ */ React$4.isValidElement(option)) {
     dot = /* @__PURE__ */ React$4.cloneElement(option, props);
-  } else if (isFunction$3(option)) {
+  } else if (isFunction$4(option)) {
     dot = option(props);
   } else {
     dot = /* @__PURE__ */ React$4.createElement(Dot, _extends$7({}, props, {
@@ -76541,7 +70188,7 @@ _defineProperty$9(ReferenceArea, "renderRect", function(option, props) {
   var rect;
   if (/* @__PURE__ */ React$4.isValidElement(option)) {
     rect = /* @__PURE__ */ React$4.cloneElement(option, props);
-  } else if (isFunction$3(option)) {
+  } else if (isFunction$4(option)) {
     rect = option(props);
   } else {
     rect = /* @__PURE__ */ React$4.createElement(Rectangle, _extends$6({}, props, {
@@ -76796,7 +70443,7 @@ function getTicks(props, fontSize, letterSpacing) {
     height: 0
   };
   var getTickSize = function getTickSize2(content, index2) {
-    var value = isFunction$3(tickFormatter) ? tickFormatter(content.value, index2) : content.value;
+    var value = isFunction$4(tickFormatter) ? tickFormatter(content.value, index2) : content.value;
     return sizeKey === "width" ? getAngledTickWidth(getStringSize(value, {
       fontSize,
       letterSpacing
@@ -77176,7 +70823,7 @@ var CartesianAxis = /* @__PURE__ */ function(_Component) {
             key: "tick-".concat(entry.value, "-").concat(entry.coordinate, "-").concat(entry.tickCoord)
           }, adaptEventsOfChild(_this2.props, entry, i)), tickLine && /* @__PURE__ */ React$4.createElement("line", _extends$5({}, tickLineProps, lineCoord, {
             className: clsx("recharts-cartesian-axis-tick-line", get$2(tickLine, "className"))
-          })), tick && CartesianAxis2.renderTickItem(tick, tickProps, "".concat(isFunction$3(tickFormatter) ? tickFormatter(entry.value, i) : entry.value).concat(unit2 || "")));
+          })), tick && CartesianAxis2.renderTickItem(tick, tickProps, "".concat(isFunction$4(tickFormatter) ? tickFormatter(entry.value, i) : entry.value).concat(unit2 || "")));
         });
         return /* @__PURE__ */ React$4.createElement("g", {
           className: "recharts-cartesian-axis-ticks"
@@ -77193,7 +70840,7 @@ var CartesianAxis = /* @__PURE__ */ function(_Component) {
       }
       var _this$props8 = this.props, ticks2 = _this$props8.ticks, noTicksProps = _objectWithoutProperties$3(_this$props8, _excluded3);
       var finalTicks = ticks2;
-      if (isFunction$3(ticksGenerator)) {
+      if (isFunction$4(ticksGenerator)) {
         finalTicks = ticks2 && ticks2.length > 0 ? ticksGenerator(this.props) : ticksGenerator(noTicksProps);
       }
       if (width <= 0 || height <= 0 || !finalTicks || !finalTicks.length) {
@@ -77215,7 +70862,7 @@ var CartesianAxis = /* @__PURE__ */ function(_Component) {
         tickItem = /* @__PURE__ */ React$4.cloneElement(option, _objectSpread$4(_objectSpread$4({}, props), {}, {
           className: combinedClassName
         }));
-      } else if (isFunction$3(option)) {
+      } else if (isFunction$4(option)) {
         tickItem = option(_objectSpread$4(_objectSpread$4({}, props), {}, {
           className: combinedClassName
         }));
@@ -77370,7 +71017,7 @@ function renderLineItem(option, props) {
   var lineItem;
   if (/* @__PURE__ */ React$4.isValidElement(option)) {
     lineItem = /* @__PURE__ */ React$4.cloneElement(option, props);
-  } else if (isFunction$3(option)) {
+  } else if (isFunction$4(option)) {
     lineItem = option(props);
   } else {
     var x1 = props.x1, y1 = props.y1, x22 = props.x2, y2 = props.y2, key = props.key, others = _objectWithoutProperties$2(props, _excluded$2);
@@ -77559,7 +71206,7 @@ function CartesianGrid(props) {
   var verticalCoordinatesGenerator = propsIncludingDefaults.verticalCoordinatesGenerator || defaultVerticalCoordinatesGenerator;
   var horizontalCoordinatesGenerator = propsIncludingDefaults.horizontalCoordinatesGenerator || defaultHorizontalCoordinatesGenerator;
   var horizontalPoints = propsIncludingDefaults.horizontalPoints, verticalPoints = propsIncludingDefaults.verticalPoints;
-  if ((!horizontalPoints || !horizontalPoints.length) && isFunction$3(horizontalCoordinatesGenerator)) {
+  if ((!horizontalPoints || !horizontalPoints.length) && isFunction$4(horizontalCoordinatesGenerator)) {
     var isHorizontalValues = horizontalValues && horizontalValues.length;
     var generatorResult = horizontalCoordinatesGenerator({
       yAxis: yAxis ? _objectSpread$3(_objectSpread$3({}, yAxis), {}, {
@@ -77574,7 +71221,7 @@ function CartesianGrid(props) {
       horizontalPoints = generatorResult;
     }
   }
-  if ((!verticalPoints || !verticalPoints.length) && isFunction$3(verticalCoordinatesGenerator)) {
+  if ((!verticalPoints || !verticalPoints.length) && isFunction$4(verticalCoordinatesGenerator)) {
     var isVerticalValues = verticalValues && verticalValues.length;
     var _generatorResult = verticalCoordinatesGenerator({
       xAxis: xAxis ? _objectSpread$3(_objectSpread$3({}, xAxis), {}, {
@@ -77795,7 +71442,7 @@ var Area = /* @__PURE__ */ function(_PureComponent) {
       _this.setState({
         isAnimationFinished: true
       });
-      if (isFunction$3(onAnimationEnd2)) {
+      if (isFunction$4(onAnimationEnd2)) {
         onAnimationEnd2();
       }
     });
@@ -77804,7 +71451,7 @@ var Area = /* @__PURE__ */ function(_PureComponent) {
       _this.setState({
         isAnimationFinished: false
       });
-      if (isFunction$3(onAnimationStart2)) {
+      if (isFunction$4(onAnimationStart2)) {
         onAnimationStart2();
       }
     });
@@ -77851,13 +71498,13 @@ var Area = /* @__PURE__ */ function(_PureComponent) {
       var startX = points[0].x;
       var endX = points[points.length - 1].x;
       var width = alpha3 * Math.abs(startX - endX);
-      var maxY = max$1(points.map(function(entry) {
+      var maxY = max$2(points.map(function(entry) {
         return entry.y || 0;
       }));
       if (isNumber(baseLine) && typeof baseLine === "number") {
         maxY = Math.max(baseLine, maxY);
       } else if (baseLine && Array.isArray(baseLine) && baseLine.length) {
-        maxY = Math.max(max$1(baseLine.map(function(entry) {
+        maxY = Math.max(max$2(baseLine.map(function(entry) {
           return entry.y || 0;
         })), maxY);
       }
@@ -77878,13 +71525,13 @@ var Area = /* @__PURE__ */ function(_PureComponent) {
       var startY = points[0].y;
       var endY = points[points.length - 1].y;
       var height = alpha3 * Math.abs(startY - endY);
-      var maxX = max$1(points.map(function(entry) {
+      var maxX = max$2(points.map(function(entry) {
         return entry.x || 0;
       }));
       if (isNumber(baseLine) && typeof baseLine === "number") {
         maxX = Math.max(baseLine, maxX);
       } else if (baseLine && Array.isArray(baseLine) && baseLine.length) {
-        maxX = Math.max(max$1(baseLine.map(function(entry) {
+        maxX = Math.max(max$2(baseLine.map(function(entry) {
           return entry.x || 0;
         })), maxX);
       }
@@ -78202,7 +71849,7 @@ _defineProperty$5(Area, "renderDotItem", function(option, props) {
   var dotItem;
   if (/* @__PURE__ */ React$4.isValidElement(option)) {
     dotItem = /* @__PURE__ */ React$4.cloneElement(option, props);
-  } else if (isFunction$3(option)) {
+  } else if (isFunction$4(option)) {
     dotItem = option(props);
   } else {
     var className = clsx("recharts-area-dot", typeof option !== "boolean" ? option.className : "");
@@ -79903,7 +73550,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
           _this.setState(_nextState);
           _this.triggerSyncEvent(_nextState);
           var onMouseEnter = _this.props.onMouseEnter;
-          if (isFunction$3(onMouseEnter)) {
+          if (isFunction$4(onMouseEnter)) {
             onMouseEnter(_nextState, e3);
           }
         }
@@ -79918,7 +73565,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
         _this.setState(nextState);
         _this.triggerSyncEvent(nextState);
         var onMouseMove = _this.props.onMouseMove;
-        if (isFunction$3(onMouseMove)) {
+        if (isFunction$4(onMouseMove)) {
           onMouseMove(nextState, e3);
         }
       });
@@ -79954,14 +73601,14 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
         _this.setState(nextState);
         _this.triggerSyncEvent(nextState);
         var onMouseLeave = _this.props.onMouseLeave;
-        if (isFunction$3(onMouseLeave)) {
+        if (isFunction$4(onMouseLeave)) {
           onMouseLeave(nextState, e3);
         }
       });
       _defineProperty(_this, "handleOuterEvent", function(e3) {
         var eventName = getReactEventByType(e3);
         var event = get$2(_this.props, "".concat(eventName));
-        if (eventName && isFunction$3(event)) {
+        if (eventName && isFunction$4(event)) {
           var _mouse;
           var mouse;
           if (/.*touch.*/i.test(eventName)) {
@@ -79981,21 +73628,21 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
           _this.setState(_nextState2);
           _this.triggerSyncEvent(_nextState2);
           var onClick = _this.props.onClick;
-          if (isFunction$3(onClick)) {
+          if (isFunction$4(onClick)) {
             onClick(_nextState2, e3);
           }
         }
       });
       _defineProperty(_this, "handleMouseDown", function(e3) {
         var onMouseDown = _this.props.onMouseDown;
-        if (isFunction$3(onMouseDown)) {
+        if (isFunction$4(onMouseDown)) {
           var _nextState3 = _this.getMouseInfo(e3);
           onMouseDown(_nextState3, e3);
         }
       });
       _defineProperty(_this, "handleMouseUp", function(e3) {
         var onMouseUp = _this.props.onMouseUp;
-        if (isFunction$3(onMouseUp)) {
+        if (isFunction$4(onMouseUp)) {
           var _nextState4 = _this.getMouseInfo(e3);
           onMouseUp(_nextState4, e3);
         }
@@ -80017,14 +73664,14 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
       });
       _defineProperty(_this, "handleDoubleClick", function(e3) {
         var onDoubleClick = _this.props.onDoubleClick;
-        if (isFunction$3(onDoubleClick)) {
+        if (isFunction$4(onDoubleClick)) {
           var _nextState5 = _this.getMouseInfo(e3);
           onDoubleClick(_nextState5, e3);
         }
       });
       _defineProperty(_this, "handleContextMenu", function(e3) {
         var onContextMenu = _this.props.onContextMenu;
-        if (isFunction$3(onContextMenu)) {
+        if (isFunction$4(onContextMenu)) {
           var _nextState6 = _this.getMouseInfo(e3);
           onContextMenu(_nextState6, e3);
         }
@@ -80167,7 +73814,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
       _defineProperty(_this, "renderTooltip", function() {
         var _tooltipItem$props$ac;
         var _this$props3 = _this.props, children = _this$props3.children, accessibilityLayer = _this$props3.accessibilityLayer;
-        var tooltipItem = findChildByType(children, Tooltip);
+        var tooltipItem = findChildByType(children, Tooltip$2);
         if (!tooltipItem) {
           return null;
         }
@@ -80258,7 +73905,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
         var tooltipEventType = _this.getTooltipEventType();
         var _this$state8 = _this.state, isTooltipActive = _this$state8.isTooltipActive, tooltipAxis = _this$state8.tooltipAxis, activeTooltipIndex = _this$state8.activeTooltipIndex, activeLabel = _this$state8.activeLabel;
         var children = _this.props.children;
-        var tooltipItem = findChildByType(children, Tooltip);
+        var tooltipItem = findChildByType(children, Tooltip$2);
         var _item$props = item.props, points = _item$props.points, isRange = _item$props.isRange, baseLine = _item$props.baseLine;
         var itemItemProps = item.item.type.defaultProps !== void 0 ? _objectSpread(_objectSpread({}, item.item.type.defaultProps), item.item.props) : item.item.props;
         var activeDot = itemItemProps.activeDot, hide2 = itemItemProps.hide, activeBar = itemItemProps.activeBar, activeShape = itemItemProps.activeShape;
@@ -80418,7 +74065,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
       key: "displayDefaultTooltip",
       value: function displayDefaultTooltip() {
         var _this$props5 = this.props, children = _this$props5.children, data = _this$props5.data, height = _this$props5.height, layout2 = _this$props5.layout;
-        var tooltipElem = findChildByType(children, Tooltip);
+        var tooltipElem = findChildByType(children, Tooltip$2);
         if (!tooltipElem) {
           return;
         }
@@ -80487,7 +74134,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
     }, {
       key: "componentDidUpdate",
       value: function componentDidUpdate(prevProps) {
-        if (!isChildrenEqual([findChildByType(prevProps.children, Tooltip)], [findChildByType(this.props.children, Tooltip)])) {
+        if (!isChildrenEqual([findChildByType(prevProps.children, Tooltip$2)], [findChildByType(this.props.children, Tooltip$2)])) {
           this.displayDefaultTooltip();
         }
       }
@@ -80500,7 +74147,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
     }, {
       key: "getTooltipEventType",
       value: function getTooltipEventType() {
-        var tooltipItem = findChildByType(this.props.children, Tooltip);
+        var tooltipItem = findChildByType(this.props.children, Tooltip$2);
         if (tooltipItem && typeof tooltipItem.props.shared === "boolean") {
           var eventType = tooltipItem.props.shared ? "axis" : "item";
           return validateTooltipEventTypes.indexOf(eventType) >= 0 ? eventType : defaultTooltipEventType;
@@ -80520,7 +74167,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
         }
         var element = this.container;
         var boundingRect = element.getBoundingClientRect();
-        var containerOffset = getOffset(boundingRect);
+        var containerOffset = getOffset$1(boundingRect);
         var e3 = {
           chartX: Math.round(event.pageX - containerOffset.left),
           chartY: Math.round(event.pageY - containerOffset.top)
@@ -80577,7 +74224,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
       value: function parseEventsOfWrapper() {
         var children = this.props.children;
         var tooltipEventType = this.getTooltipEventType();
-        var tooltipItem = findChildByType(children, Tooltip);
+        var tooltipItem = findChildByType(children, Tooltip$2);
         var tooltipEvents = {};
         if (tooltipItem && tooltipEventType === "axis") {
           if (tooltipItem.props.trigger === "click") {
@@ -80868,7 +74515,7 @@ var generateCategoricalChart = function generateCategoricalChart2(_ref6) {
     var dot;
     if (/* @__PURE__ */ reactExports.isValidElement(option)) {
       dot = /* @__PURE__ */ reactExports.cloneElement(option, props);
-    } else if (isFunction$3(option)) {
+    } else if (isFunction$4(option)) {
       dot = option(props);
     } else {
       dot = /* @__PURE__ */ React$4.createElement(Dot, props);
@@ -80912,6 +74559,6775 @@ var AreaChart = generateCategoricalChart({
   }],
   formatAxisMap
 });
+function formatMonthLabel$1(year, month) {
+  const y2 = Number(year);
+  const m2 = Number(month);
+  if (!Number.isFinite(y2) || !Number.isFinite(m2) || m2 < 1 || m2 > 12) {
+    return "—";
+  }
+  const date2 = new Date(Date.UTC(y2, m2 - 1, 1));
+  return date2.toLocaleDateString(void 0, {
+    year: "numeric",
+    month: "short",
+    timeZone: "UTC"
+  });
+}
+function e8sToIcpNumber$1(e8s) {
+  return Number(e8s) / Number(E8S_PER_ICP);
+}
+function StatRow$1({
+  label,
+  value,
+  dataOcid
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", "data-ocid": dataOcid, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-sm", children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-sm font-semibold", children: value })
+  ] });
+}
+function RewardStatsCard({
+  stats,
+  loading,
+  title = "Reward statistics",
+  dataOcidPrefix = "dashboard.reward_stats"
+}) {
+  var _a2;
+  const monthlyCount = ((_a2 = stats == null ? void 0 : stats.monthly) == null ? void 0 : _a2.length) ?? 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: title }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: !stats || loading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-full" })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow$1,
+        {
+          label: "Total capital contributed",
+          value: formatIcp(stats.totalCapitalContributedE8s ?? 0n, 4),
+          dataOcid: `${dataOcidPrefix}.total_capital`
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow$1,
+        {
+          label: "Total rewards earned",
+          value: formatIcp(stats.totalRewardsE8s ?? 0n, 4),
+          dataOcid: `${dataOcidPrefix}.total_rewards`
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow$1,
+        {
+          label: "Average daily reward",
+          value: formatIcp(stats.averageDailyRewardE8s ?? 0n, 4)
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow$1,
+        {
+          label: "APY (30-day)",
+          value: formatApy(stats.apy30d ?? 0),
+          dataOcid: `${dataOcidPrefix}.apy30d`
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        StatRow$1,
+        {
+          label: "Overall return",
+          value: formatPercent(stats.overallReturnPct ?? 0),
+          dataOcid: `${dataOcidPrefix}.overall_return`
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Separator, {}),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(StatRow$1, { label: "Monthly readings", value: monthlyCount.toString() })
+    ] }) })
+  ] });
+}
+function MonthlyBreakdownSection$1({
+  monthly,
+  dataOcidPrefix = "dashboard.monthly"
+}) {
+  const sorted = reactExports.useMemo(
+    () => [...monthly].sort((a2, b2) => {
+      const y2 = Number(a2.year - b2.year);
+      if (y2 !== 0) return y2;
+      return Number(a2.month - b2.month);
+    }),
+    [monthly]
+  );
+  const byKey = reactExports.useMemo(() => {
+    const map2 = /* @__PURE__ */ new Map();
+    for (const m2 of sorted) {
+      map2.set(`${Number(m2.year)}-${Number(m2.month)}`, m2);
+    }
+    return map2;
+  }, [sorted]);
+  const chartData = reactExports.useMemo(
+    () => sorted.map((m2) => ({
+      label: formatMonthLabel$1(m2.year, m2.month),
+      icp: e8sToIcpNumber$1(m2.totalDeltaE8s),
+      raw: m2.totalDeltaE8s
+    })),
+    [sorted]
+  );
+  const hasData = sorted.length > 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 mt-6", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "text-base", children: "Monthly breakdown" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(Badge, { variant: "secondary", className: "font-mono text-[10px]", children: [
+        sorted.length,
+        " ",
+        sorted.length === 1 ? "month" : "months"
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { children: !hasData ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-48 flex-col items-center justify-center text-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ChartColumn, { className: "text-muted-foreground/50 size-7" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-3 text-sm", children: "No monthly breakdown available yet. Record more snapshots to see per-month totals." })
+    ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-6 lg:grid-cols-2", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-72 w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        BarChart,
+        {
+          data: chartData,
+          margin: { top: 8, right: 8, bottom: 0, left: -16 },
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              CartesianGrid,
+              {
+                strokeDasharray: "3 3",
+                stroke: "oklch(var(--border))",
+                vertical: false
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              XAxis,
+              {
+                dataKey: "label",
+                tick: {
+                  fill: "oklch(var(--muted-foreground))",
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono)"
+                },
+                axisLine: { stroke: "oklch(var(--border))" },
+                tickLine: false,
+                minTickGap: 20
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              YAxis,
+              {
+                tick: {
+                  fill: "oklch(var(--muted-foreground))",
+                  fontSize: 11,
+                  fontFamily: "var(--font-mono)"
+                },
+                axisLine: false,
+                tickLine: false,
+                width: 56,
+                tickFormatter: (v2) => formatIcpCompact(BigInt(Math.round(v2 * 1e8)))
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Tooltip$2,
+              {
+                cursor: { fill: "oklch(var(--chart-1) / 0.08)" },
+                contentStyle: {
+                  backgroundColor: "oklch(var(--popover))",
+                  border: "1px solid oklch(var(--border))",
+                  borderRadius: "0.5rem",
+                  fontSize: "12px",
+                  fontFamily: "var(--font-mono)"
+                },
+                labelStyle: { color: "oklch(var(--muted-foreground))" },
+                itemStyle: { color: "oklch(var(--foreground))" },
+                formatter: (v2) => [`${v2.toFixed(4)} ICP`, "Earned"]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Bar,
+              {
+                dataKey: "icp",
+                fill: "oklch(var(--chart-1))",
+                radius: [3, 3, 0, 0],
+                maxBarSize: 48
+              }
+            )
+          ]
+        }
+      ) }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-x-auto rounded-lg border border-border/60", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Table, { "data-ocid": `${dataOcidPrefix}.table`, children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(TableRow, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px]", children: "Month" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Total earned" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "MoM delta" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "YoY delta" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TableHead, { className: "text-[11px] text-right", children: "Readings" })
+        ] }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TableBody, { children: sorted.map((m2, i) => {
+          const momNegative = m2.momDeltaE8s < 0n;
+          const prevYear = byKey.get(
+            `${Number(m2.year) - 1}-${Number(m2.month)}`
+          );
+          const yoyDeltaE8s = prevYear == null ? null : m2.totalDeltaE8s - prevYear.totalDeltaE8s;
+          const yoyNegative = yoyDeltaE8s != null && yoyDeltaE8s < 0n;
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            TableRow,
+            {
+              "data-ocid": `${dataOcidPrefix}.row.${i + 1}`,
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-xs", children: formatMonthLabel$1(m2.year, m2.month) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-foreground font-mono text-right text-xs", children: formatIcp(m2.totalDeltaE8s, 4, false) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  TableCell,
+                  {
+                    className: cn(
+                      "font-mono text-right text-xs",
+                      momNegative ? "text-destructive" : "text-primary"
+                    ),
+                    children: [
+                      momNegative ? "" : "+",
+                      formatIcp(m2.momDeltaE8s, 4, false)
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  TableCell,
+                  {
+                    className: cn(
+                      "font-mono text-right text-xs",
+                      yoyDeltaE8s == null ? "text-muted-foreground" : yoyNegative ? "text-destructive" : "text-primary"
+                    ),
+                    children: yoyDeltaE8s == null ? "—" : `${yoyNegative ? "" : "+"}${formatIcp(yoyDeltaE8s, 4, false)}`
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(TableCell, { className: "text-muted-foreground font-mono text-right text-xs", children: Number(m2.readingCount) })
+              ]
+            },
+            `monthly-${m2.year}-${m2.month}`
+          );
+        }) })
+      ] }) })
+    ] }) })
+  ] });
+}
+function composeEventHandlers(originalEventHandler, ourEventHandler, { checkForDefaultPrevented = true } = {}) {
+  return function handleEvent(event) {
+    originalEventHandler == null ? void 0 : originalEventHandler(event);
+    if (checkForDefaultPrevented === false || !event.defaultPrevented) {
+      return ourEventHandler == null ? void 0 : ourEventHandler(event);
+    }
+  };
+}
+function createContext2(rootComponentName, defaultContext) {
+  const Context = reactExports.createContext(defaultContext);
+  const Provider2 = (props) => {
+    const { children, ...context } = props;
+    const value = reactExports.useMemo(() => context, Object.values(context));
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Context.Provider, { value, children });
+  };
+  Provider2.displayName = rootComponentName + "Provider";
+  function useContext2(consumerName) {
+    const context = reactExports.useContext(Context);
+    if (context) return context;
+    if (defaultContext !== void 0) return defaultContext;
+    throw new Error(`\`${consumerName}\` must be used within \`${rootComponentName}\``);
+  }
+  return [Provider2, useContext2];
+}
+function createContextScope(scopeName, createContextScopeDeps = []) {
+  let defaultContexts = [];
+  function createContext3(rootComponentName, defaultContext) {
+    const BaseContext = reactExports.createContext(defaultContext);
+    const index2 = defaultContexts.length;
+    defaultContexts = [...defaultContexts, defaultContext];
+    const Provider2 = (props) => {
+      var _a2;
+      const { scope, children, ...context } = props;
+      const Context = ((_a2 = scope == null ? void 0 : scope[scopeName]) == null ? void 0 : _a2[index2]) || BaseContext;
+      const value = reactExports.useMemo(() => context, Object.values(context));
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(Context.Provider, { value, children });
+    };
+    Provider2.displayName = rootComponentName + "Provider";
+    function useContext2(consumerName, scope) {
+      var _a2;
+      const Context = ((_a2 = scope == null ? void 0 : scope[scopeName]) == null ? void 0 : _a2[index2]) || BaseContext;
+      const context = reactExports.useContext(Context);
+      if (context) return context;
+      if (defaultContext !== void 0) return defaultContext;
+      throw new Error(`\`${consumerName}\` must be used within \`${rootComponentName}\``);
+    }
+    return [Provider2, useContext2];
+  }
+  const createScope = () => {
+    const scopeContexts = defaultContexts.map((defaultContext) => {
+      return reactExports.createContext(defaultContext);
+    });
+    return function useScope(scope) {
+      const contexts = (scope == null ? void 0 : scope[scopeName]) || scopeContexts;
+      return reactExports.useMemo(
+        () => ({ [`__scope${scopeName}`]: { ...scope, [scopeName]: contexts } }),
+        [scope, contexts]
+      );
+    };
+  };
+  createScope.scopeName = scopeName;
+  return [createContext3, composeContextScopes(createScope, ...createContextScopeDeps)];
+}
+function composeContextScopes(...scopes) {
+  const baseScope = scopes[0];
+  if (scopes.length === 1) return baseScope;
+  const createScope = () => {
+    const scopeHooks = scopes.map((createScope2) => ({
+      useScope: createScope2(),
+      scopeName: createScope2.scopeName
+    }));
+    return function useComposedScopes(overrideScopes) {
+      const nextScopes = scopeHooks.reduce((nextScopes2, { useScope, scopeName }) => {
+        const scopeProps = useScope(overrideScopes);
+        const currentScope = scopeProps[`__scope${scopeName}`];
+        return { ...nextScopes2, ...currentScope };
+      }, {});
+      return reactExports.useMemo(() => ({ [`__scope${baseScope.scopeName}`]: nextScopes }), [nextScopes]);
+    };
+  };
+  createScope.scopeName = baseScope.scopeName;
+  return createScope;
+}
+// @__NO_SIDE_EFFECTS__
+function createSlot(ownerName) {
+  const SlotClone = /* @__PURE__ */ createSlotClone(ownerName);
+  const Slot2 = reactExports.forwardRef((props, forwardedRef) => {
+    const { children, ...slotProps } = props;
+    const childrenArray = reactExports.Children.toArray(children);
+    const slottable = childrenArray.find(isSlottable);
+    if (slottable) {
+      const newElement = slottable.props.children;
+      const newChildren = childrenArray.map((child) => {
+        if (child === slottable) {
+          if (reactExports.Children.count(newElement) > 1) return reactExports.Children.only(null);
+          return reactExports.isValidElement(newElement) ? newElement.props.children : null;
+        } else {
+          return child;
+        }
+      });
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children: reactExports.isValidElement(newElement) ? reactExports.cloneElement(newElement, void 0, newChildren) : null });
+    }
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(SlotClone, { ...slotProps, ref: forwardedRef, children });
+  });
+  Slot2.displayName = `${ownerName}.Slot`;
+  return Slot2;
+}
+// @__NO_SIDE_EFFECTS__
+function createSlotClone(ownerName) {
+  const SlotClone = reactExports.forwardRef((props, forwardedRef) => {
+    const { children, ...slotProps } = props;
+    if (reactExports.isValidElement(children)) {
+      const childrenRef = getElementRef$1(children);
+      const props2 = mergeProps(slotProps, children.props);
+      if (children.type !== reactExports.Fragment) {
+        props2.ref = forwardedRef ? composeRefs(forwardedRef, childrenRef) : childrenRef;
+      }
+      return reactExports.cloneElement(children, props2);
+    }
+    return reactExports.Children.count(children) > 1 ? reactExports.Children.only(null) : null;
+  });
+  SlotClone.displayName = `${ownerName}.SlotClone`;
+  return SlotClone;
+}
+var SLOTTABLE_IDENTIFIER = Symbol("radix.slottable");
+// @__NO_SIDE_EFFECTS__
+function createSlottable(ownerName) {
+  const Slottable2 = ({ children }) => {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children });
+  };
+  Slottable2.displayName = `${ownerName}.Slottable`;
+  Slottable2.__radixId = SLOTTABLE_IDENTIFIER;
+  return Slottable2;
+}
+function isSlottable(child) {
+  return reactExports.isValidElement(child) && typeof child.type === "function" && "__radixId" in child.type && child.type.__radixId === SLOTTABLE_IDENTIFIER;
+}
+function mergeProps(slotProps, childProps) {
+  const overrideProps = { ...childProps };
+  for (const propName in childProps) {
+    const slotPropValue = slotProps[propName];
+    const childPropValue = childProps[propName];
+    const isHandler = /^on[A-Z]/.test(propName);
+    if (isHandler) {
+      if (slotPropValue && childPropValue) {
+        overrideProps[propName] = (...args) => {
+          const result = childPropValue(...args);
+          slotPropValue(...args);
+          return result;
+        };
+      } else if (slotPropValue) {
+        overrideProps[propName] = slotPropValue;
+      }
+    } else if (propName === "style") {
+      overrideProps[propName] = { ...slotPropValue, ...childPropValue };
+    } else if (propName === "className") {
+      overrideProps[propName] = [slotPropValue, childPropValue].filter(Boolean).join(" ");
+    }
+  }
+  return { ...slotProps, ...overrideProps };
+}
+function getElementRef$1(element) {
+  var _a2, _b2;
+  let getter = (_a2 = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a2.get;
+  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.ref;
+  }
+  getter = (_b2 = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b2.get;
+  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.props.ref;
+  }
+  return element.props.ref || element.ref;
+}
+var NODES = [
+  "a",
+  "button",
+  "div",
+  "form",
+  "h2",
+  "h3",
+  "img",
+  "input",
+  "label",
+  "li",
+  "nav",
+  "ol",
+  "p",
+  "select",
+  "span",
+  "svg",
+  "ul"
+];
+var Primitive = NODES.reduce((primitive, node) => {
+  const Slot2 = /* @__PURE__ */ createSlot(`Primitive.${node}`);
+  const Node2 = reactExports.forwardRef((props, forwardedRef) => {
+    const { asChild, ...primitiveProps } = props;
+    const Comp = asChild ? Slot2 : node;
+    if (typeof window !== "undefined") {
+      window[Symbol.for("radix-ui")] = true;
+    }
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Comp, { ...primitiveProps, ref: forwardedRef });
+  });
+  Node2.displayName = `Primitive.${node}`;
+  return { ...primitive, [node]: Node2 };
+}, {});
+function dispatchDiscreteCustomEvent(target, event) {
+  if (target) reactDomExports.flushSync(() => target.dispatchEvent(event));
+}
+function useEscapeKeydown(onEscapeKeyDownProp, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
+  const onEscapeKeyDown = useCallbackRef$1(onEscapeKeyDownProp);
+  reactExports.useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        onEscapeKeyDown(event);
+      }
+    };
+    ownerDocument.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => ownerDocument.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [onEscapeKeyDown, ownerDocument]);
+}
+var DISMISSABLE_LAYER_NAME = "DismissableLayer";
+var CONTEXT_UPDATE = "dismissableLayer.update";
+var POINTER_DOWN_OUTSIDE = "dismissableLayer.pointerDownOutside";
+var FOCUS_OUTSIDE = "dismissableLayer.focusOutside";
+var originalBodyPointerEvents;
+var DismissableLayerContext = reactExports.createContext({
+  layers: /* @__PURE__ */ new Set(),
+  layersWithOutsidePointerEventsDisabled: /* @__PURE__ */ new Set(),
+  branches: /* @__PURE__ */ new Set()
+});
+var DismissableLayer = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      disableOutsidePointerEvents = false,
+      onEscapeKeyDown,
+      onPointerDownOutside,
+      onFocusOutside,
+      onInteractOutside,
+      onDismiss,
+      ...layerProps
+    } = props;
+    const context = reactExports.useContext(DismissableLayerContext);
+    const [node, setNode] = reactExports.useState(null);
+    const ownerDocument = (node == null ? void 0 : node.ownerDocument) ?? (globalThis == null ? void 0 : globalThis.document);
+    const [, force] = reactExports.useState({});
+    const composedRefs = useComposedRefs(forwardedRef, (node2) => setNode(node2));
+    const layers = Array.from(context.layers);
+    const [highestLayerWithOutsidePointerEventsDisabled] = [...context.layersWithOutsidePointerEventsDisabled].slice(-1);
+    const highestLayerWithOutsidePointerEventsDisabledIndex = layers.indexOf(highestLayerWithOutsidePointerEventsDisabled);
+    const index2 = node ? layers.indexOf(node) : -1;
+    const isBodyPointerEventsDisabled = context.layersWithOutsidePointerEventsDisabled.size > 0;
+    const isPointerEventsEnabled = index2 >= highestLayerWithOutsidePointerEventsDisabledIndex;
+    const pointerDownOutside = usePointerDownOutside((event) => {
+      const target = event.target;
+      const isPointerDownOnBranch = [...context.branches].some((branch) => branch.contains(target));
+      if (!isPointerEventsEnabled || isPointerDownOnBranch) return;
+      onPointerDownOutside == null ? void 0 : onPointerDownOutside(event);
+      onInteractOutside == null ? void 0 : onInteractOutside(event);
+      if (!event.defaultPrevented) onDismiss == null ? void 0 : onDismiss();
+    }, ownerDocument);
+    const focusOutside = useFocusOutside((event) => {
+      const target = event.target;
+      const isFocusInBranch = [...context.branches].some((branch) => branch.contains(target));
+      if (isFocusInBranch) return;
+      onFocusOutside == null ? void 0 : onFocusOutside(event);
+      onInteractOutside == null ? void 0 : onInteractOutside(event);
+      if (!event.defaultPrevented) onDismiss == null ? void 0 : onDismiss();
+    }, ownerDocument);
+    useEscapeKeydown((event) => {
+      const isHighestLayer = index2 === context.layers.size - 1;
+      if (!isHighestLayer) return;
+      onEscapeKeyDown == null ? void 0 : onEscapeKeyDown(event);
+      if (!event.defaultPrevented && onDismiss) {
+        event.preventDefault();
+        onDismiss();
+      }
+    }, ownerDocument);
+    reactExports.useEffect(() => {
+      if (!node) return;
+      if (disableOutsidePointerEvents) {
+        if (context.layersWithOutsidePointerEventsDisabled.size === 0) {
+          originalBodyPointerEvents = ownerDocument.body.style.pointerEvents;
+          ownerDocument.body.style.pointerEvents = "none";
+        }
+        context.layersWithOutsidePointerEventsDisabled.add(node);
+      }
+      context.layers.add(node);
+      dispatchUpdate();
+      return () => {
+        if (disableOutsidePointerEvents && context.layersWithOutsidePointerEventsDisabled.size === 1) {
+          ownerDocument.body.style.pointerEvents = originalBodyPointerEvents;
+        }
+      };
+    }, [node, ownerDocument, disableOutsidePointerEvents, context]);
+    reactExports.useEffect(() => {
+      return () => {
+        if (!node) return;
+        context.layers.delete(node);
+        context.layersWithOutsidePointerEventsDisabled.delete(node);
+        dispatchUpdate();
+      };
+    }, [node, context]);
+    reactExports.useEffect(() => {
+      const handleUpdate = () => force({});
+      document.addEventListener(CONTEXT_UPDATE, handleUpdate);
+      return () => document.removeEventListener(CONTEXT_UPDATE, handleUpdate);
+    }, []);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.div,
+      {
+        ...layerProps,
+        ref: composedRefs,
+        style: {
+          pointerEvents: isBodyPointerEventsDisabled ? isPointerEventsEnabled ? "auto" : "none" : void 0,
+          ...props.style
+        },
+        onFocusCapture: composeEventHandlers(props.onFocusCapture, focusOutside.onFocusCapture),
+        onBlurCapture: composeEventHandlers(props.onBlurCapture, focusOutside.onBlurCapture),
+        onPointerDownCapture: composeEventHandlers(
+          props.onPointerDownCapture,
+          pointerDownOutside.onPointerDownCapture
+        )
+      }
+    );
+  }
+);
+DismissableLayer.displayName = DISMISSABLE_LAYER_NAME;
+var BRANCH_NAME = "DismissableLayerBranch";
+var DismissableLayerBranch = reactExports.forwardRef((props, forwardedRef) => {
+  const context = reactExports.useContext(DismissableLayerContext);
+  const ref = reactExports.useRef(null);
+  const composedRefs = useComposedRefs(forwardedRef, ref);
+  reactExports.useEffect(() => {
+    const node = ref.current;
+    if (node) {
+      context.branches.add(node);
+      return () => {
+        context.branches.delete(node);
+      };
+    }
+  }, [context.branches]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...props, ref: composedRefs });
+});
+DismissableLayerBranch.displayName = BRANCH_NAME;
+function usePointerDownOutside(onPointerDownOutside, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
+  const handlePointerDownOutside = useCallbackRef$1(onPointerDownOutside);
+  const isPointerInsideReactTreeRef = reactExports.useRef(false);
+  const handleClickRef = reactExports.useRef(() => {
+  });
+  reactExports.useEffect(() => {
+    const handlePointerDown = (event) => {
+      if (event.target && !isPointerInsideReactTreeRef.current) {
+        let handleAndDispatchPointerDownOutsideEvent2 = function() {
+          handleAndDispatchCustomEvent(
+            POINTER_DOWN_OUTSIDE,
+            handlePointerDownOutside,
+            eventDetail,
+            { discrete: true }
+          );
+        };
+        const eventDetail = { originalEvent: event };
+        if (event.pointerType === "touch") {
+          ownerDocument.removeEventListener("click", handleClickRef.current);
+          handleClickRef.current = handleAndDispatchPointerDownOutsideEvent2;
+          ownerDocument.addEventListener("click", handleClickRef.current, { once: true });
+        } else {
+          handleAndDispatchPointerDownOutsideEvent2();
+        }
+      } else {
+        ownerDocument.removeEventListener("click", handleClickRef.current);
+      }
+      isPointerInsideReactTreeRef.current = false;
+    };
+    const timerId = window.setTimeout(() => {
+      ownerDocument.addEventListener("pointerdown", handlePointerDown);
+    }, 0);
+    return () => {
+      window.clearTimeout(timerId);
+      ownerDocument.removeEventListener("pointerdown", handlePointerDown);
+      ownerDocument.removeEventListener("click", handleClickRef.current);
+    };
+  }, [ownerDocument, handlePointerDownOutside]);
+  return {
+    // ensures we check React component tree (not just DOM tree)
+    onPointerDownCapture: () => isPointerInsideReactTreeRef.current = true
+  };
+}
+function useFocusOutside(onFocusOutside, ownerDocument = globalThis == null ? void 0 : globalThis.document) {
+  const handleFocusOutside = useCallbackRef$1(onFocusOutside);
+  const isFocusInsideReactTreeRef = reactExports.useRef(false);
+  reactExports.useEffect(() => {
+    const handleFocus = (event) => {
+      if (event.target && !isFocusInsideReactTreeRef.current) {
+        const eventDetail = { originalEvent: event };
+        handleAndDispatchCustomEvent(FOCUS_OUTSIDE, handleFocusOutside, eventDetail, {
+          discrete: false
+        });
+      }
+    };
+    ownerDocument.addEventListener("focusin", handleFocus);
+    return () => ownerDocument.removeEventListener("focusin", handleFocus);
+  }, [ownerDocument, handleFocusOutside]);
+  return {
+    onFocusCapture: () => isFocusInsideReactTreeRef.current = true,
+    onBlurCapture: () => isFocusInsideReactTreeRef.current = false
+  };
+}
+function dispatchUpdate() {
+  const event = new CustomEvent(CONTEXT_UPDATE);
+  document.dispatchEvent(event);
+}
+function handleAndDispatchCustomEvent(name, handler, detail, { discrete }) {
+  const target = detail.originalEvent.target;
+  const event = new CustomEvent(name, { bubbles: false, cancelable: true, detail });
+  if (handler) target.addEventListener(name, handler, { once: true });
+  if (discrete) {
+    dispatchDiscreteCustomEvent(target, event);
+  } else {
+    target.dispatchEvent(event);
+  }
+}
+var useReactId = React$5[" useId ".trim().toString()] || (() => void 0);
+var count$1 = 0;
+function useId(deterministicId) {
+  const [id2, setId] = reactExports.useState(useReactId());
+  useLayoutEffect2(() => {
+    setId((reactId) => reactId ?? String(count$1++));
+  }, [deterministicId]);
+  return id2 ? `radix-${id2}` : "";
+}
+const sides = ["top", "right", "bottom", "left"];
+const min = Math.min;
+const max = Math.max;
+const round = Math.round;
+const floor = Math.floor;
+const createCoords = (v2) => ({
+  x: v2,
+  y: v2
+});
+const oppositeSideMap = {
+  left: "right",
+  right: "left",
+  bottom: "top",
+  top: "bottom"
+};
+function clamp(start, value, end) {
+  return max(start, min(value, end));
+}
+function evaluate(value, param) {
+  return typeof value === "function" ? value(param) : value;
+}
+function getSide(placement) {
+  return placement.split("-")[0];
+}
+function getAlignment(placement) {
+  return placement.split("-")[1];
+}
+function getOppositeAxis(axis) {
+  return axis === "x" ? "y" : "x";
+}
+function getAxisLength(axis) {
+  return axis === "y" ? "height" : "width";
+}
+function getSideAxis(placement) {
+  const firstChar = placement[0];
+  return firstChar === "t" || firstChar === "b" ? "y" : "x";
+}
+function getAlignmentAxis(placement) {
+  return getOppositeAxis(getSideAxis(placement));
+}
+function getAlignmentSides(placement, rects, rtl) {
+  if (rtl === void 0) {
+    rtl = false;
+  }
+  const alignment = getAlignment(placement);
+  const alignmentAxis = getAlignmentAxis(placement);
+  const length = getAxisLength(alignmentAxis);
+  let mainAlignmentSide = alignmentAxis === "x" ? alignment === (rtl ? "end" : "start") ? "right" : "left" : alignment === "start" ? "bottom" : "top";
+  if (rects.reference[length] > rects.floating[length]) {
+    mainAlignmentSide = getOppositePlacement(mainAlignmentSide);
+  }
+  return [mainAlignmentSide, getOppositePlacement(mainAlignmentSide)];
+}
+function getExpandedPlacements(placement) {
+  const oppositePlacement = getOppositePlacement(placement);
+  return [getOppositeAlignmentPlacement(placement), oppositePlacement, getOppositeAlignmentPlacement(oppositePlacement)];
+}
+function getOppositeAlignmentPlacement(placement) {
+  return placement.includes("start") ? placement.replace("start", "end") : placement.replace("end", "start");
+}
+const lrPlacement = ["left", "right"];
+const rlPlacement = ["right", "left"];
+const tbPlacement = ["top", "bottom"];
+const btPlacement = ["bottom", "top"];
+function getSideList(side, isStart, rtl) {
+  switch (side) {
+    case "top":
+    case "bottom":
+      if (rtl) return isStart ? rlPlacement : lrPlacement;
+      return isStart ? lrPlacement : rlPlacement;
+    case "left":
+    case "right":
+      return isStart ? tbPlacement : btPlacement;
+    default:
+      return [];
+  }
+}
+function getOppositeAxisPlacements(placement, flipAlignment, direction, rtl) {
+  const alignment = getAlignment(placement);
+  let list = getSideList(getSide(placement), direction === "start", rtl);
+  if (alignment) {
+    list = list.map((side) => side + "-" + alignment);
+    if (flipAlignment) {
+      list = list.concat(list.map(getOppositeAlignmentPlacement));
+    }
+  }
+  return list;
+}
+function getOppositePlacement(placement) {
+  const side = getSide(placement);
+  return oppositeSideMap[side] + placement.slice(side.length);
+}
+function expandPaddingObject(padding) {
+  return {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    ...padding
+  };
+}
+function getPaddingObject(padding) {
+  return typeof padding !== "number" ? expandPaddingObject(padding) : {
+    top: padding,
+    right: padding,
+    bottom: padding,
+    left: padding
+  };
+}
+function rectToClientRect(rect) {
+  const {
+    x: x3,
+    y: y2,
+    width,
+    height
+  } = rect;
+  return {
+    width,
+    height,
+    top: y2,
+    left: x3,
+    right: x3 + width,
+    bottom: y2 + height,
+    x: x3,
+    y: y2
+  };
+}
+function computeCoordsFromPlacement(_ref, placement, rtl) {
+  let {
+    reference,
+    floating
+  } = _ref;
+  const sideAxis = getSideAxis(placement);
+  const alignmentAxis = getAlignmentAxis(placement);
+  const alignLength = getAxisLength(alignmentAxis);
+  const side = getSide(placement);
+  const isVertical = sideAxis === "y";
+  const commonX = reference.x + reference.width / 2 - floating.width / 2;
+  const commonY = reference.y + reference.height / 2 - floating.height / 2;
+  const commonAlign = reference[alignLength] / 2 - floating[alignLength] / 2;
+  let coords;
+  switch (side) {
+    case "top":
+      coords = {
+        x: commonX,
+        y: reference.y - floating.height
+      };
+      break;
+    case "bottom":
+      coords = {
+        x: commonX,
+        y: reference.y + reference.height
+      };
+      break;
+    case "right":
+      coords = {
+        x: reference.x + reference.width,
+        y: commonY
+      };
+      break;
+    case "left":
+      coords = {
+        x: reference.x - floating.width,
+        y: commonY
+      };
+      break;
+    default:
+      coords = {
+        x: reference.x,
+        y: reference.y
+      };
+  }
+  switch (getAlignment(placement)) {
+    case "start":
+      coords[alignmentAxis] -= commonAlign * (rtl && isVertical ? -1 : 1);
+      break;
+    case "end":
+      coords[alignmentAxis] += commonAlign * (rtl && isVertical ? -1 : 1);
+      break;
+  }
+  return coords;
+}
+async function detectOverflow(state, options) {
+  var _await$platform$isEle;
+  if (options === void 0) {
+    options = {};
+  }
+  const {
+    x: x3,
+    y: y2,
+    platform: platform2,
+    rects,
+    elements,
+    strategy
+  } = state;
+  const {
+    boundary = "clippingAncestors",
+    rootBoundary = "viewport",
+    elementContext = "floating",
+    altBoundary = false,
+    padding = 0
+  } = evaluate(options, state);
+  const paddingObject = getPaddingObject(padding);
+  const altContext = elementContext === "floating" ? "reference" : "floating";
+  const element = elements[altBoundary ? altContext : elementContext];
+  const clippingClientRect = rectToClientRect(await platform2.getClippingRect({
+    element: ((_await$platform$isEle = await (platform2.isElement == null ? void 0 : platform2.isElement(element))) != null ? _await$platform$isEle : true) ? element : element.contextElement || await (platform2.getDocumentElement == null ? void 0 : platform2.getDocumentElement(elements.floating)),
+    boundary,
+    rootBoundary,
+    strategy
+  }));
+  const rect = elementContext === "floating" ? {
+    x: x3,
+    y: y2,
+    width: rects.floating.width,
+    height: rects.floating.height
+  } : rects.reference;
+  const offsetParent = await (platform2.getOffsetParent == null ? void 0 : platform2.getOffsetParent(elements.floating));
+  const offsetScale = await (platform2.isElement == null ? void 0 : platform2.isElement(offsetParent)) ? await (platform2.getScale == null ? void 0 : platform2.getScale(offsetParent)) || {
+    x: 1,
+    y: 1
+  } : {
+    x: 1,
+    y: 1
+  };
+  const elementClientRect = rectToClientRect(platform2.convertOffsetParentRelativeRectToViewportRelativeRect ? await platform2.convertOffsetParentRelativeRectToViewportRelativeRect({
+    elements,
+    rect,
+    offsetParent,
+    strategy
+  }) : rect);
+  return {
+    top: (clippingClientRect.top - elementClientRect.top + paddingObject.top) / offsetScale.y,
+    bottom: (elementClientRect.bottom - clippingClientRect.bottom + paddingObject.bottom) / offsetScale.y,
+    left: (clippingClientRect.left - elementClientRect.left + paddingObject.left) / offsetScale.x,
+    right: (elementClientRect.right - clippingClientRect.right + paddingObject.right) / offsetScale.x
+  };
+}
+const MAX_RESET_COUNT = 50;
+const computePosition$1 = async (reference, floating, config2) => {
+  const {
+    placement = "bottom",
+    strategy = "absolute",
+    middleware = [],
+    platform: platform2
+  } = config2;
+  const platformWithDetectOverflow = platform2.detectOverflow ? platform2 : {
+    ...platform2,
+    detectOverflow
+  };
+  const rtl = await (platform2.isRTL == null ? void 0 : platform2.isRTL(floating));
+  let rects = await platform2.getElementRects({
+    reference,
+    floating,
+    strategy
+  });
+  let {
+    x: x3,
+    y: y2
+  } = computeCoordsFromPlacement(rects, placement, rtl);
+  let statefulPlacement = placement;
+  let resetCount = 0;
+  const middlewareData = {};
+  for (let i = 0; i < middleware.length; i++) {
+    const currentMiddleware = middleware[i];
+    if (!currentMiddleware) {
+      continue;
+    }
+    const {
+      name,
+      fn
+    } = currentMiddleware;
+    const {
+      x: nextX,
+      y: nextY,
+      data,
+      reset
+    } = await fn({
+      x: x3,
+      y: y2,
+      initialPlacement: placement,
+      placement: statefulPlacement,
+      strategy,
+      middlewareData,
+      rects,
+      platform: platformWithDetectOverflow,
+      elements: {
+        reference,
+        floating
+      }
+    });
+    x3 = nextX != null ? nextX : x3;
+    y2 = nextY != null ? nextY : y2;
+    middlewareData[name] = {
+      ...middlewareData[name],
+      ...data
+    };
+    if (reset && resetCount < MAX_RESET_COUNT) {
+      resetCount++;
+      if (typeof reset === "object") {
+        if (reset.placement) {
+          statefulPlacement = reset.placement;
+        }
+        if (reset.rects) {
+          rects = reset.rects === true ? await platform2.getElementRects({
+            reference,
+            floating,
+            strategy
+          }) : reset.rects;
+        }
+        ({
+          x: x3,
+          y: y2
+        } = computeCoordsFromPlacement(rects, statefulPlacement, rtl));
+      }
+      i = -1;
+    }
+  }
+  return {
+    x: x3,
+    y: y2,
+    placement: statefulPlacement,
+    strategy,
+    middlewareData
+  };
+};
+const arrow$3 = (options) => ({
+  name: "arrow",
+  options,
+  async fn(state) {
+    const {
+      x: x3,
+      y: y2,
+      placement,
+      rects,
+      platform: platform2,
+      elements,
+      middlewareData
+    } = state;
+    const {
+      element,
+      padding = 0
+    } = evaluate(options, state) || {};
+    if (element == null) {
+      return {};
+    }
+    const paddingObject = getPaddingObject(padding);
+    const coords = {
+      x: x3,
+      y: y2
+    };
+    const axis = getAlignmentAxis(placement);
+    const length = getAxisLength(axis);
+    const arrowDimensions = await platform2.getDimensions(element);
+    const isYAxis = axis === "y";
+    const minProp = isYAxis ? "top" : "left";
+    const maxProp = isYAxis ? "bottom" : "right";
+    const clientProp = isYAxis ? "clientHeight" : "clientWidth";
+    const endDiff = rects.reference[length] + rects.reference[axis] - coords[axis] - rects.floating[length];
+    const startDiff = coords[axis] - rects.reference[axis];
+    const arrowOffsetParent = await (platform2.getOffsetParent == null ? void 0 : platform2.getOffsetParent(element));
+    let clientSize = arrowOffsetParent ? arrowOffsetParent[clientProp] : 0;
+    if (!clientSize || !await (platform2.isElement == null ? void 0 : platform2.isElement(arrowOffsetParent))) {
+      clientSize = elements.floating[clientProp] || rects.floating[length];
+    }
+    const centerToReference = endDiff / 2 - startDiff / 2;
+    const largestPossiblePadding = clientSize / 2 - arrowDimensions[length] / 2 - 1;
+    const minPadding = min(paddingObject[minProp], largestPossiblePadding);
+    const maxPadding = min(paddingObject[maxProp], largestPossiblePadding);
+    const min$12 = minPadding;
+    const max2 = clientSize - arrowDimensions[length] - maxPadding;
+    const center = clientSize / 2 - arrowDimensions[length] / 2 + centerToReference;
+    const offset2 = clamp(min$12, center, max2);
+    const shouldAddOffset = !middlewareData.arrow && getAlignment(placement) != null && center !== offset2 && rects.reference[length] / 2 - (center < min$12 ? minPadding : maxPadding) - arrowDimensions[length] / 2 < 0;
+    const alignmentOffset = shouldAddOffset ? center < min$12 ? center - min$12 : center - max2 : 0;
+    return {
+      [axis]: coords[axis] + alignmentOffset,
+      data: {
+        [axis]: offset2,
+        centerOffset: center - offset2 - alignmentOffset,
+        ...shouldAddOffset && {
+          alignmentOffset
+        }
+      },
+      reset: shouldAddOffset
+    };
+  }
+});
+const flip$2 = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    name: "flip",
+    options,
+    async fn(state) {
+      var _middlewareData$arrow, _middlewareData$flip;
+      const {
+        placement,
+        middlewareData,
+        rects,
+        initialPlacement,
+        platform: platform2,
+        elements
+      } = state;
+      const {
+        mainAxis: checkMainAxis = true,
+        crossAxis: checkCrossAxis = true,
+        fallbackPlacements: specifiedFallbackPlacements,
+        fallbackStrategy = "bestFit",
+        fallbackAxisSideDirection = "none",
+        flipAlignment = true,
+        ...detectOverflowOptions
+      } = evaluate(options, state);
+      if ((_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) {
+        return {};
+      }
+      const side = getSide(placement);
+      const initialSideAxis = getSideAxis(initialPlacement);
+      const isBasePlacement = getSide(initialPlacement) === initialPlacement;
+      const rtl = await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating));
+      const fallbackPlacements = specifiedFallbackPlacements || (isBasePlacement || !flipAlignment ? [getOppositePlacement(initialPlacement)] : getExpandedPlacements(initialPlacement));
+      const hasFallbackAxisSideDirection = fallbackAxisSideDirection !== "none";
+      if (!specifiedFallbackPlacements && hasFallbackAxisSideDirection) {
+        fallbackPlacements.push(...getOppositeAxisPlacements(initialPlacement, flipAlignment, fallbackAxisSideDirection, rtl));
+      }
+      const placements = [initialPlacement, ...fallbackPlacements];
+      const overflow = await platform2.detectOverflow(state, detectOverflowOptions);
+      const overflows = [];
+      let overflowsData = ((_middlewareData$flip = middlewareData.flip) == null ? void 0 : _middlewareData$flip.overflows) || [];
+      if (checkMainAxis) {
+        overflows.push(overflow[side]);
+      }
+      if (checkCrossAxis) {
+        const sides2 = getAlignmentSides(placement, rects, rtl);
+        overflows.push(overflow[sides2[0]], overflow[sides2[1]]);
+      }
+      overflowsData = [...overflowsData, {
+        placement,
+        overflows
+      }];
+      if (!overflows.every((side2) => side2 <= 0)) {
+        var _middlewareData$flip2, _overflowsData$filter;
+        const nextIndex = (((_middlewareData$flip2 = middlewareData.flip) == null ? void 0 : _middlewareData$flip2.index) || 0) + 1;
+        const nextPlacement = placements[nextIndex];
+        if (nextPlacement) {
+          const ignoreCrossAxisOverflow = checkCrossAxis === "alignment" ? initialSideAxis !== getSideAxis(nextPlacement) : false;
+          if (!ignoreCrossAxisOverflow || // We leave the current main axis only if every placement on that axis
+          // overflows the main axis.
+          overflowsData.every((d2) => getSideAxis(d2.placement) === initialSideAxis ? d2.overflows[0] > 0 : true)) {
+            return {
+              data: {
+                index: nextIndex,
+                overflows: overflowsData
+              },
+              reset: {
+                placement: nextPlacement
+              }
+            };
+          }
+        }
+        let resetPlacement = (_overflowsData$filter = overflowsData.filter((d2) => d2.overflows[0] <= 0).sort((a2, b2) => a2.overflows[1] - b2.overflows[1])[0]) == null ? void 0 : _overflowsData$filter.placement;
+        if (!resetPlacement) {
+          switch (fallbackStrategy) {
+            case "bestFit": {
+              var _overflowsData$filter2;
+              const placement2 = (_overflowsData$filter2 = overflowsData.filter((d2) => {
+                if (hasFallbackAxisSideDirection) {
+                  const currentSideAxis = getSideAxis(d2.placement);
+                  return currentSideAxis === initialSideAxis || // Create a bias to the `y` side axis due to horizontal
+                  // reading directions favoring greater width.
+                  currentSideAxis === "y";
+                }
+                return true;
+              }).map((d2) => [d2.placement, d2.overflows.filter((overflow2) => overflow2 > 0).reduce((acc, overflow2) => acc + overflow2, 0)]).sort((a2, b2) => a2[1] - b2[1])[0]) == null ? void 0 : _overflowsData$filter2[0];
+              if (placement2) {
+                resetPlacement = placement2;
+              }
+              break;
+            }
+            case "initialPlacement":
+              resetPlacement = initialPlacement;
+              break;
+          }
+        }
+        if (placement !== resetPlacement) {
+          return {
+            reset: {
+              placement: resetPlacement
+            }
+          };
+        }
+      }
+      return {};
+    }
+  };
+};
+function getSideOffsets(overflow, rect) {
+  return {
+    top: overflow.top - rect.height,
+    right: overflow.right - rect.width,
+    bottom: overflow.bottom - rect.height,
+    left: overflow.left - rect.width
+  };
+}
+function isAnySideFullyClipped(overflow) {
+  return sides.some((side) => overflow[side] >= 0);
+}
+const hide$2 = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    name: "hide",
+    options,
+    async fn(state) {
+      const {
+        rects,
+        platform: platform2
+      } = state;
+      const {
+        strategy = "referenceHidden",
+        ...detectOverflowOptions
+      } = evaluate(options, state);
+      switch (strategy) {
+        case "referenceHidden": {
+          const overflow = await platform2.detectOverflow(state, {
+            ...detectOverflowOptions,
+            elementContext: "reference"
+          });
+          const offsets = getSideOffsets(overflow, rects.reference);
+          return {
+            data: {
+              referenceHiddenOffsets: offsets,
+              referenceHidden: isAnySideFullyClipped(offsets)
+            }
+          };
+        }
+        case "escaped": {
+          const overflow = await platform2.detectOverflow(state, {
+            ...detectOverflowOptions,
+            altBoundary: true
+          });
+          const offsets = getSideOffsets(overflow, rects.floating);
+          return {
+            data: {
+              escapedOffsets: offsets,
+              escaped: isAnySideFullyClipped(offsets)
+            }
+          };
+        }
+        default: {
+          return {};
+        }
+      }
+    }
+  };
+};
+const originSides = /* @__PURE__ */ new Set(["left", "top"]);
+async function convertValueToCoords(state, options) {
+  const {
+    placement,
+    platform: platform2,
+    elements
+  } = state;
+  const rtl = await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating));
+  const side = getSide(placement);
+  const alignment = getAlignment(placement);
+  const isVertical = getSideAxis(placement) === "y";
+  const mainAxisMulti = originSides.has(side) ? -1 : 1;
+  const crossAxisMulti = rtl && isVertical ? -1 : 1;
+  const rawValue = evaluate(options, state);
+  let {
+    mainAxis,
+    crossAxis,
+    alignmentAxis
+  } = typeof rawValue === "number" ? {
+    mainAxis: rawValue,
+    crossAxis: 0,
+    alignmentAxis: null
+  } : {
+    mainAxis: rawValue.mainAxis || 0,
+    crossAxis: rawValue.crossAxis || 0,
+    alignmentAxis: rawValue.alignmentAxis
+  };
+  if (alignment && typeof alignmentAxis === "number") {
+    crossAxis = alignment === "end" ? alignmentAxis * -1 : alignmentAxis;
+  }
+  return isVertical ? {
+    x: crossAxis * crossAxisMulti,
+    y: mainAxis * mainAxisMulti
+  } : {
+    x: mainAxis * mainAxisMulti,
+    y: crossAxis * crossAxisMulti
+  };
+}
+const offset$2 = function(options) {
+  if (options === void 0) {
+    options = 0;
+  }
+  return {
+    name: "offset",
+    options,
+    async fn(state) {
+      var _middlewareData$offse, _middlewareData$arrow;
+      const {
+        x: x3,
+        y: y2,
+        placement,
+        middlewareData
+      } = state;
+      const diffCoords = await convertValueToCoords(state, options);
+      if (placement === ((_middlewareData$offse = middlewareData.offset) == null ? void 0 : _middlewareData$offse.placement) && (_middlewareData$arrow = middlewareData.arrow) != null && _middlewareData$arrow.alignmentOffset) {
+        return {};
+      }
+      return {
+        x: x3 + diffCoords.x,
+        y: y2 + diffCoords.y,
+        data: {
+          ...diffCoords,
+          placement
+        }
+      };
+    }
+  };
+};
+const shift$2 = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    name: "shift",
+    options,
+    async fn(state) {
+      const {
+        x: x3,
+        y: y2,
+        placement,
+        platform: platform2
+      } = state;
+      const {
+        mainAxis: checkMainAxis = true,
+        crossAxis: checkCrossAxis = false,
+        limiter = {
+          fn: (_ref) => {
+            let {
+              x: x4,
+              y: y3
+            } = _ref;
+            return {
+              x: x4,
+              y: y3
+            };
+          }
+        },
+        ...detectOverflowOptions
+      } = evaluate(options, state);
+      const coords = {
+        x: x3,
+        y: y2
+      };
+      const overflow = await platform2.detectOverflow(state, detectOverflowOptions);
+      const crossAxis = getSideAxis(getSide(placement));
+      const mainAxis = getOppositeAxis(crossAxis);
+      let mainAxisCoord = coords[mainAxis];
+      let crossAxisCoord = coords[crossAxis];
+      if (checkMainAxis) {
+        const minSide = mainAxis === "y" ? "top" : "left";
+        const maxSide = mainAxis === "y" ? "bottom" : "right";
+        const min2 = mainAxisCoord + overflow[minSide];
+        const max2 = mainAxisCoord - overflow[maxSide];
+        mainAxisCoord = clamp(min2, mainAxisCoord, max2);
+      }
+      if (checkCrossAxis) {
+        const minSide = crossAxis === "y" ? "top" : "left";
+        const maxSide = crossAxis === "y" ? "bottom" : "right";
+        const min2 = crossAxisCoord + overflow[minSide];
+        const max2 = crossAxisCoord - overflow[maxSide];
+        crossAxisCoord = clamp(min2, crossAxisCoord, max2);
+      }
+      const limitedCoords = limiter.fn({
+        ...state,
+        [mainAxis]: mainAxisCoord,
+        [crossAxis]: crossAxisCoord
+      });
+      return {
+        ...limitedCoords,
+        data: {
+          x: limitedCoords.x - x3,
+          y: limitedCoords.y - y2,
+          enabled: {
+            [mainAxis]: checkMainAxis,
+            [crossAxis]: checkCrossAxis
+          }
+        }
+      };
+    }
+  };
+};
+const limitShift$2 = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    options,
+    fn(state) {
+      const {
+        x: x3,
+        y: y2,
+        placement,
+        rects,
+        middlewareData
+      } = state;
+      const {
+        offset: offset2 = 0,
+        mainAxis: checkMainAxis = true,
+        crossAxis: checkCrossAxis = true
+      } = evaluate(options, state);
+      const coords = {
+        x: x3,
+        y: y2
+      };
+      const crossAxis = getSideAxis(placement);
+      const mainAxis = getOppositeAxis(crossAxis);
+      let mainAxisCoord = coords[mainAxis];
+      let crossAxisCoord = coords[crossAxis];
+      const rawOffset = evaluate(offset2, state);
+      const computedOffset = typeof rawOffset === "number" ? {
+        mainAxis: rawOffset,
+        crossAxis: 0
+      } : {
+        mainAxis: 0,
+        crossAxis: 0,
+        ...rawOffset
+      };
+      if (checkMainAxis) {
+        const len = mainAxis === "y" ? "height" : "width";
+        const limitMin = rects.reference[mainAxis] - rects.floating[len] + computedOffset.mainAxis;
+        const limitMax = rects.reference[mainAxis] + rects.reference[len] - computedOffset.mainAxis;
+        if (mainAxisCoord < limitMin) {
+          mainAxisCoord = limitMin;
+        } else if (mainAxisCoord > limitMax) {
+          mainAxisCoord = limitMax;
+        }
+      }
+      if (checkCrossAxis) {
+        var _middlewareData$offse, _middlewareData$offse2;
+        const len = mainAxis === "y" ? "width" : "height";
+        const isOriginSide = originSides.has(getSide(placement));
+        const limitMin = rects.reference[crossAxis] - rects.floating[len] + (isOriginSide ? ((_middlewareData$offse = middlewareData.offset) == null ? void 0 : _middlewareData$offse[crossAxis]) || 0 : 0) + (isOriginSide ? 0 : computedOffset.crossAxis);
+        const limitMax = rects.reference[crossAxis] + rects.reference[len] + (isOriginSide ? 0 : ((_middlewareData$offse2 = middlewareData.offset) == null ? void 0 : _middlewareData$offse2[crossAxis]) || 0) - (isOriginSide ? computedOffset.crossAxis : 0);
+        if (crossAxisCoord < limitMin) {
+          crossAxisCoord = limitMin;
+        } else if (crossAxisCoord > limitMax) {
+          crossAxisCoord = limitMax;
+        }
+      }
+      return {
+        [mainAxis]: mainAxisCoord,
+        [crossAxis]: crossAxisCoord
+      };
+    }
+  };
+};
+const size$2 = function(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  return {
+    name: "size",
+    options,
+    async fn(state) {
+      var _state$middlewareData, _state$middlewareData2;
+      const {
+        placement,
+        rects,
+        platform: platform2,
+        elements
+      } = state;
+      const {
+        apply: apply2 = () => {
+        },
+        ...detectOverflowOptions
+      } = evaluate(options, state);
+      const overflow = await platform2.detectOverflow(state, detectOverflowOptions);
+      const side = getSide(placement);
+      const alignment = getAlignment(placement);
+      const isYAxis = getSideAxis(placement) === "y";
+      const {
+        width,
+        height
+      } = rects.floating;
+      let heightSide;
+      let widthSide;
+      if (side === "top" || side === "bottom") {
+        heightSide = side;
+        widthSide = alignment === (await (platform2.isRTL == null ? void 0 : platform2.isRTL(elements.floating)) ? "start" : "end") ? "left" : "right";
+      } else {
+        widthSide = side;
+        heightSide = alignment === "end" ? "top" : "bottom";
+      }
+      const maximumClippingHeight = height - overflow.top - overflow.bottom;
+      const maximumClippingWidth = width - overflow.left - overflow.right;
+      const overflowAvailableHeight = min(height - overflow[heightSide], maximumClippingHeight);
+      const overflowAvailableWidth = min(width - overflow[widthSide], maximumClippingWidth);
+      const noShift = !state.middlewareData.shift;
+      let availableHeight = overflowAvailableHeight;
+      let availableWidth = overflowAvailableWidth;
+      if ((_state$middlewareData = state.middlewareData.shift) != null && _state$middlewareData.enabled.x) {
+        availableWidth = maximumClippingWidth;
+      }
+      if ((_state$middlewareData2 = state.middlewareData.shift) != null && _state$middlewareData2.enabled.y) {
+        availableHeight = maximumClippingHeight;
+      }
+      if (noShift && !alignment) {
+        const xMin = max(overflow.left, 0);
+        const xMax = max(overflow.right, 0);
+        const yMin = max(overflow.top, 0);
+        const yMax = max(overflow.bottom, 0);
+        if (isYAxis) {
+          availableWidth = width - 2 * (xMin !== 0 || xMax !== 0 ? xMin + xMax : max(overflow.left, overflow.right));
+        } else {
+          availableHeight = height - 2 * (yMin !== 0 || yMax !== 0 ? yMin + yMax : max(overflow.top, overflow.bottom));
+        }
+      }
+      await apply2({
+        ...state,
+        availableWidth,
+        availableHeight
+      });
+      const nextDimensions = await platform2.getDimensions(elements.floating);
+      if (width !== nextDimensions.width || height !== nextDimensions.height) {
+        return {
+          reset: {
+            rects: true
+          }
+        };
+      }
+      return {};
+    }
+  };
+};
+function hasWindow() {
+  return typeof window !== "undefined";
+}
+function getNodeName(node) {
+  if (isNode(node)) {
+    return (node.nodeName || "").toLowerCase();
+  }
+  return "#document";
+}
+function getWindow(node) {
+  var _node$ownerDocument;
+  return (node == null || (_node$ownerDocument = node.ownerDocument) == null ? void 0 : _node$ownerDocument.defaultView) || window;
+}
+function getDocumentElement(node) {
+  var _ref;
+  return (_ref = (isNode(node) ? node.ownerDocument : node.document) || window.document) == null ? void 0 : _ref.documentElement;
+}
+function isNode(value) {
+  if (!hasWindow()) {
+    return false;
+  }
+  return value instanceof Node || value instanceof getWindow(value).Node;
+}
+function isElement(value) {
+  if (!hasWindow()) {
+    return false;
+  }
+  return value instanceof Element || value instanceof getWindow(value).Element;
+}
+function isHTMLElement(value) {
+  if (!hasWindow()) {
+    return false;
+  }
+  return value instanceof HTMLElement || value instanceof getWindow(value).HTMLElement;
+}
+function isShadowRoot(value) {
+  if (!hasWindow() || typeof ShadowRoot === "undefined") {
+    return false;
+  }
+  return value instanceof ShadowRoot || value instanceof getWindow(value).ShadowRoot;
+}
+function isOverflowElement(element) {
+  const {
+    overflow,
+    overflowX,
+    overflowY,
+    display
+  } = getComputedStyle$1(element);
+  return /auto|scroll|overlay|hidden|clip/.test(overflow + overflowY + overflowX) && display !== "inline" && display !== "contents";
+}
+function isTableElement(element) {
+  return /^(table|td|th)$/.test(getNodeName(element));
+}
+function isTopLayer(element) {
+  try {
+    if (element.matches(":popover-open")) {
+      return true;
+    }
+  } catch (_e2) {
+  }
+  try {
+    return element.matches(":modal");
+  } catch (_e2) {
+    return false;
+  }
+}
+const willChangeRe = /transform|translate|scale|rotate|perspective|filter/;
+const containRe = /paint|layout|strict|content/;
+const isNotNone = (value) => !!value && value !== "none";
+let isWebKitValue;
+function isContainingBlock(elementOrCss) {
+  const css = isElement(elementOrCss) ? getComputedStyle$1(elementOrCss) : elementOrCss;
+  return isNotNone(css.transform) || isNotNone(css.translate) || isNotNone(css.scale) || isNotNone(css.rotate) || isNotNone(css.perspective) || !isWebKit() && (isNotNone(css.backdropFilter) || isNotNone(css.filter)) || willChangeRe.test(css.willChange || "") || containRe.test(css.contain || "");
+}
+function getContainingBlock(element) {
+  let currentNode = getParentNode(element);
+  while (isHTMLElement(currentNode) && !isLastTraversableNode(currentNode)) {
+    if (isContainingBlock(currentNode)) {
+      return currentNode;
+    } else if (isTopLayer(currentNode)) {
+      return null;
+    }
+    currentNode = getParentNode(currentNode);
+  }
+  return null;
+}
+function isWebKit() {
+  if (isWebKitValue == null) {
+    isWebKitValue = typeof CSS !== "undefined" && CSS.supports && CSS.supports("-webkit-backdrop-filter", "none");
+  }
+  return isWebKitValue;
+}
+function isLastTraversableNode(node) {
+  return /^(html|body|#document)$/.test(getNodeName(node));
+}
+function getComputedStyle$1(element) {
+  return getWindow(element).getComputedStyle(element);
+}
+function getNodeScroll(element) {
+  if (isElement(element)) {
+    return {
+      scrollLeft: element.scrollLeft,
+      scrollTop: element.scrollTop
+    };
+  }
+  return {
+    scrollLeft: element.scrollX,
+    scrollTop: element.scrollY
+  };
+}
+function getParentNode(node) {
+  if (getNodeName(node) === "html") {
+    return node;
+  }
+  const result = (
+    // Step into the shadow DOM of the parent of a slotted node.
+    node.assignedSlot || // DOM Element detected.
+    node.parentNode || // ShadowRoot detected.
+    isShadowRoot(node) && node.host || // Fallback.
+    getDocumentElement(node)
+  );
+  return isShadowRoot(result) ? result.host : result;
+}
+function getNearestOverflowAncestor(node) {
+  const parentNode = getParentNode(node);
+  if (isLastTraversableNode(parentNode)) {
+    return node.ownerDocument ? node.ownerDocument.body : node.body;
+  }
+  if (isHTMLElement(parentNode) && isOverflowElement(parentNode)) {
+    return parentNode;
+  }
+  return getNearestOverflowAncestor(parentNode);
+}
+function getOverflowAncestors(node, list, traverseIframes) {
+  var _node$ownerDocument2;
+  if (list === void 0) {
+    list = [];
+  }
+  if (traverseIframes === void 0) {
+    traverseIframes = true;
+  }
+  const scrollableAncestor = getNearestOverflowAncestor(node);
+  const isBody = scrollableAncestor === ((_node$ownerDocument2 = node.ownerDocument) == null ? void 0 : _node$ownerDocument2.body);
+  const win = getWindow(scrollableAncestor);
+  if (isBody) {
+    const frameElement = getFrameElement(win);
+    return list.concat(win, win.visualViewport || [], isOverflowElement(scrollableAncestor) ? scrollableAncestor : [], frameElement && traverseIframes ? getOverflowAncestors(frameElement) : []);
+  } else {
+    return list.concat(scrollableAncestor, getOverflowAncestors(scrollableAncestor, [], traverseIframes));
+  }
+}
+function getFrameElement(win) {
+  return win.parent && Object.getPrototypeOf(win.parent) ? win.frameElement : null;
+}
+function getCssDimensions(element) {
+  const css = getComputedStyle$1(element);
+  let width = parseFloat(css.width) || 0;
+  let height = parseFloat(css.height) || 0;
+  const hasOffset = isHTMLElement(element);
+  const offsetWidth = hasOffset ? element.offsetWidth : width;
+  const offsetHeight = hasOffset ? element.offsetHeight : height;
+  const shouldFallback = round(width) !== offsetWidth || round(height) !== offsetHeight;
+  if (shouldFallback) {
+    width = offsetWidth;
+    height = offsetHeight;
+  }
+  return {
+    width,
+    height,
+    $: shouldFallback
+  };
+}
+function unwrapElement(element) {
+  return !isElement(element) ? element.contextElement : element;
+}
+function getScale(element) {
+  const domElement = unwrapElement(element);
+  if (!isHTMLElement(domElement)) {
+    return createCoords(1);
+  }
+  const rect = domElement.getBoundingClientRect();
+  const {
+    width,
+    height,
+    $: $2
+  } = getCssDimensions(domElement);
+  let x3 = ($2 ? round(rect.width) : rect.width) / width;
+  let y2 = ($2 ? round(rect.height) : rect.height) / height;
+  if (!x3 || !Number.isFinite(x3)) {
+    x3 = 1;
+  }
+  if (!y2 || !Number.isFinite(y2)) {
+    y2 = 1;
+  }
+  return {
+    x: x3,
+    y: y2
+  };
+}
+const noOffsets = /* @__PURE__ */ createCoords(0);
+function getVisualOffsets(element) {
+  const win = getWindow(element);
+  if (!isWebKit() || !win.visualViewport) {
+    return noOffsets;
+  }
+  return {
+    x: win.visualViewport.offsetLeft,
+    y: win.visualViewport.offsetTop
+  };
+}
+function shouldAddVisualOffsets(element, isFixed, floatingOffsetParent) {
+  if (isFixed === void 0) {
+    isFixed = false;
+  }
+  if (!floatingOffsetParent || isFixed && floatingOffsetParent !== getWindow(element)) {
+    return false;
+  }
+  return isFixed;
+}
+function getBoundingClientRect(element, includeScale, isFixedStrategy, offsetParent) {
+  if (includeScale === void 0) {
+    includeScale = false;
+  }
+  if (isFixedStrategy === void 0) {
+    isFixedStrategy = false;
+  }
+  const clientRect = element.getBoundingClientRect();
+  const domElement = unwrapElement(element);
+  let scale2 = createCoords(1);
+  if (includeScale) {
+    if (offsetParent) {
+      if (isElement(offsetParent)) {
+        scale2 = getScale(offsetParent);
+      }
+    } else {
+      scale2 = getScale(element);
+    }
+  }
+  const visualOffsets = shouldAddVisualOffsets(domElement, isFixedStrategy, offsetParent) ? getVisualOffsets(domElement) : createCoords(0);
+  let x3 = (clientRect.left + visualOffsets.x) / scale2.x;
+  let y2 = (clientRect.top + visualOffsets.y) / scale2.y;
+  let width = clientRect.width / scale2.x;
+  let height = clientRect.height / scale2.y;
+  if (domElement) {
+    const win = getWindow(domElement);
+    const offsetWin = offsetParent && isElement(offsetParent) ? getWindow(offsetParent) : offsetParent;
+    let currentWin = win;
+    let currentIFrame = getFrameElement(currentWin);
+    while (currentIFrame && offsetParent && offsetWin !== currentWin) {
+      const iframeScale = getScale(currentIFrame);
+      const iframeRect = currentIFrame.getBoundingClientRect();
+      const css = getComputedStyle$1(currentIFrame);
+      const left = iframeRect.left + (currentIFrame.clientLeft + parseFloat(css.paddingLeft)) * iframeScale.x;
+      const top = iframeRect.top + (currentIFrame.clientTop + parseFloat(css.paddingTop)) * iframeScale.y;
+      x3 *= iframeScale.x;
+      y2 *= iframeScale.y;
+      width *= iframeScale.x;
+      height *= iframeScale.y;
+      x3 += left;
+      y2 += top;
+      currentWin = getWindow(currentIFrame);
+      currentIFrame = getFrameElement(currentWin);
+    }
+  }
+  return rectToClientRect({
+    width,
+    height,
+    x: x3,
+    y: y2
+  });
+}
+function getWindowScrollBarX(element, rect) {
+  const leftScroll = getNodeScroll(element).scrollLeft;
+  if (!rect) {
+    return getBoundingClientRect(getDocumentElement(element)).left + leftScroll;
+  }
+  return rect.left + leftScroll;
+}
+function getHTMLOffset(documentElement, scroll) {
+  const htmlRect = documentElement.getBoundingClientRect();
+  const x3 = htmlRect.left + scroll.scrollLeft - getWindowScrollBarX(documentElement, htmlRect);
+  const y2 = htmlRect.top + scroll.scrollTop;
+  return {
+    x: x3,
+    y: y2
+  };
+}
+function convertOffsetParentRelativeRectToViewportRelativeRect(_ref) {
+  let {
+    elements,
+    rect,
+    offsetParent,
+    strategy
+  } = _ref;
+  const isFixed = strategy === "fixed";
+  const documentElement = getDocumentElement(offsetParent);
+  const topLayer = elements ? isTopLayer(elements.floating) : false;
+  if (offsetParent === documentElement || topLayer && isFixed) {
+    return rect;
+  }
+  let scroll = {
+    scrollLeft: 0,
+    scrollTop: 0
+  };
+  let scale2 = createCoords(1);
+  const offsets = createCoords(0);
+  const isOffsetParentAnElement = isHTMLElement(offsetParent);
+  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
+    if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) {
+      scroll = getNodeScroll(offsetParent);
+    }
+    if (isOffsetParentAnElement) {
+      const offsetRect = getBoundingClientRect(offsetParent);
+      scale2 = getScale(offsetParent);
+      offsets.x = offsetRect.x + offsetParent.clientLeft;
+      offsets.y = offsetRect.y + offsetParent.clientTop;
+    }
+  }
+  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+  return {
+    width: rect.width * scale2.x,
+    height: rect.height * scale2.y,
+    x: rect.x * scale2.x - scroll.scrollLeft * scale2.x + offsets.x + htmlOffset.x,
+    y: rect.y * scale2.y - scroll.scrollTop * scale2.y + offsets.y + htmlOffset.y
+  };
+}
+function getClientRects(element) {
+  return Array.from(element.getClientRects());
+}
+function getDocumentRect(element) {
+  const html = getDocumentElement(element);
+  const scroll = getNodeScroll(element);
+  const body = element.ownerDocument.body;
+  const width = max(html.scrollWidth, html.clientWidth, body.scrollWidth, body.clientWidth);
+  const height = max(html.scrollHeight, html.clientHeight, body.scrollHeight, body.clientHeight);
+  let x3 = -scroll.scrollLeft + getWindowScrollBarX(element);
+  const y2 = -scroll.scrollTop;
+  if (getComputedStyle$1(body).direction === "rtl") {
+    x3 += max(html.clientWidth, body.clientWidth) - width;
+  }
+  return {
+    width,
+    height,
+    x: x3,
+    y: y2
+  };
+}
+const SCROLLBAR_MAX = 25;
+function getViewportRect(element, strategy) {
+  const win = getWindow(element);
+  const html = getDocumentElement(element);
+  const visualViewport = win.visualViewport;
+  let width = html.clientWidth;
+  let height = html.clientHeight;
+  let x3 = 0;
+  let y2 = 0;
+  if (visualViewport) {
+    width = visualViewport.width;
+    height = visualViewport.height;
+    const visualViewportBased = isWebKit();
+    if (!visualViewportBased || visualViewportBased && strategy === "fixed") {
+      x3 = visualViewport.offsetLeft;
+      y2 = visualViewport.offsetTop;
+    }
+  }
+  const windowScrollbarX = getWindowScrollBarX(html);
+  if (windowScrollbarX <= 0) {
+    const doc = html.ownerDocument;
+    const body = doc.body;
+    const bodyStyles = getComputedStyle(body);
+    const bodyMarginInline = doc.compatMode === "CSS1Compat" ? parseFloat(bodyStyles.marginLeft) + parseFloat(bodyStyles.marginRight) || 0 : 0;
+    const clippingStableScrollbarWidth = Math.abs(html.clientWidth - body.clientWidth - bodyMarginInline);
+    if (clippingStableScrollbarWidth <= SCROLLBAR_MAX) {
+      width -= clippingStableScrollbarWidth;
+    }
+  } else if (windowScrollbarX <= SCROLLBAR_MAX) {
+    width += windowScrollbarX;
+  }
+  return {
+    width,
+    height,
+    x: x3,
+    y: y2
+  };
+}
+function getInnerBoundingClientRect(element, strategy) {
+  const clientRect = getBoundingClientRect(element, true, strategy === "fixed");
+  const top = clientRect.top + element.clientTop;
+  const left = clientRect.left + element.clientLeft;
+  const scale2 = isHTMLElement(element) ? getScale(element) : createCoords(1);
+  const width = element.clientWidth * scale2.x;
+  const height = element.clientHeight * scale2.y;
+  const x3 = left * scale2.x;
+  const y2 = top * scale2.y;
+  return {
+    width,
+    height,
+    x: x3,
+    y: y2
+  };
+}
+function getClientRectFromClippingAncestor(element, clippingAncestor, strategy) {
+  let rect;
+  if (clippingAncestor === "viewport") {
+    rect = getViewportRect(element, strategy);
+  } else if (clippingAncestor === "document") {
+    rect = getDocumentRect(getDocumentElement(element));
+  } else if (isElement(clippingAncestor)) {
+    rect = getInnerBoundingClientRect(clippingAncestor, strategy);
+  } else {
+    const visualOffsets = getVisualOffsets(element);
+    rect = {
+      x: clippingAncestor.x - visualOffsets.x,
+      y: clippingAncestor.y - visualOffsets.y,
+      width: clippingAncestor.width,
+      height: clippingAncestor.height
+    };
+  }
+  return rectToClientRect(rect);
+}
+function hasFixedPositionAncestor(element, stopNode) {
+  const parentNode = getParentNode(element);
+  if (parentNode === stopNode || !isElement(parentNode) || isLastTraversableNode(parentNode)) {
+    return false;
+  }
+  return getComputedStyle$1(parentNode).position === "fixed" || hasFixedPositionAncestor(parentNode, stopNode);
+}
+function getClippingElementAncestors(element, cache) {
+  const cachedResult = cache.get(element);
+  if (cachedResult) {
+    return cachedResult;
+  }
+  let result = getOverflowAncestors(element, [], false).filter((el) => isElement(el) && getNodeName(el) !== "body");
+  let currentContainingBlockComputedStyle = null;
+  const elementIsFixed = getComputedStyle$1(element).position === "fixed";
+  let currentNode = elementIsFixed ? getParentNode(element) : element;
+  while (isElement(currentNode) && !isLastTraversableNode(currentNode)) {
+    const computedStyle = getComputedStyle$1(currentNode);
+    const currentNodeIsContaining = isContainingBlock(currentNode);
+    if (!currentNodeIsContaining && computedStyle.position === "fixed") {
+      currentContainingBlockComputedStyle = null;
+    }
+    const shouldDropCurrentNode = elementIsFixed ? !currentNodeIsContaining && !currentContainingBlockComputedStyle : !currentNodeIsContaining && computedStyle.position === "static" && !!currentContainingBlockComputedStyle && (currentContainingBlockComputedStyle.position === "absolute" || currentContainingBlockComputedStyle.position === "fixed") || isOverflowElement(currentNode) && !currentNodeIsContaining && hasFixedPositionAncestor(element, currentNode);
+    if (shouldDropCurrentNode) {
+      result = result.filter((ancestor) => ancestor !== currentNode);
+    } else {
+      currentContainingBlockComputedStyle = computedStyle;
+    }
+    currentNode = getParentNode(currentNode);
+  }
+  cache.set(element, result);
+  return result;
+}
+function getClippingRect(_ref) {
+  let {
+    element,
+    boundary,
+    rootBoundary,
+    strategy
+  } = _ref;
+  const elementClippingAncestors = boundary === "clippingAncestors" ? isTopLayer(element) ? [] : getClippingElementAncestors(element, this._c) : [].concat(boundary);
+  const clippingAncestors = [...elementClippingAncestors, rootBoundary];
+  const firstRect = getClientRectFromClippingAncestor(element, clippingAncestors[0], strategy);
+  let top = firstRect.top;
+  let right = firstRect.right;
+  let bottom = firstRect.bottom;
+  let left = firstRect.left;
+  for (let i = 1; i < clippingAncestors.length; i++) {
+    const rect = getClientRectFromClippingAncestor(element, clippingAncestors[i], strategy);
+    top = max(rect.top, top);
+    right = min(rect.right, right);
+    bottom = min(rect.bottom, bottom);
+    left = max(rect.left, left);
+  }
+  return {
+    width: right - left,
+    height: bottom - top,
+    x: left,
+    y: top
+  };
+}
+function getDimensions(element) {
+  const {
+    width,
+    height
+  } = getCssDimensions(element);
+  return {
+    width,
+    height
+  };
+}
+function getRectRelativeToOffsetParent(element, offsetParent, strategy) {
+  const isOffsetParentAnElement = isHTMLElement(offsetParent);
+  const documentElement = getDocumentElement(offsetParent);
+  const isFixed = strategy === "fixed";
+  const rect = getBoundingClientRect(element, true, isFixed, offsetParent);
+  let scroll = {
+    scrollLeft: 0,
+    scrollTop: 0
+  };
+  const offsets = createCoords(0);
+  function setLeftRTLScrollbarOffset() {
+    offsets.x = getWindowScrollBarX(documentElement);
+  }
+  if (isOffsetParentAnElement || !isOffsetParentAnElement && !isFixed) {
+    if (getNodeName(offsetParent) !== "body" || isOverflowElement(documentElement)) {
+      scroll = getNodeScroll(offsetParent);
+    }
+    if (isOffsetParentAnElement) {
+      const offsetRect = getBoundingClientRect(offsetParent, true, isFixed, offsetParent);
+      offsets.x = offsetRect.x + offsetParent.clientLeft;
+      offsets.y = offsetRect.y + offsetParent.clientTop;
+    } else if (documentElement) {
+      setLeftRTLScrollbarOffset();
+    }
+  }
+  if (isFixed && !isOffsetParentAnElement && documentElement) {
+    setLeftRTLScrollbarOffset();
+  }
+  const htmlOffset = documentElement && !isOffsetParentAnElement && !isFixed ? getHTMLOffset(documentElement, scroll) : createCoords(0);
+  const x3 = rect.left + scroll.scrollLeft - offsets.x - htmlOffset.x;
+  const y2 = rect.top + scroll.scrollTop - offsets.y - htmlOffset.y;
+  return {
+    x: x3,
+    y: y2,
+    width: rect.width,
+    height: rect.height
+  };
+}
+function isStaticPositioned(element) {
+  return getComputedStyle$1(element).position === "static";
+}
+function getTrueOffsetParent(element, polyfill2) {
+  if (!isHTMLElement(element) || getComputedStyle$1(element).position === "fixed") {
+    return null;
+  }
+  if (polyfill2) {
+    return polyfill2(element);
+  }
+  let rawOffsetParent = element.offsetParent;
+  if (getDocumentElement(element) === rawOffsetParent) {
+    rawOffsetParent = rawOffsetParent.ownerDocument.body;
+  }
+  return rawOffsetParent;
+}
+function getOffsetParent(element, polyfill2) {
+  const win = getWindow(element);
+  if (isTopLayer(element)) {
+    return win;
+  }
+  if (!isHTMLElement(element)) {
+    let svgOffsetParent = getParentNode(element);
+    while (svgOffsetParent && !isLastTraversableNode(svgOffsetParent)) {
+      if (isElement(svgOffsetParent) && !isStaticPositioned(svgOffsetParent)) {
+        return svgOffsetParent;
+      }
+      svgOffsetParent = getParentNode(svgOffsetParent);
+    }
+    return win;
+  }
+  let offsetParent = getTrueOffsetParent(element, polyfill2);
+  while (offsetParent && isTableElement(offsetParent) && isStaticPositioned(offsetParent)) {
+    offsetParent = getTrueOffsetParent(offsetParent, polyfill2);
+  }
+  if (offsetParent && isLastTraversableNode(offsetParent) && isStaticPositioned(offsetParent) && !isContainingBlock(offsetParent)) {
+    return win;
+  }
+  return offsetParent || getContainingBlock(element) || win;
+}
+const getElementRects = async function(data) {
+  const getOffsetParentFn = this.getOffsetParent || getOffsetParent;
+  const getDimensionsFn = this.getDimensions;
+  const floatingDimensions = await getDimensionsFn(data.floating);
+  return {
+    reference: getRectRelativeToOffsetParent(data.reference, await getOffsetParentFn(data.floating), data.strategy),
+    floating: {
+      x: 0,
+      y: 0,
+      width: floatingDimensions.width,
+      height: floatingDimensions.height
+    }
+  };
+};
+function isRTL(element) {
+  return getComputedStyle$1(element).direction === "rtl";
+}
+const platform = {
+  convertOffsetParentRelativeRectToViewportRelativeRect,
+  getDocumentElement,
+  getClippingRect,
+  getOffsetParent,
+  getElementRects,
+  getClientRects,
+  getDimensions,
+  getScale,
+  isElement,
+  isRTL
+};
+function rectsAreEqual(a2, b2) {
+  return a2.x === b2.x && a2.y === b2.y && a2.width === b2.width && a2.height === b2.height;
+}
+function observeMove(element, onMove) {
+  let io = null;
+  let timeoutId;
+  const root2 = getDocumentElement(element);
+  function cleanup() {
+    var _io;
+    clearTimeout(timeoutId);
+    (_io = io) == null || _io.disconnect();
+    io = null;
+  }
+  function refresh(skip, threshold2) {
+    if (skip === void 0) {
+      skip = false;
+    }
+    if (threshold2 === void 0) {
+      threshold2 = 1;
+    }
+    cleanup();
+    const elementRectForRootMargin = element.getBoundingClientRect();
+    const {
+      left,
+      top,
+      width,
+      height
+    } = elementRectForRootMargin;
+    if (!skip) {
+      onMove();
+    }
+    if (!width || !height) {
+      return;
+    }
+    const insetTop = floor(top);
+    const insetRight = floor(root2.clientWidth - (left + width));
+    const insetBottom = floor(root2.clientHeight - (top + height));
+    const insetLeft = floor(left);
+    const rootMargin = -insetTop + "px " + -insetRight + "px " + -insetBottom + "px " + -insetLeft + "px";
+    const options = {
+      rootMargin,
+      threshold: max(0, min(1, threshold2)) || 1
+    };
+    let isFirstUpdate = true;
+    function handleObserve(entries) {
+      const ratio = entries[0].intersectionRatio;
+      if (ratio !== threshold2) {
+        if (!isFirstUpdate) {
+          return refresh();
+        }
+        if (!ratio) {
+          timeoutId = setTimeout(() => {
+            refresh(false, 1e-7);
+          }, 1e3);
+        } else {
+          refresh(false, ratio);
+        }
+      }
+      if (ratio === 1 && !rectsAreEqual(elementRectForRootMargin, element.getBoundingClientRect())) {
+        refresh();
+      }
+      isFirstUpdate = false;
+    }
+    try {
+      io = new IntersectionObserver(handleObserve, {
+        ...options,
+        // Handle <iframe>s
+        root: root2.ownerDocument
+      });
+    } catch (_e2) {
+      io = new IntersectionObserver(handleObserve, options);
+    }
+    io.observe(element);
+  }
+  refresh(true);
+  return cleanup;
+}
+function autoUpdate(reference, floating, update, options) {
+  if (options === void 0) {
+    options = {};
+  }
+  const {
+    ancestorScroll = true,
+    ancestorResize = true,
+    elementResize = typeof ResizeObserver === "function",
+    layoutShift = typeof IntersectionObserver === "function",
+    animationFrame = false
+  } = options;
+  const referenceEl = unwrapElement(reference);
+  const ancestors = ancestorScroll || ancestorResize ? [...referenceEl ? getOverflowAncestors(referenceEl) : [], ...floating ? getOverflowAncestors(floating) : []] : [];
+  ancestors.forEach((ancestor) => {
+    ancestorScroll && ancestor.addEventListener("scroll", update, {
+      passive: true
+    });
+    ancestorResize && ancestor.addEventListener("resize", update);
+  });
+  const cleanupIo = referenceEl && layoutShift ? observeMove(referenceEl, update) : null;
+  let reobserveFrame = -1;
+  let resizeObserver = null;
+  if (elementResize) {
+    resizeObserver = new ResizeObserver((_ref) => {
+      let [firstEntry] = _ref;
+      if (firstEntry && firstEntry.target === referenceEl && resizeObserver && floating) {
+        resizeObserver.unobserve(floating);
+        cancelAnimationFrame(reobserveFrame);
+        reobserveFrame = requestAnimationFrame(() => {
+          var _resizeObserver;
+          (_resizeObserver = resizeObserver) == null || _resizeObserver.observe(floating);
+        });
+      }
+      update();
+    });
+    if (referenceEl && !animationFrame) {
+      resizeObserver.observe(referenceEl);
+    }
+    if (floating) {
+      resizeObserver.observe(floating);
+    }
+  }
+  let frameId;
+  let prevRefRect = animationFrame ? getBoundingClientRect(reference) : null;
+  if (animationFrame) {
+    frameLoop();
+  }
+  function frameLoop() {
+    const nextRefRect = getBoundingClientRect(reference);
+    if (prevRefRect && !rectsAreEqual(prevRefRect, nextRefRect)) {
+      update();
+    }
+    prevRefRect = nextRefRect;
+    frameId = requestAnimationFrame(frameLoop);
+  }
+  update();
+  return () => {
+    var _resizeObserver2;
+    ancestors.forEach((ancestor) => {
+      ancestorScroll && ancestor.removeEventListener("scroll", update);
+      ancestorResize && ancestor.removeEventListener("resize", update);
+    });
+    cleanupIo == null || cleanupIo();
+    (_resizeObserver2 = resizeObserver) == null || _resizeObserver2.disconnect();
+    resizeObserver = null;
+    if (animationFrame) {
+      cancelAnimationFrame(frameId);
+    }
+  };
+}
+const offset$1 = offset$2;
+const shift$1 = shift$2;
+const flip$1 = flip$2;
+const size$1 = size$2;
+const hide$1 = hide$2;
+const arrow$2 = arrow$3;
+const limitShift$1 = limitShift$2;
+const computePosition = (reference, floating, options) => {
+  const cache = /* @__PURE__ */ new Map();
+  const mergedOptions = {
+    platform,
+    ...options
+  };
+  const platformWithCache = {
+    ...mergedOptions.platform,
+    _c: cache
+  };
+  return computePosition$1(reference, floating, {
+    ...mergedOptions,
+    platform: platformWithCache
+  });
+};
+var isClient = typeof document !== "undefined";
+var noop = function noop2() {
+};
+var index = isClient ? reactExports.useLayoutEffect : noop;
+function deepEqual(a2, b2) {
+  if (a2 === b2) {
+    return true;
+  }
+  if (typeof a2 !== typeof b2) {
+    return false;
+  }
+  if (typeof a2 === "function" && a2.toString() === b2.toString()) {
+    return true;
+  }
+  let length;
+  let i;
+  let keys2;
+  if (a2 && b2 && typeof a2 === "object") {
+    if (Array.isArray(a2)) {
+      length = a2.length;
+      if (length !== b2.length) return false;
+      for (i = length; i-- !== 0; ) {
+        if (!deepEqual(a2[i], b2[i])) {
+          return false;
+        }
+      }
+      return true;
+    }
+    keys2 = Object.keys(a2);
+    length = keys2.length;
+    if (length !== Object.keys(b2).length) {
+      return false;
+    }
+    for (i = length; i-- !== 0; ) {
+      if (!{}.hasOwnProperty.call(b2, keys2[i])) {
+        return false;
+      }
+    }
+    for (i = length; i-- !== 0; ) {
+      const key = keys2[i];
+      if (key === "_owner" && a2.$$typeof) {
+        continue;
+      }
+      if (!deepEqual(a2[key], b2[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return a2 !== a2 && b2 !== b2;
+}
+function getDPR(element) {
+  if (typeof window === "undefined") {
+    return 1;
+  }
+  const win = element.ownerDocument.defaultView || window;
+  return win.devicePixelRatio || 1;
+}
+function roundByDPR(element, value) {
+  const dpr = getDPR(element);
+  return Math.round(value * dpr) / dpr;
+}
+function useLatestRef(value) {
+  const ref = reactExports.useRef(value);
+  index(() => {
+    ref.current = value;
+  });
+  return ref;
+}
+function useFloating(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  const {
+    placement = "bottom",
+    strategy = "absolute",
+    middleware = [],
+    platform: platform2,
+    elements: {
+      reference: externalReference,
+      floating: externalFloating
+    } = {},
+    transform = true,
+    whileElementsMounted,
+    open
+  } = options;
+  const [data, setData] = reactExports.useState({
+    x: 0,
+    y: 0,
+    strategy,
+    placement,
+    middlewareData: {},
+    isPositioned: false
+  });
+  const [latestMiddleware, setLatestMiddleware] = reactExports.useState(middleware);
+  if (!deepEqual(latestMiddleware, middleware)) {
+    setLatestMiddleware(middleware);
+  }
+  const [_reference, _setReference] = reactExports.useState(null);
+  const [_floating, _setFloating] = reactExports.useState(null);
+  const setReference = reactExports.useCallback((node) => {
+    if (node !== referenceRef.current) {
+      referenceRef.current = node;
+      _setReference(node);
+    }
+  }, []);
+  const setFloating = reactExports.useCallback((node) => {
+    if (node !== floatingRef.current) {
+      floatingRef.current = node;
+      _setFloating(node);
+    }
+  }, []);
+  const referenceEl = externalReference || _reference;
+  const floatingEl = externalFloating || _floating;
+  const referenceRef = reactExports.useRef(null);
+  const floatingRef = reactExports.useRef(null);
+  const dataRef = reactExports.useRef(data);
+  const hasWhileElementsMounted = whileElementsMounted != null;
+  const whileElementsMountedRef = useLatestRef(whileElementsMounted);
+  const platformRef = useLatestRef(platform2);
+  const openRef = useLatestRef(open);
+  const update = reactExports.useCallback(() => {
+    if (!referenceRef.current || !floatingRef.current) {
+      return;
+    }
+    const config2 = {
+      placement,
+      strategy,
+      middleware: latestMiddleware
+    };
+    if (platformRef.current) {
+      config2.platform = platformRef.current;
+    }
+    computePosition(referenceRef.current, floatingRef.current, config2).then((data2) => {
+      const fullData = {
+        ...data2,
+        // The floating element's position may be recomputed while it's closed
+        // but still mounted (such as when transitioning out). To ensure
+        // `isPositioned` will be `false` initially on the next open, avoid
+        // setting it to `true` when `open === false` (must be specified).
+        isPositioned: openRef.current !== false
+      };
+      if (isMountedRef.current && !deepEqual(dataRef.current, fullData)) {
+        dataRef.current = fullData;
+        reactDomExports.flushSync(() => {
+          setData(fullData);
+        });
+      }
+    });
+  }, [latestMiddleware, placement, strategy, platformRef, openRef]);
+  index(() => {
+    if (open === false && dataRef.current.isPositioned) {
+      dataRef.current.isPositioned = false;
+      setData((data2) => ({
+        ...data2,
+        isPositioned: false
+      }));
+    }
+  }, [open]);
+  const isMountedRef = reactExports.useRef(false);
+  index(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+  index(() => {
+    if (referenceEl) referenceRef.current = referenceEl;
+    if (floatingEl) floatingRef.current = floatingEl;
+    if (referenceEl && floatingEl) {
+      if (whileElementsMountedRef.current) {
+        return whileElementsMountedRef.current(referenceEl, floatingEl, update);
+      }
+      update();
+    }
+  }, [referenceEl, floatingEl, update, whileElementsMountedRef, hasWhileElementsMounted]);
+  const refs = reactExports.useMemo(() => ({
+    reference: referenceRef,
+    floating: floatingRef,
+    setReference,
+    setFloating
+  }), [setReference, setFloating]);
+  const elements = reactExports.useMemo(() => ({
+    reference: referenceEl,
+    floating: floatingEl
+  }), [referenceEl, floatingEl]);
+  const floatingStyles = reactExports.useMemo(() => {
+    const initialStyles = {
+      position: strategy,
+      left: 0,
+      top: 0
+    };
+    if (!elements.floating) {
+      return initialStyles;
+    }
+    const x3 = roundByDPR(elements.floating, data.x);
+    const y2 = roundByDPR(elements.floating, data.y);
+    if (transform) {
+      return {
+        ...initialStyles,
+        transform: "translate(" + x3 + "px, " + y2 + "px)",
+        ...getDPR(elements.floating) >= 1.5 && {
+          willChange: "transform"
+        }
+      };
+    }
+    return {
+      position: strategy,
+      left: x3,
+      top: y2
+    };
+  }, [strategy, transform, elements.floating, data.x, data.y]);
+  return reactExports.useMemo(() => ({
+    ...data,
+    update,
+    refs,
+    elements,
+    floatingStyles
+  }), [data, update, refs, elements, floatingStyles]);
+}
+const arrow$1 = (options) => {
+  function isRef(value) {
+    return {}.hasOwnProperty.call(value, "current");
+  }
+  return {
+    name: "arrow",
+    options,
+    fn(state) {
+      const {
+        element,
+        padding
+      } = typeof options === "function" ? options(state) : options;
+      if (element && isRef(element)) {
+        if (element.current != null) {
+          return arrow$2({
+            element: element.current,
+            padding
+          }).fn(state);
+        }
+        return {};
+      }
+      if (element) {
+        return arrow$2({
+          element,
+          padding
+        }).fn(state);
+      }
+      return {};
+    }
+  };
+};
+const offset = (options, deps) => {
+  const result = offset$1(options);
+  return {
+    name: result.name,
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+const shift = (options, deps) => {
+  const result = shift$1(options);
+  return {
+    name: result.name,
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+const limitShift = (options, deps) => {
+  const result = limitShift$1(options);
+  return {
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+const flip = (options, deps) => {
+  const result = flip$1(options);
+  return {
+    name: result.name,
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+const size = (options, deps) => {
+  const result = size$1(options);
+  return {
+    name: result.name,
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+const hide = (options, deps) => {
+  const result = hide$1(options);
+  return {
+    name: result.name,
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+const arrow = (options, deps) => {
+  const result = arrow$1(options);
+  return {
+    name: result.name,
+    fn: result.fn,
+    options: [options, deps]
+  };
+};
+var NAME$1 = "Arrow";
+var Arrow$1 = reactExports.forwardRef((props, forwardedRef) => {
+  const { children, width = 10, height = 5, ...arrowProps } = props;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Primitive.svg,
+    {
+      ...arrowProps,
+      ref: forwardedRef,
+      width,
+      height,
+      viewBox: "0 0 30 10",
+      preserveAspectRatio: "none",
+      children: props.asChild ? children : /* @__PURE__ */ jsxRuntimeExports.jsx("polygon", { points: "0,0 30,0 15,10" })
+    }
+  );
+});
+Arrow$1.displayName = NAME$1;
+var Root$4 = Arrow$1;
+function useSize(element) {
+  const [size2, setSize] = reactExports.useState(void 0);
+  useLayoutEffect2(() => {
+    if (element) {
+      setSize({ width: element.offsetWidth, height: element.offsetHeight });
+      const resizeObserver = new ResizeObserver((entries) => {
+        if (!Array.isArray(entries)) {
+          return;
+        }
+        if (!entries.length) {
+          return;
+        }
+        const entry = entries[0];
+        let width;
+        let height;
+        if ("borderBoxSize" in entry) {
+          const borderSizeEntry = entry["borderBoxSize"];
+          const borderSize = Array.isArray(borderSizeEntry) ? borderSizeEntry[0] : borderSizeEntry;
+          width = borderSize["inlineSize"];
+          height = borderSize["blockSize"];
+        } else {
+          width = element.offsetWidth;
+          height = element.offsetHeight;
+        }
+        setSize({ width, height });
+      });
+      resizeObserver.observe(element, { box: "border-box" });
+      return () => resizeObserver.unobserve(element);
+    } else {
+      setSize(void 0);
+    }
+  }, [element]);
+  return size2;
+}
+var POPPER_NAME = "Popper";
+var [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME);
+var [PopperProvider, usePopperContext] = createPopperContext(POPPER_NAME);
+var Popper = (props) => {
+  const { __scopePopper, children } = props;
+  const [anchor, setAnchor] = reactExports.useState(null);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PopperProvider, { scope: __scopePopper, anchor, onAnchorChange: setAnchor, children });
+};
+Popper.displayName = POPPER_NAME;
+var ANCHOR_NAME = "PopperAnchor";
+var PopperAnchor = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopePopper, virtualRef, ...anchorProps } = props;
+    const context = usePopperContext(ANCHOR_NAME, __scopePopper);
+    const ref = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, ref);
+    const anchorRef = reactExports.useRef(null);
+    reactExports.useEffect(() => {
+      const previousAnchor = anchorRef.current;
+      anchorRef.current = (virtualRef == null ? void 0 : virtualRef.current) || ref.current;
+      if (previousAnchor !== anchorRef.current) {
+        context.onAnchorChange(anchorRef.current);
+      }
+    });
+    return virtualRef ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...anchorProps, ref: composedRefs });
+  }
+);
+PopperAnchor.displayName = ANCHOR_NAME;
+var CONTENT_NAME$4 = "PopperContent";
+var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME$4);
+var PopperContent = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    var _a2, _b2, _c2, _d2, _e2, _f2;
+    const {
+      __scopePopper,
+      side = "bottom",
+      sideOffset = 0,
+      align = "center",
+      alignOffset = 0,
+      arrowPadding = 0,
+      avoidCollisions = true,
+      collisionBoundary = [],
+      collisionPadding: collisionPaddingProp = 0,
+      sticky = "partial",
+      hideWhenDetached = false,
+      updatePositionStrategy = "optimized",
+      onPlaced,
+      ...contentProps
+    } = props;
+    const context = usePopperContext(CONTENT_NAME$4, __scopePopper);
+    const [content, setContent] = reactExports.useState(null);
+    const composedRefs = useComposedRefs(forwardedRef, (node) => setContent(node));
+    const [arrow$12, setArrow] = reactExports.useState(null);
+    const arrowSize = useSize(arrow$12);
+    const arrowWidth = (arrowSize == null ? void 0 : arrowSize.width) ?? 0;
+    const arrowHeight = (arrowSize == null ? void 0 : arrowSize.height) ?? 0;
+    const desiredPlacement = side + (align !== "center" ? "-" + align : "");
+    const collisionPadding = typeof collisionPaddingProp === "number" ? collisionPaddingProp : { top: 0, right: 0, bottom: 0, left: 0, ...collisionPaddingProp };
+    const boundary = Array.isArray(collisionBoundary) ? collisionBoundary : [collisionBoundary];
+    const hasExplicitBoundaries = boundary.length > 0;
+    const detectOverflowOptions = {
+      padding: collisionPadding,
+      boundary: boundary.filter(isNotNull),
+      // with `strategy: 'fixed'`, this is the only way to get it to respect boundaries
+      altBoundary: hasExplicitBoundaries
+    };
+    const { refs, floatingStyles, placement, isPositioned, middlewareData } = useFloating({
+      // default to `fixed` strategy so users don't have to pick and we also avoid focus scroll issues
+      strategy: "fixed",
+      placement: desiredPlacement,
+      whileElementsMounted: (...args) => {
+        const cleanup = autoUpdate(...args, {
+          animationFrame: updatePositionStrategy === "always"
+        });
+        return cleanup;
+      },
+      elements: {
+        reference: context.anchor
+      },
+      middleware: [
+        offset({ mainAxis: sideOffset + arrowHeight, alignmentAxis: alignOffset }),
+        avoidCollisions && shift({
+          mainAxis: true,
+          crossAxis: false,
+          limiter: sticky === "partial" ? limitShift() : void 0,
+          ...detectOverflowOptions
+        }),
+        avoidCollisions && flip({ ...detectOverflowOptions }),
+        size({
+          ...detectOverflowOptions,
+          apply: ({ elements, rects, availableWidth, availableHeight }) => {
+            const { width: anchorWidth, height: anchorHeight } = rects.reference;
+            const contentStyle = elements.floating.style;
+            contentStyle.setProperty("--radix-popper-available-width", `${availableWidth}px`);
+            contentStyle.setProperty("--radix-popper-available-height", `${availableHeight}px`);
+            contentStyle.setProperty("--radix-popper-anchor-width", `${anchorWidth}px`);
+            contentStyle.setProperty("--radix-popper-anchor-height", `${anchorHeight}px`);
+          }
+        }),
+        arrow$12 && arrow({ element: arrow$12, padding: arrowPadding }),
+        transformOrigin({ arrowWidth, arrowHeight }),
+        hideWhenDetached && hide({ strategy: "referenceHidden", ...detectOverflowOptions })
+      ]
+    });
+    const [placedSide, placedAlign] = getSideAndAlignFromPlacement(placement);
+    const handlePlaced = useCallbackRef$1(onPlaced);
+    useLayoutEffect2(() => {
+      if (isPositioned) {
+        handlePlaced == null ? void 0 : handlePlaced();
+      }
+    }, [isPositioned, handlePlaced]);
+    const arrowX = (_a2 = middlewareData.arrow) == null ? void 0 : _a2.x;
+    const arrowY = (_b2 = middlewareData.arrow) == null ? void 0 : _b2.y;
+    const cannotCenterArrow = ((_c2 = middlewareData.arrow) == null ? void 0 : _c2.centerOffset) !== 0;
+    const [contentZIndex, setContentZIndex] = reactExports.useState();
+    useLayoutEffect2(() => {
+      if (content) setContentZIndex(window.getComputedStyle(content).zIndex);
+    }, [content]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        ref: refs.setFloating,
+        "data-radix-popper-content-wrapper": "",
+        style: {
+          ...floatingStyles,
+          transform: isPositioned ? floatingStyles.transform : "translate(0, -200%)",
+          // keep off the page when measuring
+          minWidth: "max-content",
+          zIndex: contentZIndex,
+          ["--radix-popper-transform-origin"]: [
+            (_d2 = middlewareData.transformOrigin) == null ? void 0 : _d2.x,
+            (_e2 = middlewareData.transformOrigin) == null ? void 0 : _e2.y
+          ].join(" "),
+          // hide the content if using the hide middleware and should be hidden
+          // set visibility to hidden and disable pointer events so the UI behaves
+          // as if the PopperContent isn't there at all
+          ...((_f2 = middlewareData.hide) == null ? void 0 : _f2.referenceHidden) && {
+            visibility: "hidden",
+            pointerEvents: "none"
+          }
+        },
+        dir: props.dir,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          PopperContentProvider,
+          {
+            scope: __scopePopper,
+            placedSide,
+            onArrowChange: setArrow,
+            arrowX,
+            arrowY,
+            shouldHideArrow: cannotCenterArrow,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Primitive.div,
+              {
+                "data-side": placedSide,
+                "data-align": placedAlign,
+                ...contentProps,
+                ref: composedRefs,
+                style: {
+                  ...contentProps.style,
+                  // if the PopperContent hasn't been placed yet (not all measurements done)
+                  // we prevent animations so that users's animation don't kick in too early referring wrong sides
+                  animation: !isPositioned ? "none" : void 0
+                }
+              }
+            )
+          }
+        )
+      }
+    );
+  }
+);
+PopperContent.displayName = CONTENT_NAME$4;
+var ARROW_NAME$1 = "PopperArrow";
+var OPPOSITE_SIDE = {
+  top: "bottom",
+  right: "left",
+  bottom: "top",
+  left: "right"
+};
+var PopperArrow = reactExports.forwardRef(function PopperArrow2(props, forwardedRef) {
+  const { __scopePopper, ...arrowProps } = props;
+  const contentContext = useContentContext(ARROW_NAME$1, __scopePopper);
+  const baseSide = OPPOSITE_SIDE[contentContext.placedSide];
+  return (
+    // we have to use an extra wrapper because `ResizeObserver` (used by `useSize`)
+    // doesn't report size as we'd expect on SVG elements.
+    // it reports their bounding box which is effectively the largest path inside the SVG.
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "span",
+      {
+        ref: contentContext.onArrowChange,
+        style: {
+          position: "absolute",
+          left: contentContext.arrowX,
+          top: contentContext.arrowY,
+          [baseSide]: 0,
+          transformOrigin: {
+            top: "",
+            right: "0 0",
+            bottom: "center 0",
+            left: "100% 0"
+          }[contentContext.placedSide],
+          transform: {
+            top: "translateY(100%)",
+            right: "translateY(50%) rotate(90deg) translateX(-50%)",
+            bottom: `rotate(180deg)`,
+            left: "translateY(50%) rotate(-90deg) translateX(50%)"
+          }[contentContext.placedSide],
+          visibility: contentContext.shouldHideArrow ? "hidden" : void 0
+        },
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Root$4,
+          {
+            ...arrowProps,
+            ref: forwardedRef,
+            style: {
+              ...arrowProps.style,
+              // ensures the element can be measured correctly (mostly for if SVG)
+              display: "block"
+            }
+          }
+        )
+      }
+    )
+  );
+});
+PopperArrow.displayName = ARROW_NAME$1;
+function isNotNull(value) {
+  return value !== null;
+}
+var transformOrigin = (options) => ({
+  name: "transformOrigin",
+  options,
+  fn(data) {
+    var _a2, _b2, _c2;
+    const { placement, rects, middlewareData } = data;
+    const cannotCenterArrow = ((_a2 = middlewareData.arrow) == null ? void 0 : _a2.centerOffset) !== 0;
+    const isArrowHidden = cannotCenterArrow;
+    const arrowWidth = isArrowHidden ? 0 : options.arrowWidth;
+    const arrowHeight = isArrowHidden ? 0 : options.arrowHeight;
+    const [placedSide, placedAlign] = getSideAndAlignFromPlacement(placement);
+    const noArrowAlign = { start: "0%", center: "50%", end: "100%" }[placedAlign];
+    const arrowXCenter = (((_b2 = middlewareData.arrow) == null ? void 0 : _b2.x) ?? 0) + arrowWidth / 2;
+    const arrowYCenter = (((_c2 = middlewareData.arrow) == null ? void 0 : _c2.y) ?? 0) + arrowHeight / 2;
+    let x3 = "";
+    let y2 = "";
+    if (placedSide === "bottom") {
+      x3 = isArrowHidden ? noArrowAlign : `${arrowXCenter}px`;
+      y2 = `${-arrowHeight}px`;
+    } else if (placedSide === "top") {
+      x3 = isArrowHidden ? noArrowAlign : `${arrowXCenter}px`;
+      y2 = `${rects.floating.height + arrowHeight}px`;
+    } else if (placedSide === "right") {
+      x3 = `${-arrowHeight}px`;
+      y2 = isArrowHidden ? noArrowAlign : `${arrowYCenter}px`;
+    } else if (placedSide === "left") {
+      x3 = `${rects.floating.width + arrowHeight}px`;
+      y2 = isArrowHidden ? noArrowAlign : `${arrowYCenter}px`;
+    }
+    return { data: { x: x3, y: y2 } };
+  }
+});
+function getSideAndAlignFromPlacement(placement) {
+  const [side, align = "center"] = placement.split("-");
+  return [side, align];
+}
+var Root2$1 = Popper;
+var Anchor = PopperAnchor;
+var Content$1 = PopperContent;
+var Arrow = PopperArrow;
+var PORTAL_NAME$3 = "Portal";
+var Portal$2 = reactExports.forwardRef((props, forwardedRef) => {
+  var _a2;
+  const { container: containerProp, ...portalProps } = props;
+  const [mounted, setMounted] = reactExports.useState(false);
+  useLayoutEffect2(() => setMounted(true), []);
+  const container = containerProp || mounted && ((_a2 = globalThis == null ? void 0 : globalThis.document) == null ? void 0 : _a2.body);
+  return container ? ReactDOM$2.createPortal(/* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { ...portalProps, ref: forwardedRef }), container) : null;
+});
+Portal$2.displayName = PORTAL_NAME$3;
+function useStateMachine(initialState, machine) {
+  return reactExports.useReducer((state, event) => {
+    const nextState = machine[state][event];
+    return nextState ?? state;
+  }, initialState);
+}
+var Presence = (props) => {
+  const { present, children } = props;
+  const presence = usePresence(present);
+  const child = typeof children === "function" ? children({ present: presence.isPresent }) : reactExports.Children.only(children);
+  const ref = useComposedRefs(presence.ref, getElementRef(child));
+  const forceMount = typeof children === "function";
+  return forceMount || presence.isPresent ? reactExports.cloneElement(child, { ref }) : null;
+};
+Presence.displayName = "Presence";
+function usePresence(present) {
+  const [node, setNode] = reactExports.useState();
+  const stylesRef = reactExports.useRef(null);
+  const prevPresentRef = reactExports.useRef(present);
+  const prevAnimationNameRef = reactExports.useRef("none");
+  const initialState = present ? "mounted" : "unmounted";
+  const [state, send] = useStateMachine(initialState, {
+    mounted: {
+      UNMOUNT: "unmounted",
+      ANIMATION_OUT: "unmountSuspended"
+    },
+    unmountSuspended: {
+      MOUNT: "mounted",
+      ANIMATION_END: "unmounted"
+    },
+    unmounted: {
+      MOUNT: "mounted"
+    }
+  });
+  reactExports.useEffect(() => {
+    const currentAnimationName = getAnimationName(stylesRef.current);
+    prevAnimationNameRef.current = state === "mounted" ? currentAnimationName : "none";
+  }, [state]);
+  useLayoutEffect2(() => {
+    const styles = stylesRef.current;
+    const wasPresent = prevPresentRef.current;
+    const hasPresentChanged = wasPresent !== present;
+    if (hasPresentChanged) {
+      const prevAnimationName = prevAnimationNameRef.current;
+      const currentAnimationName = getAnimationName(styles);
+      if (present) {
+        send("MOUNT");
+      } else if (currentAnimationName === "none" || (styles == null ? void 0 : styles.display) === "none") {
+        send("UNMOUNT");
+      } else {
+        const isAnimating = prevAnimationName !== currentAnimationName;
+        if (wasPresent && isAnimating) {
+          send("ANIMATION_OUT");
+        } else {
+          send("UNMOUNT");
+        }
+      }
+      prevPresentRef.current = present;
+    }
+  }, [present, send]);
+  useLayoutEffect2(() => {
+    if (node) {
+      let timeoutId;
+      const ownerWindow = node.ownerDocument.defaultView ?? window;
+      const handleAnimationEnd = (event) => {
+        const currentAnimationName = getAnimationName(stylesRef.current);
+        const isCurrentAnimation = currentAnimationName.includes(CSS.escape(event.animationName));
+        if (event.target === node && isCurrentAnimation) {
+          send("ANIMATION_END");
+          if (!prevPresentRef.current) {
+            const currentFillMode = node.style.animationFillMode;
+            node.style.animationFillMode = "forwards";
+            timeoutId = ownerWindow.setTimeout(() => {
+              if (node.style.animationFillMode === "forwards") {
+                node.style.animationFillMode = currentFillMode;
+              }
+            });
+          }
+        }
+      };
+      const handleAnimationStart = (event) => {
+        if (event.target === node) {
+          prevAnimationNameRef.current = getAnimationName(stylesRef.current);
+        }
+      };
+      node.addEventListener("animationstart", handleAnimationStart);
+      node.addEventListener("animationcancel", handleAnimationEnd);
+      node.addEventListener("animationend", handleAnimationEnd);
+      return () => {
+        ownerWindow.clearTimeout(timeoutId);
+        node.removeEventListener("animationstart", handleAnimationStart);
+        node.removeEventListener("animationcancel", handleAnimationEnd);
+        node.removeEventListener("animationend", handleAnimationEnd);
+      };
+    } else {
+      send("ANIMATION_END");
+    }
+  }, [node, send]);
+  return {
+    isPresent: ["mounted", "unmountSuspended"].includes(state),
+    ref: reactExports.useCallback((node2) => {
+      stylesRef.current = node2 ? getComputedStyle(node2) : null;
+      setNode(node2);
+    }, [])
+  };
+}
+function getAnimationName(styles) {
+  return (styles == null ? void 0 : styles.animationName) || "none";
+}
+function getElementRef(element) {
+  var _a2, _b2;
+  let getter = (_a2 = Object.getOwnPropertyDescriptor(element.props, "ref")) == null ? void 0 : _a2.get;
+  let mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.ref;
+  }
+  getter = (_b2 = Object.getOwnPropertyDescriptor(element, "ref")) == null ? void 0 : _b2.get;
+  mayWarn = getter && "isReactWarning" in getter && getter.isReactWarning;
+  if (mayWarn) {
+    return element.props.ref;
+  }
+  return element.props.ref || element.ref;
+}
+var useInsertionEffect = React$5[" useInsertionEffect ".trim().toString()] || useLayoutEffect2;
+function useControllableState({
+  prop,
+  defaultProp,
+  onChange = () => {
+  },
+  caller
+}) {
+  const [uncontrolledProp, setUncontrolledProp, onChangeRef] = useUncontrolledState({
+    defaultProp,
+    onChange
+  });
+  const isControlled = prop !== void 0;
+  const value = isControlled ? prop : uncontrolledProp;
+  {
+    const isControlledRef = reactExports.useRef(prop !== void 0);
+    reactExports.useEffect(() => {
+      const wasControlled = isControlledRef.current;
+      if (wasControlled !== isControlled) {
+        const from = wasControlled ? "controlled" : "uncontrolled";
+        const to = isControlled ? "controlled" : "uncontrolled";
+        console.warn(
+          `${caller} is changing from ${from} to ${to}. Components should not switch from controlled to uncontrolled (or vice versa). Decide between using a controlled or uncontrolled value for the lifetime of the component.`
+        );
+      }
+      isControlledRef.current = isControlled;
+    }, [isControlled, caller]);
+  }
+  const setValue = reactExports.useCallback(
+    (nextValue) => {
+      var _a2;
+      if (isControlled) {
+        const value2 = isFunction(nextValue) ? nextValue(prop) : nextValue;
+        if (value2 !== prop) {
+          (_a2 = onChangeRef.current) == null ? void 0 : _a2.call(onChangeRef, value2);
+        }
+      } else {
+        setUncontrolledProp(nextValue);
+      }
+    },
+    [isControlled, prop, setUncontrolledProp, onChangeRef]
+  );
+  return [value, setValue];
+}
+function useUncontrolledState({
+  defaultProp,
+  onChange
+}) {
+  const [value, setValue] = reactExports.useState(defaultProp);
+  const prevValueRef = reactExports.useRef(value);
+  const onChangeRef = reactExports.useRef(onChange);
+  useInsertionEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  reactExports.useEffect(() => {
+    var _a2;
+    if (prevValueRef.current !== value) {
+      (_a2 = onChangeRef.current) == null ? void 0 : _a2.call(onChangeRef, value);
+      prevValueRef.current = value;
+    }
+  }, [value, prevValueRef]);
+  return [value, setValue, onChangeRef];
+}
+function isFunction(value) {
+  return typeof value === "function";
+}
+var VISUALLY_HIDDEN_STYLES = Object.freeze({
+  // See: https://github.com/twbs/bootstrap/blob/main/scss/mixins/_visually-hidden.scss
+  position: "absolute",
+  border: 0,
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  wordWrap: "normal"
+});
+var NAME = "VisuallyHidden";
+var VisuallyHidden = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.span,
+      {
+        ...props,
+        ref: forwardedRef,
+        style: { ...VISUALLY_HIDDEN_STYLES, ...props.style }
+      }
+    );
+  }
+);
+VisuallyHidden.displayName = NAME;
+var Root$3 = VisuallyHidden;
+var [createTooltipContext] = createContextScope("Tooltip", [
+  createPopperScope
+]);
+var usePopperScope = createPopperScope();
+var PROVIDER_NAME = "TooltipProvider";
+var DEFAULT_DELAY_DURATION = 700;
+var TOOLTIP_OPEN = "tooltip.open";
+var [TooltipProviderContextProvider, useTooltipProviderContext] = createTooltipContext(PROVIDER_NAME);
+var TooltipProvider$1 = (props) => {
+  const {
+    __scopeTooltip,
+    delayDuration = DEFAULT_DELAY_DURATION,
+    skipDelayDuration = 300,
+    disableHoverableContent = false,
+    children
+  } = props;
+  const isOpenDelayedRef = reactExports.useRef(true);
+  const isPointerInTransitRef = reactExports.useRef(false);
+  const skipDelayTimerRef = reactExports.useRef(0);
+  reactExports.useEffect(() => {
+    const skipDelayTimer = skipDelayTimerRef.current;
+    return () => window.clearTimeout(skipDelayTimer);
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    TooltipProviderContextProvider,
+    {
+      scope: __scopeTooltip,
+      isOpenDelayedRef,
+      delayDuration,
+      onOpen: reactExports.useCallback(() => {
+        window.clearTimeout(skipDelayTimerRef.current);
+        isOpenDelayedRef.current = false;
+      }, []),
+      onClose: reactExports.useCallback(() => {
+        window.clearTimeout(skipDelayTimerRef.current);
+        skipDelayTimerRef.current = window.setTimeout(
+          () => isOpenDelayedRef.current = true,
+          skipDelayDuration
+        );
+      }, [skipDelayDuration]),
+      isPointerInTransitRef,
+      onPointerInTransitChange: reactExports.useCallback((inTransit) => {
+        isPointerInTransitRef.current = inTransit;
+      }, []),
+      disableHoverableContent,
+      children
+    }
+  );
+};
+TooltipProvider$1.displayName = PROVIDER_NAME;
+var TOOLTIP_NAME = "Tooltip";
+var [TooltipContextProvider, useTooltipContext] = createTooltipContext(TOOLTIP_NAME);
+var Tooltip$1 = (props) => {
+  const {
+    __scopeTooltip,
+    children,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    disableHoverableContent: disableHoverableContentProp,
+    delayDuration: delayDurationProp
+  } = props;
+  const providerContext = useTooltipProviderContext(TOOLTIP_NAME, props.__scopeTooltip);
+  const popperScope = usePopperScope(__scopeTooltip);
+  const [trigger, setTrigger] = reactExports.useState(null);
+  const contentId = useId();
+  const openTimerRef = reactExports.useRef(0);
+  const disableHoverableContent = disableHoverableContentProp ?? providerContext.disableHoverableContent;
+  const delayDuration = delayDurationProp ?? providerContext.delayDuration;
+  const wasOpenDelayedRef = reactExports.useRef(false);
+  const [open, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen ?? false,
+    onChange: (open2) => {
+      if (open2) {
+        providerContext.onOpen();
+        document.dispatchEvent(new CustomEvent(TOOLTIP_OPEN));
+      } else {
+        providerContext.onClose();
+      }
+      onOpenChange == null ? void 0 : onOpenChange(open2);
+    },
+    caller: TOOLTIP_NAME
+  });
+  const stateAttribute = reactExports.useMemo(() => {
+    return open ? wasOpenDelayedRef.current ? "delayed-open" : "instant-open" : "closed";
+  }, [open]);
+  const handleOpen = reactExports.useCallback(() => {
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = 0;
+    wasOpenDelayedRef.current = false;
+    setOpen(true);
+  }, [setOpen]);
+  const handleClose = reactExports.useCallback(() => {
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = 0;
+    setOpen(false);
+  }, [setOpen]);
+  const handleDelayedOpen = reactExports.useCallback(() => {
+    window.clearTimeout(openTimerRef.current);
+    openTimerRef.current = window.setTimeout(() => {
+      wasOpenDelayedRef.current = true;
+      setOpen(true);
+      openTimerRef.current = 0;
+    }, delayDuration);
+  }, [delayDuration, setOpen]);
+  reactExports.useEffect(() => {
+    return () => {
+      if (openTimerRef.current) {
+        window.clearTimeout(openTimerRef.current);
+        openTimerRef.current = 0;
+      }
+    };
+  }, []);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2$1, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    TooltipContextProvider,
+    {
+      scope: __scopeTooltip,
+      contentId,
+      open,
+      stateAttribute,
+      trigger,
+      onTriggerChange: setTrigger,
+      onTriggerEnter: reactExports.useCallback(() => {
+        if (providerContext.isOpenDelayedRef.current) handleDelayedOpen();
+        else handleOpen();
+      }, [providerContext.isOpenDelayedRef, handleDelayedOpen, handleOpen]),
+      onTriggerLeave: reactExports.useCallback(() => {
+        if (disableHoverableContent) {
+          handleClose();
+        } else {
+          window.clearTimeout(openTimerRef.current);
+          openTimerRef.current = 0;
+        }
+      }, [handleClose, disableHoverableContent]),
+      onOpen: handleOpen,
+      onClose: handleClose,
+      disableHoverableContent,
+      children
+    }
+  ) });
+};
+Tooltip$1.displayName = TOOLTIP_NAME;
+var TRIGGER_NAME$3 = "TooltipTrigger";
+var TooltipTrigger$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeTooltip, ...triggerProps } = props;
+    const context = useTooltipContext(TRIGGER_NAME$3, __scopeTooltip);
+    const providerContext = useTooltipProviderContext(TRIGGER_NAME$3, __scopeTooltip);
+    const popperScope = usePopperScope(__scopeTooltip);
+    const ref = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, ref, context.onTriggerChange);
+    const isPointerDownRef = reactExports.useRef(false);
+    const hasPointerMoveOpenedRef = reactExports.useRef(false);
+    const handlePointerUp = reactExports.useCallback(() => isPointerDownRef.current = false, []);
+    reactExports.useEffect(() => {
+      return () => document.removeEventListener("pointerup", handlePointerUp);
+    }, [handlePointerUp]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor, { asChild: true, ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.button,
+      {
+        "aria-describedby": context.open ? context.contentId : void 0,
+        "data-state": context.stateAttribute,
+        ...triggerProps,
+        ref: composedRefs,
+        onPointerMove: composeEventHandlers(props.onPointerMove, (event) => {
+          if (event.pointerType === "touch") return;
+          if (!hasPointerMoveOpenedRef.current && !providerContext.isPointerInTransitRef.current) {
+            context.onTriggerEnter();
+            hasPointerMoveOpenedRef.current = true;
+          }
+        }),
+        onPointerLeave: composeEventHandlers(props.onPointerLeave, () => {
+          context.onTriggerLeave();
+          hasPointerMoveOpenedRef.current = false;
+        }),
+        onPointerDown: composeEventHandlers(props.onPointerDown, () => {
+          if (context.open) {
+            context.onClose();
+          }
+          isPointerDownRef.current = true;
+          document.addEventListener("pointerup", handlePointerUp, { once: true });
+        }),
+        onFocus: composeEventHandlers(props.onFocus, () => {
+          if (!isPointerDownRef.current) context.onOpen();
+        }),
+        onBlur: composeEventHandlers(props.onBlur, context.onClose),
+        onClick: composeEventHandlers(props.onClick, context.onClose)
+      }
+    ) });
+  }
+);
+TooltipTrigger$1.displayName = TRIGGER_NAME$3;
+var PORTAL_NAME$2 = "TooltipPortal";
+var [PortalProvider$1, usePortalContext$1] = createTooltipContext(PORTAL_NAME$2, {
+  forceMount: void 0
+});
+var TooltipPortal = (props) => {
+  const { __scopeTooltip, forceMount, children, container } = props;
+  const context = useTooltipContext(PORTAL_NAME$2, __scopeTooltip);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider$1, { scope: __scopeTooltip, forceMount, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$2, { asChild: true, container, children }) }) });
+};
+TooltipPortal.displayName = PORTAL_NAME$2;
+var CONTENT_NAME$3 = "TooltipContent";
+var TooltipContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const portalContext = usePortalContext$1(CONTENT_NAME$3, props.__scopeTooltip);
+    const { forceMount = portalContext.forceMount, side = "top", ...contentProps } = props;
+    const context = useTooltipContext(CONTENT_NAME$3, props.__scopeTooltip);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.disableHoverableContent ? /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { side, ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentHoverable, { side, ...contentProps, ref: forwardedRef }) });
+  }
+);
+var TooltipContentHoverable = reactExports.forwardRef((props, forwardedRef) => {
+  const context = useTooltipContext(CONTENT_NAME$3, props.__scopeTooltip);
+  const providerContext = useTooltipProviderContext(CONTENT_NAME$3, props.__scopeTooltip);
+  const ref = reactExports.useRef(null);
+  const composedRefs = useComposedRefs(forwardedRef, ref);
+  const [pointerGraceArea, setPointerGraceArea] = reactExports.useState(null);
+  const { trigger, onClose } = context;
+  const content = ref.current;
+  const { onPointerInTransitChange } = providerContext;
+  const handleRemoveGraceArea = reactExports.useCallback(() => {
+    setPointerGraceArea(null);
+    onPointerInTransitChange(false);
+  }, [onPointerInTransitChange]);
+  const handleCreateGraceArea = reactExports.useCallback(
+    (event, hoverTarget) => {
+      const currentTarget = event.currentTarget;
+      const exitPoint = { x: event.clientX, y: event.clientY };
+      const exitSide = getExitSideFromRect(exitPoint, currentTarget.getBoundingClientRect());
+      const paddedExitPoints = getPaddedExitPoints(exitPoint, exitSide);
+      const hoverTargetPoints = getPointsFromRect(hoverTarget.getBoundingClientRect());
+      const graceArea = getHull([...paddedExitPoints, ...hoverTargetPoints]);
+      setPointerGraceArea(graceArea);
+      onPointerInTransitChange(true);
+    },
+    [onPointerInTransitChange]
+  );
+  reactExports.useEffect(() => {
+    return () => handleRemoveGraceArea();
+  }, [handleRemoveGraceArea]);
+  reactExports.useEffect(() => {
+    if (trigger && content) {
+      const handleTriggerLeave = (event) => handleCreateGraceArea(event, content);
+      const handleContentLeave = (event) => handleCreateGraceArea(event, trigger);
+      trigger.addEventListener("pointerleave", handleTriggerLeave);
+      content.addEventListener("pointerleave", handleContentLeave);
+      return () => {
+        trigger.removeEventListener("pointerleave", handleTriggerLeave);
+        content.removeEventListener("pointerleave", handleContentLeave);
+      };
+    }
+  }, [trigger, content, handleCreateGraceArea, handleRemoveGraceArea]);
+  reactExports.useEffect(() => {
+    if (pointerGraceArea) {
+      const handleTrackPointerGrace = (event) => {
+        const target = event.target;
+        const pointerPosition = { x: event.clientX, y: event.clientY };
+        const hasEnteredTarget = (trigger == null ? void 0 : trigger.contains(target)) || (content == null ? void 0 : content.contains(target));
+        const isPointerOutsideGraceArea = !isPointInPolygon(pointerPosition, pointerGraceArea);
+        if (hasEnteredTarget) {
+          handleRemoveGraceArea();
+        } else if (isPointerOutsideGraceArea) {
+          handleRemoveGraceArea();
+          onClose();
+        }
+      };
+      document.addEventListener("pointermove", handleTrackPointerGrace);
+      return () => document.removeEventListener("pointermove", handleTrackPointerGrace);
+    }
+  }, [trigger, content, pointerGraceArea, onClose, handleRemoveGraceArea]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContentImpl, { ...props, ref: composedRefs });
+});
+var [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = createTooltipContext(TOOLTIP_NAME, { isInside: false });
+var Slottable$1 = /* @__PURE__ */ createSlottable("TooltipContent");
+var TooltipContentImpl = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeTooltip,
+      children,
+      "aria-label": ariaLabel,
+      onEscapeKeyDown,
+      onPointerDownOutside,
+      ...contentProps
+    } = props;
+    const context = useTooltipContext(CONTENT_NAME$3, __scopeTooltip);
+    const popperScope = usePopperScope(__scopeTooltip);
+    const { onClose } = context;
+    reactExports.useEffect(() => {
+      document.addEventListener(TOOLTIP_OPEN, onClose);
+      return () => document.removeEventListener(TOOLTIP_OPEN, onClose);
+    }, [onClose]);
+    reactExports.useEffect(() => {
+      if (context.trigger) {
+        const handleScroll2 = (event) => {
+          const target = event.target;
+          if (target == null ? void 0 : target.contains(context.trigger)) onClose();
+        };
+        window.addEventListener("scroll", handleScroll2, { capture: true });
+        return () => window.removeEventListener("scroll", handleScroll2, { capture: true });
+      }
+    }, [context.trigger, onClose]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DismissableLayer,
+      {
+        asChild: true,
+        disableOutsidePointerEvents: false,
+        onEscapeKeyDown,
+        onPointerDownOutside,
+        onFocusOutside: (event) => event.preventDefault(),
+        onDismiss: onClose,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Content$1,
+          {
+            "data-state": context.stateAttribute,
+            ...popperScope,
+            ...contentProps,
+            ref: forwardedRef,
+            style: {
+              ...contentProps.style,
+              // re-namespace exposed content custom properties
+              ...{
+                "--radix-tooltip-content-transform-origin": "var(--radix-popper-transform-origin)",
+                "--radix-tooltip-content-available-width": "var(--radix-popper-available-width)",
+                "--radix-tooltip-content-available-height": "var(--radix-popper-available-height)",
+                "--radix-tooltip-trigger-width": "var(--radix-popper-anchor-width)",
+                "--radix-tooltip-trigger-height": "var(--radix-popper-anchor-height)"
+              }
+            },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable$1, { children }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(VisuallyHiddenContentContextProvider, { scope: __scopeTooltip, isInside: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root$3, { id: context.contentId, role: "tooltip", children: ariaLabel || children }) })
+            ]
+          }
+        )
+      }
+    );
+  }
+);
+TooltipContent$1.displayName = CONTENT_NAME$3;
+var ARROW_NAME = "TooltipArrow";
+var TooltipArrow = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeTooltip, ...arrowProps } = props;
+    const popperScope = usePopperScope(__scopeTooltip);
+    const visuallyHiddenContentContext = useVisuallyHiddenContentContext(
+      ARROW_NAME,
+      __scopeTooltip
+    );
+    return visuallyHiddenContentContext.isInside ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow, { ...popperScope, ...arrowProps, ref: forwardedRef });
+  }
+);
+TooltipArrow.displayName = ARROW_NAME;
+function getExitSideFromRect(point2, rect) {
+  const top = Math.abs(rect.top - point2.y);
+  const bottom = Math.abs(rect.bottom - point2.y);
+  const right = Math.abs(rect.right - point2.x);
+  const left = Math.abs(rect.left - point2.x);
+  switch (Math.min(top, bottom, right, left)) {
+    case left:
+      return "left";
+    case right:
+      return "right";
+    case top:
+      return "top";
+    case bottom:
+      return "bottom";
+    default:
+      throw new Error("unreachable");
+  }
+}
+function getPaddedExitPoints(exitPoint, exitSide, padding = 5) {
+  const paddedExitPoints = [];
+  switch (exitSide) {
+    case "top":
+      paddedExitPoints.push(
+        { x: exitPoint.x - padding, y: exitPoint.y + padding },
+        { x: exitPoint.x + padding, y: exitPoint.y + padding }
+      );
+      break;
+    case "bottom":
+      paddedExitPoints.push(
+        { x: exitPoint.x - padding, y: exitPoint.y - padding },
+        { x: exitPoint.x + padding, y: exitPoint.y - padding }
+      );
+      break;
+    case "left":
+      paddedExitPoints.push(
+        { x: exitPoint.x + padding, y: exitPoint.y - padding },
+        { x: exitPoint.x + padding, y: exitPoint.y + padding }
+      );
+      break;
+    case "right":
+      paddedExitPoints.push(
+        { x: exitPoint.x - padding, y: exitPoint.y - padding },
+        { x: exitPoint.x - padding, y: exitPoint.y + padding }
+      );
+      break;
+  }
+  return paddedExitPoints;
+}
+function getPointsFromRect(rect) {
+  const { top, right, bottom, left } = rect;
+  return [
+    { x: left, y: top },
+    { x: right, y: top },
+    { x: right, y: bottom },
+    { x: left, y: bottom }
+  ];
+}
+function isPointInPolygon(point2, polygon) {
+  const { x: x3, y: y2 } = point2;
+  let inside = false;
+  for (let i = 0, j2 = polygon.length - 1; i < polygon.length; j2 = i++) {
+    const ii = polygon[i];
+    const jj = polygon[j2];
+    const xi = ii.x;
+    const yi = ii.y;
+    const xj = jj.x;
+    const yj = jj.y;
+    const intersect = yi > y2 !== yj > y2 && x3 < (xj - xi) * (y2 - yi) / (yj - yi) + xi;
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+function getHull(points) {
+  const newPoints = points.slice();
+  newPoints.sort((a2, b2) => {
+    if (a2.x < b2.x) return -1;
+    else if (a2.x > b2.x) return 1;
+    else if (a2.y < b2.y) return -1;
+    else if (a2.y > b2.y) return 1;
+    else return 0;
+  });
+  return getHullPresorted(newPoints);
+}
+function getHullPresorted(points) {
+  if (points.length <= 1) return points.slice();
+  const upperHull = [];
+  for (let i = 0; i < points.length; i++) {
+    const p2 = points[i];
+    while (upperHull.length >= 2) {
+      const q2 = upperHull[upperHull.length - 1];
+      const r2 = upperHull[upperHull.length - 2];
+      if ((q2.x - r2.x) * (p2.y - r2.y) >= (q2.y - r2.y) * (p2.x - r2.x)) upperHull.pop();
+      else break;
+    }
+    upperHull.push(p2);
+  }
+  upperHull.pop();
+  const lowerHull = [];
+  for (let i = points.length - 1; i >= 0; i--) {
+    const p2 = points[i];
+    while (lowerHull.length >= 2) {
+      const q2 = lowerHull[lowerHull.length - 1];
+      const r2 = lowerHull[lowerHull.length - 2];
+      if ((q2.x - r2.x) * (p2.y - r2.y) >= (q2.y - r2.y) * (p2.x - r2.x)) lowerHull.pop();
+      else break;
+    }
+    lowerHull.push(p2);
+  }
+  lowerHull.pop();
+  if (upperHull.length === 1 && lowerHull.length === 1 && upperHull[0].x === lowerHull[0].x && upperHull[0].y === lowerHull[0].y) {
+    return upperHull;
+  } else {
+    return upperHull.concat(lowerHull);
+  }
+}
+var Provider = TooltipProvider$1;
+var Root3 = Tooltip$1;
+var Trigger$1 = TooltipTrigger$1;
+var Portal$1 = TooltipPortal;
+var Content2$1 = TooltipContent$1;
+var Arrow2 = TooltipArrow;
+function TooltipProvider({
+  delayDuration = 0,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Provider,
+    {
+      "data-slot": "tooltip-provider",
+      delayDuration,
+      ...props
+    }
+  );
+}
+function Tooltip({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root3, { "data-slot": "tooltip", ...props }) });
+}
+function TooltipTrigger({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$1, { "data-slot": "tooltip-trigger", ...props });
+}
+function TooltipContent({
+  className,
+  sideOffset = 0,
+  children,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Content2$1,
+    {
+      "data-slot": "tooltip-content",
+      sideOffset,
+      className: cn(
+        "bg-primary text-primary-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
+        className
+      ),
+      ...props,
+      children: [
+        children,
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow2, { className: "bg-primary fill-primary z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px]" })
+      ]
+    }
+  ) });
+}
+const CURRENT_PRICE_STALE_MS = 10 * 60 * 1e3;
+const HISTORICAL_PRICES_ENABLED = false;
+function useIcpPrice() {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["icp-price", "current"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.getCurrentIcpPrice();
+    },
+    enabled: !!actor && !isFetching,
+    refetchOnMount: true,
+    staleTime: CURRENT_PRICE_STALE_MS
+  });
+}
+function useHistoricalPrices(dates) {
+  useBackendActor();
+  return useQuery({
+    queryKey: ["icp-price", "historical", dates],
+    queryFn: async () => {
+      return /* @__PURE__ */ new Map();
+    },
+    // When the flag is off, disable the query entirely so it never
+    // fetches and `isFetching` stays false (consumers treat that as
+    // "settled"). The queryFn guard above is a belt-and-suspenders.
+    enabled: HISTORICAL_PRICES_ENABLED,
+    staleTime: Number.POSITIVE_INFINITY
+  });
+}
+const PORTFOLIO_KEY = ["portfolio-stats"];
+const statsKey = (id2) => ["neuron-stats", id2];
+const rewardsKey = (id2) => ["rewards", id2];
+function useRewardHistory(neuronId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["rewards", neuronId ?? "none"],
+    queryFn: async () => {
+      if (!actor || !neuronId) return [];
+      return actor.getRewardHistory(BigInt(neuronId));
+    },
+    enabled: !!actor && !isFetching && !!neuronId
+  });
+}
+function useSyncStatus(neuronId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["sync-status", neuronId ?? "none"],
+    queryFn: async () => {
+      if (!actor || !neuronId) throw new Error("No actor or neuron id");
+      return actor.getSyncStatus(BigInt(neuronId));
+    },
+    enabled: !!actor && !isFetching && !!neuronId
+  });
+}
+function useEditSnapshot() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.editSnapshot(
+        vars.neuronId,
+        vars.timestamp,
+        vars.newTimestamp,
+        vars.newMaturityE8s
+      );
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.neuronId.toString();
+      void queryClient2.invalidateQueries({ queryKey: rewardsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
+    }
+  });
+}
+function useDeleteSnapshot() {
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  return useMutation({
+    mutationFn: async (vars) => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.deleteSnapshot(vars.neuronId, vars.timestamp);
+    },
+    onSuccess: (_data, vars) => {
+      const id2 = vars.neuronId.toString();
+      void queryClient2.invalidateQueries({ queryKey: rewardsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: statsKey(id2) });
+      void queryClient2.invalidateQueries({ queryKey: PORTFOLIO_KEY });
+    }
+  });
+}
+function useNeuronStats(neuronId) {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["neuron-stats", neuronId ?? "none"],
+    queryFn: async () => {
+      if (!actor || !neuronId) throw new Error("No actor or neuron id");
+      return actor.getNeuronStats(BigInt(neuronId));
+    },
+    enabled: !!actor && !isFetching && !!neuronId
+  });
+}
+function usePortfolioStats() {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["portfolio-stats"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.getPortfolioStats();
+    },
+    enabled: !!actor && !isFetching
+  });
+}
+function usePortfolioRewardStats() {
+  const { actor, isFetching } = useBackendActor();
+  return useQuery({
+    queryKey: ["portfolio-reward-stats"],
+    queryFn: async () => {
+      if (!actor) throw new Error("Backend actor not ready");
+      return actor.getPortfolioRewardStats();
+    },
+    enabled: !!actor && !isFetching
+  });
+}
+function escapeCsvField(value) {
+  if (/[",\n\r]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+function eventLabel(eventType) {
+  if (eventType === "mergedToStake") return "mergedToStake";
+  if (eventType === "externalTopUp") return "externalTopUp";
+  switch (eventType) {
+    case EventType.normalGrowth:
+      return "normalGrowth";
+    case EventType.disburseOrSpawn:
+      return "disburseOrSpawn";
+    case EventType.firstReading:
+      return "firstReading";
+    default:
+      return EventType[eventType] ?? "unknown";
+  }
+}
+function classifyEvent(eventType) {
+  if (eventType === "externalTopUp") return "capital";
+  if (eventType === "mergedToStake") return "reclassify";
+  switch (eventType) {
+    case EventType.normalGrowth:
+      return "reward";
+    case EventType.disburseOrSpawn:
+      return "withdrawal";
+    case EventType.firstReading:
+      return "firstReading";
+    default:
+      return "unknown";
+  }
+}
+function maturityBalance(reward) {
+  const combined = reward.unstakedMaturityE8s + reward.stakedMaturityE8s;
+  return formatIcp(combined, 8, false);
+}
+function deltaIcp(reward) {
+  return formatIcp(reward.deltaE8s, 8, false);
+}
+function stakeDeltaIcp(reward) {
+  return formatIcp(reward.stakeDeltaE8s, 8, false);
+}
+function dateKeyFromTimestamp(ns) {
+  if (ns == null) return null;
+  const ms2 = typeof ns === "number" ? ns : Number(ns / 1000000n);
+  if (!Number.isFinite(ms2) || ms2 <= 0) return null;
+  const date2 = new Date(ms2);
+  if (Number.isNaN(date2.getTime())) return null;
+  const yyyy = date2.getUTCFullYear();
+  const mm = String(date2.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(date2.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function formatPriceValue(value) {
+  if (value == null || Number.isNaN(value)) return "";
+  return String(value);
+}
+function priceColumns(reward, priceMap) {
+  if (!priceMap) return ["", "", "", ""];
+  const key = dateKeyFromTimestamp(reward.timestamp);
+  if (!key) return ["", "", "", ""];
+  const price = priceMap.get(key);
+  if (!price) return ["", "", "", ""];
+  const icp = Number(reward.deltaE8s) / Number(E8S_PER_ICP);
+  const rewardValueUsd = icp * price.usd;
+  const rewardValuePln = icp * price.pln;
+  return [
+    formatPriceValue(price.usd),
+    formatPriceValue(price.pln),
+    formatPriceValue(rewardValueUsd),
+    formatPriceValue(rewardValuePln)
+  ];
+}
+const HEADER = [
+  "date",
+  "maturity balance",
+  "delta",
+  "event type",
+  "classification",
+  "stakeDelta",
+  "priceUsd",
+  "pricePln",
+  "rewardValueUsd",
+  "rewardValuePln"
+];
+function rewardsToCsv(rewards, priceMap) {
+  const rows = rewards.map((r2) => {
+    const [priceUsd, pricePln, rewardValueUsd, rewardValuePln] = priceColumns(
+      r2,
+      priceMap
+    );
+    return [
+      formatTimestamp(r2.timestamp),
+      maturityBalance(r2),
+      deltaIcp(r2),
+      eventLabel(r2.eventType),
+      classifyEvent(r2.eventType),
+      stakeDeltaIcp(r2),
+      priceUsd,
+      pricePln,
+      rewardValueUsd,
+      rewardValuePln
+    ].map(escapeCsvField).join(",");
+  });
+  return [HEADER.join(","), ...rows].join("\n");
+}
+function classifyWtnEvent(eventType) {
+  switch (eventType) {
+    case WtnEventType.capitalAdded:
+      return "capital";
+    case WtnEventType.withdrawal:
+      return "withdrawal";
+    case WtnEventType.organicGrowth:
+      return "reward";
+    default:
+      return "unknown";
+  }
+}
+function wtnEventLabel(eventType) {
+  switch (eventType) {
+    case WtnEventType.organicGrowth:
+      return "organicGrowth";
+    case WtnEventType.capitalAdded:
+      return "capitalAdded";
+    case WtnEventType.withdrawal:
+      return "withdrawal";
+    case WtnEventType.firstReading:
+      return "firstReading";
+    default:
+      return WtnEventType[eventType] ?? "unknown";
+  }
+}
+function formatWtnIcp$1(value) {
+  if (value == null || Number.isNaN(value)) return "";
+  return String(value);
+}
+const WTN_HEADER = [
+  "date",
+  "nicpHeld",
+  "totalIcpPaid",
+  "redeemableIcpValue",
+  "classification"
+];
+function wtnSnapshotsToCsv(snapshots) {
+  const rows = snapshots.map(
+    (s2) => [
+      formatTimestamp(s2.date),
+      formatWtnIcp$1(s2.nicpHeld),
+      formatWtnIcp$1(s2.totalIcpPaid),
+      formatWtnIcp$1(s2.redeemableIcpValue),
+      classifyWtnEvent(s2.eventType)
+    ].map(escapeCsvField).join(",")
+  );
+  return [WTN_HEADER.join(","), ...rows].join("\n");
+}
+const WTN_COMBINED_HEADER = [
+  "id",
+  "type",
+  "date",
+  "maturityBalance",
+  "deltaE8s",
+  "stakeDeltaE8s",
+  "nicpHeld",
+  "totalIcpPaid",
+  "redeemableValue",
+  "classification"
+];
+function wtnSnapshotsToCombinedCsv(groups) {
+  const header = WTN_COMBINED_HEADER.join(",");
+  const rows = [];
+  for (const group of groups) {
+    const positionId = group.positionId.toString();
+    for (const s2 of group.snapshots) {
+      rows.push(
+        [
+          positionId,
+          "WTN",
+          formatTimestamp(s2.date),
+          "",
+          "",
+          "",
+          formatWtnIcp$1(s2.nicpHeld),
+          formatWtnIcp$1(s2.totalIcpPaid),
+          formatWtnIcp$1(s2.redeemableIcpValue),
+          wtnEventLabel(s2.eventType)
+        ].map(escapeCsvField).join(",")
+      );
+    }
+  }
+  return [header, ...rows].join("\n");
+}
+function neuronRewardsToCombinedTypedRows(groups) {
+  const rows = [];
+  for (const group of groups) {
+    const neuronId = group.neuronId.toString();
+    for (const r2 of group.rewards) {
+      rows.push(
+        [
+          neuronId,
+          "NNS",
+          formatTimestamp(r2.timestamp),
+          maturityBalance(r2),
+          deltaIcp(r2),
+          stakeDeltaIcp(r2),
+          "",
+          "",
+          "",
+          eventLabel(r2.eventType)
+        ].map(escapeCsvField).join(",")
+      );
+    }
+  }
+  return rows;
+}
+function downloadCsv(filename, content) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  URL.revokeObjectURL(url);
+}
+function DashboardPage() {
+  const { data: neurons, isLoading: neuronsLoading } = useNeurons();
+  const { data: wtnPositions, isLoading: wtnLoading } = useWtnPositions();
+  const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
+  const { data: rewardStats, isLoading: rewardStatsLoading } = usePortfolioRewardStats();
+  const priceQuery = useIcpPrice();
+  const syncAll = useSyncAllNeurons();
+  const queryClient2 = useQueryClient();
+  const { actor } = useBackendActor();
+  const navigate = useNavigate();
+  const [isExporting, setIsExporting] = reactExports.useState(false);
+  const neuronCount = (neurons == null ? void 0 : neurons.length) ?? 0;
+  const wtnCount = (wtnPositions == null ? void 0 : wtnPositions.length) ?? 0;
+  const isEmpty = !neuronsLoading && !wtnLoading && neuronCount === 0 && wtnCount === 0;
+  const isSyncingAll = syncAll.isPending;
+  const handleSyncAll = async () => {
+    try {
+      const results = await syncAll.mutateAsync();
+      await queryClient2.invalidateQueries({
+        predicate: (q2) => q2.queryKey[0] === "neurons" || q2.queryKey[0] === "neuron-stats" || q2.queryKey[0] === "rewards" || q2.queryKey[0] === "sync-status" || q2.queryKey[0] === "sync-error" || q2.queryKey[0] === "portfolio-stats" || q2.queryKey[0] === "portfolio-reward-stats",
+        refetchType: "active"
+      });
+      const failed = results.filter(
+        (r2) => r2.status === "failed"
+      );
+      const needsHotkey = results.some(
+        (r2) => r2.status === "hotkeyRequired"
+      );
+      if (failed.length > 0) {
+        ue.error(
+          `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`
+        );
+      } else if (needsHotkey) {
+        ue.warning("Synced — some neurons need a hotkey to fully sync");
+      } else {
+        ue.success("Synced all neurons with NNS governance");
+      }
+    } catch (err) {
+      ue.error(err instanceof Error ? err.message : "Failed to sync");
+    }
+  };
+  const handleRefreshPrice = () => {
+    priceQuery.refetch();
+  };
+  const handleExportCsv = async () => {
+    if (!actor || !neurons || neurons.length === 0 && (!wtnPositions || wtnPositions.length === 0))
+      return;
+    setIsExporting(true);
+    try {
+      const groups = await Promise.all(
+        neurons.map(async (neuron) => {
+          const rewards = await actor.getRewardHistory(
+            neuron.id
+          );
+          return { neuronId: neuron.id, rewards };
+        })
+      );
+      const nonEmpty = groups.filter((g2) => g2.rewards.length > 0);
+      const wtnGroups = await Promise.all(
+        (wtnPositions ?? []).map(async (position) => {
+          const snapshots = await actor.getWtnSnapshots(
+            position.id
+          );
+          return { positionId: position.id, snapshots };
+        })
+      );
+      const wtnNonEmpty = wtnGroups.filter((g2) => g2.snapshots.length > 0);
+      if (nonEmpty.length === 0 && wtnNonEmpty.length === 0) {
+        ue.info("No reward snapshots to export yet");
+        return;
+      }
+      const dateSet = /* @__PURE__ */ new Set();
+      for (const g2 of nonEmpty) {
+        for (const r2 of g2.rewards) {
+          const ms2 = Number(r2.timestamp / 1000000n);
+          if (!Number.isFinite(ms2) || ms2 <= 0) continue;
+          const d2 = new Date(ms2);
+          if (Number.isNaN(d2.getTime())) continue;
+          const pad2 = (n2) => String(n2).padStart(2, "0");
+          dateSet.add(
+            `${d2.getUTCFullYear()}-${pad2(d2.getUTCMonth() + 1)}-${pad2(d2.getUTCDate())}`
+          );
+        }
+      }
+      const priceMap = /* @__PURE__ */ new Map();
+      if (HISTORICAL_PRICES_ENABLED) ;
+      const wtnCsv = wtnSnapshotsToCombinedCsv(wtnNonEmpty);
+      const TYPED_HEADER = "id,type,date,maturityBalance,deltaE8s,stakeDeltaE8s,nicpHeld,totalIcpPaid,redeemableValue,classification";
+      const nnsTypedRows = neuronRewardsToCombinedTypedRows(groups);
+      const wtnRows = wtnCsv.split("\n").slice(1);
+      const csv = [TYPED_HEADER, ...nnsTypedRows, ...wtnRows].join("\n");
+      downloadCsv("portfolio-export.csv", csv);
+      const totalPositions = nonEmpty.length + wtnNonEmpty.length;
+      ue.success(
+        `Exported ${totalPositions} position${totalPositions === 1 ? "" : "s"} to CSV`
+      );
+    } catch (err) {
+      ue.error(err instanceof Error ? err.message : "Failed to export CSV");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-background", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        "aria-hidden": true,
+        className: "pointer-events-none absolute inset-x-0 top-0 h-64 opacity-40",
+        style: {
+          background: "radial-gradient(50% 60% at 50% 0%, oklch(var(--primary) / 0.12) 0%, oklch(var(--background) / 0) 70%)"
+        }
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-foreground font-display text-2xl font-semibold tracking-tight sm:text-3xl", children: "Portfolio" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1 text-sm", children: "Track staked ICP, maturity growth, and governance rewards across your NNS neurons." })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              variant: "outline",
+              onClick: handleSyncAll,
+              disabled: syncAll.isPending || isEmpty,
+              "data-ocid": "dashboard.refresh_all",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  RefreshCw,
+                  {
+                    className: syncAll.isPending ? "size-4 animate-spin" : "size-4"
+                  }
+                ),
+                "Refresh All"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { delayDuration: 300, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Button,
+              {
+                variant: "outline",
+                onClick: handleExportCsv,
+                disabled: isExporting || isEmpty || neuronsLoading,
+                "data-ocid": "dashboard.export_csv",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    Download,
+                    {
+                      className: isExporting ? "size-4 animate-spin" : "size-4"
+                    }
+                  ),
+                  "Export CSV"
+                ]
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: isEmpty ? "Add a neuron or WTN position before exporting" : "Download all neurons' and WTN positions' histories as one CSV" })
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              onClick: () => navigate({ to: "/add-neuron" }),
+              "data-ocid": "dashboard.add_neuron",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "size-4" }),
+                "Add Neuron"
+              ]
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Button,
+            {
+              variant: "outline",
+              onClick: () => navigate({ to: "/add-wtn" }),
+              "data-ocid": "dashboard.add_wtn",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-4" }),
+                "Add WTN Neuron"
+              ]
+            }
+          )
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-8", "data-ocid": "dashboard.portfolio_summary", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        PortfolioSummary,
+        {
+          totalStaked: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
+          nnsStaked: (portfolio == null ? void 0 : portfolio.nnsStakedE8s) ?? null,
+          wtnStaked: (portfolio == null ? void 0 : portfolio.wtnStakedE8s) ?? null,
+          totalCapitalContributed: (portfolio == null ? void 0 : portfolio.totalCapitalContributedE8s) ?? null,
+          nnsCapitalContributed: (portfolio == null ? void 0 : portfolio.nnsCapitalContributedE8s) ?? null,
+          wtnCapitalContributed: (portfolio == null ? void 0 : portfolio.wtnCapitalContributedE8s) ?? null,
+          totalMaturity: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
+          blendedApy: (portfolio == null ? void 0 : portfolio.blendedApy) ?? null,
+          rewardsThisMonth: (portfolio == null ? void 0 : portfolio.combinedRewardsThisMonthE8s) ?? null,
+          nnsRewardsThisMonth: (portfolio == null ? void 0 : portfolio.nnsRewardsThisMonthE8s) ?? null,
+          wtnRewardsThisMonthFloat: (portfolio == null ? void 0 : portfolio.wtnRewardsThisMonthFloat) ?? null,
+          totalRewards: (portfolio == null ? void 0 : portfolio.totalRewardsE8s) ?? null,
+          nnsRewards: (portfolio == null ? void 0 : portfolio.nnsRewardsE8s) ?? null,
+          wtnRewards: (portfolio == null ? void 0 : portfolio.wtnRewardsE8s) ?? null,
+          neuronCount: (portfolio == null ? void 0 : portfolio.neuronCount) ?? null,
+          loading: portfolioLoading
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "mt-6", "data-ocid": "dashboard.portfolio_value", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        PortfolioValuation,
+        {
+          totalStakedE8s: (portfolio == null ? void 0 : portfolio.totalStakedE8s) ?? null,
+          totalMaturityE8s: (portfolio == null ? void 0 : portfolio.totalMaturityE8s) ?? null,
+          priceQuery,
+          onRefreshPrice: handleRefreshPrice,
+          loading: portfolioLoading
+        }
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-6", "data-ocid": "dashboard.reward_stats_section", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          RewardStatsCard,
+          {
+            stats: rewardStats,
+            loading: rewardStatsLoading,
+            dataOcidPrefix: "dashboard.reward_stats"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          MonthlyBreakdownSection$1,
+          {
+            monthly: (rewardStats == null ? void 0 : rewardStats.monthly) ?? [],
+            dataOcidPrefix: "dashboard.monthly"
+          }
+        )
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "mt-10", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-foreground font-display text-lg font-semibold tracking-tight", children: "Positions" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Badge, { variant: "secondary", className: "font-mono", children: ((neurons == null ? void 0 : neurons.length) ?? 0) + ((wtnPositions == null ? void 0 : wtnPositions.length) ?? 0) })
+        ] }),
+        isSyncingAll && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "output",
+          {
+            className: "bg-primary/5 border-primary/30 mb-4 flex items-center gap-3 rounded-lg border px-4 py-3",
+            "data-ocid": "dashboard.refreshing_banner",
+            "aria-live": "polite",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "text-primary size-4 animate-spin" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground text-sm font-medium", children: "Refreshing all neurons…" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: "Syncing with NNS governance and WTN positions" })
+            ]
+          }
+        ),
+        neuronsLoading || wtnLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(NeuronGridSkeleton, {}) : isEmpty ? /* @__PURE__ */ jsxRuntimeExports.jsx(EmptyState, { onAdd: () => navigate({ to: "/add-neuron" }) }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", children: [
+          neurons == null ? void 0 : neurons.map((neuron, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            NeuronCard,
+            {
+              neuron,
+              index: i,
+              syncing: isSyncingAll
+            },
+            neuron.id.toString()
+          )),
+          wtnPositions == null ? void 0 : wtnPositions.map((position, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            WtnCard,
+            {
+              position,
+              index: ((neurons == null ? void 0 : neurons.length) ?? 0) + i,
+              syncing: isSyncingAll
+            },
+            `wtn-${position.id.toString()}`
+          ))
+        ] })
+      ] })
+    ] })
+  ] });
+}
+function PortfolioSummary({
+  totalStaked,
+  nnsStaked,
+  wtnStaked,
+  totalCapitalContributed,
+  nnsCapitalContributed,
+  wtnCapitalContributed,
+  totalMaturity,
+  blendedApy,
+  rewardsThisMonth,
+  nnsRewardsThisMonth,
+  wtnRewardsThisMonthFloat,
+  totalRewards,
+  nnsRewards,
+  wtnRewards,
+  neuronCount,
+  loading
+}) {
+  const wtnRewardsThisMonthE8s = wtnRewardsThisMonthFloat != null ? BigInt(Math.trunc(wtnRewardsThisMonthFloat * Number(E8S_PER_ICP))) : 0n;
+  const stats = [
+    {
+      label: "Total Staked",
+      value: formatIcp(totalStaked, 2),
+      icon: Wallet,
+      accent: "text-primary",
+      hint: !loading && neuronCount != null ? `${neuronCount.toString()} neuron${neuronCount === 1n ? "" : "s"}` : null,
+      subline: `${formatIcpCompact(nnsStaked ?? 0n)} (NNS) + ${formatIcpCompact(wtnStaked ?? 0n)} (nICP)`
+    },
+    {
+      label: "Total Capital Contributed",
+      value: formatIcp(totalCapitalContributed, 2),
+      icon: Landmark,
+      accent: "text-muted-foreground",
+      hint: "Initial stakes + top-ups",
+      subline: `${formatIcpCompact(nnsCapitalContributed ?? 0n)} (NNS) + ${formatIcpCompact(wtnCapitalContributed ?? 0n)} (nICP)`
+    },
+    {
+      label: "Total Maturity",
+      value: formatIcp(totalMaturity, 2),
+      icon: Coins,
+      accent: "text-accent",
+      hint: "Withdrawable + staked",
+      subline: null
+    },
+    {
+      label: "Blended APY",
+      value: formatApy(blendedApy),
+      icon: TrendingUp,
+      accent: blendedApy != null && blendedApy > 0 ? "text-primary" : "text-muted-foreground",
+      hint: blendedApy === 0 ? "Insufficient history" : null,
+      subline: null
+    },
+    {
+      label: "Earned This Month",
+      value: formatIcp(rewardsThisMonth, 2),
+      icon: Sparkles,
+      accent: "text-primary",
+      hint: "Combined NNS + nICP rewards",
+      subline: `${formatIcpCompact(nnsRewardsThisMonth ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewardsThisMonthE8s)} (nICP)`
+    },
+    {
+      label: "Total Rewards Earned",
+      value: formatIcp(totalRewards, 2),
+      icon: BrainCircuit,
+      accent: "text-primary",
+      hint: "Lifetime rewards",
+      subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`
+    }
+  ];
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6", children: stats.map((stat) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "stat-card", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: stat.label }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(stat.icon, { className: cn("size-4", stat.accent) })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3", children: [
+      loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-32" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-2xl font-semibold tracking-tight", children: stat.value }),
+      stat.subline && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "p",
+        {
+          className: "value-pill mt-2",
+          "data-ocid": "dashboard.portfolio_summary.subline",
+          children: stat.subline
+        }
+      ),
+      stat.hint && !loading && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1 font-mono text-xs", children: stat.hint })
+    ] })
+  ] }, stat.label)) });
+}
+function PortfolioValuation({
+  totalStakedE8s,
+  totalMaturityE8s,
+  priceQuery,
+  onRefreshPrice,
+  loading
+}) {
+  const price = priceQuery.data ?? null;
+  const priceLoading = priceQuery.isLoading;
+  const priceStale = (price == null ? void 0 : price.cached) === true;
+  const totalE8s = totalStakedE8s != null && totalMaturityE8s != null ? totalStakedE8s + totalMaturityE8s : null;
+  const icpAmount = totalE8s != null ? Number(totalE8s / E8S_PER_ICP) + Number(totalE8s % E8S_PER_ICP) / Number(E8S_PER_ICP) : null;
+  const usdValue = icpAmount != null && (price == null ? void 0 : price.usd) != null ? icpAmount * price.usd : null;
+  const plnValue = icpAmount != null && (price == null ? void 0 : price.pln) != null ? icpAmount * price.pln : null;
+  const showValueLoading = loading || priceLoading;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "bg-card/60 border-border/60 overflow-hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: "p-6", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-xs font-medium tracking-wider uppercase", children: "Current Portfolio Value" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1", children: [
+        showValueLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-9 w-40" }) : /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-3xl font-semibold tracking-tight", children: formatUsd(usdValue) }),
+        !showValueLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "value-pill", "data-ocid": "dashboard.value.pln", children: formatPln(plnValue) })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-1.5 font-mono text-xs", children: icpAmount != null ? `${formatIcpCompact(totalE8s)} total` : "—" })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-start gap-2 lg:items-end", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "span",
+          {
+            className: cn(
+              priceStale ? "price-stale" : "price-badge",
+              priceLoading && "opacity-60"
+            ),
+            "data-ocid": "dashboard.price_badge",
+            title: (price == null ? void 0 : price.timestamp) != null ? `Last updated ${formatTimestampDateTime(price.timestamp)}` : void 0,
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "span",
+                {
+                  className: cn(
+                    "size-1.5 rounded-full",
+                    priceStale ? "bg-warning" : "bg-success"
+                  ),
+                  style: { backgroundColor: "currentColor" }
+                }
+              ),
+              priceLoading ? "Loading price…" : price ? `ICP ${formatUsd(price.usd)} · ${formatPln(price.pln)}` : "Price unavailable"
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            variant: "outline",
+            size: "sm",
+            onClick: onRefreshPrice,
+            disabled: priceQuery.isFetching,
+            "data-ocid": "dashboard.refresh_price",
+            "aria-label": "Refresh ICP price",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                RefreshCw,
+                {
+                  className: priceQuery.isFetching ? "size-4 animate-spin" : "size-4"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "Refresh price" })
+            ]
+          }
+        )
+      ] }),
+      (price == null ? void 0 : price.timestamp) != null && !priceLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px]", children: [
+        "Updated ",
+        formatTimestampDateTime(price.timestamp),
+        priceStale ? " · cached" : ""
+      ] })
+    ] })
+  ] }) }) });
+}
+function NeuronCard({
+  neuron,
+  index: index2,
+  syncing
+}) {
+  const idStr = neuron.id.toString();
+  const { data: stats } = useNeuronStats(idStr);
+  const { data: syncStatus } = useSyncStatus(idStr);
+  const { data: syncError } = useSyncError(
+    syncStatus === "failed" ? idStr : null
+  );
+  const maturityE8s = (stats == null ? void 0 : stats.totalRewardsE8s) ?? 0n;
+  const maturityPercent = (stats == null ? void 0 : stats.percentageReturn) ?? 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    motion.div,
+    {
+      initial: { opacity: 0, y: 12 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.3, delay: index2 * 0.06 },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Link,
+        {
+          to: "/neuron-detail/$neuronId",
+          params: { neuronId: idStr },
+          "data-ocid": `dashboard.neuron.item.${index2 + 1}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 transition-smooth hover:border-primary/40 hover:shadow-elevated relative h-full", children: [
+            syncing && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "output",
+              {
+                className: "bg-primary/5 border-primary/30 absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]",
+                "data-ocid": `dashboard.neuron.syncing.${index2 + 1}`,
+                "aria-live": "polite",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card/90 border-border/60 flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "text-primary size-3.5 animate-spin" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground text-xs font-medium", children: "Syncing…" })
+                ] })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5 min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrainCircuit, { className: "size-4.5" }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "font-mono text-sm font-semibold truncate", children: neuron.name || shortenNeuronId(neuron.id) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px] truncate", children: shortenPrincipal(neuron.ownerId.toString(), 8) })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                SyncStatusBadge$1,
+                {
+                  status: syncStatus ?? null,
+                  errorReason: syncError ?? null
+                }
+              )
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Maturity" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(maturityE8s) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: cn(
+                        "font-mono text-xs",
+                        maturityPercent >= 0 ? "text-primary" : "text-destructive"
+                      ),
+                      children: formatPercent(maturityPercent)
+                    }
+                  )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(neuron.startDate) })
+              ] })
+            ] })
+          ] })
+        }
+      )
+    }
+  );
+}
+function WtnCard({
+  position,
+  index: index2,
+  syncing
+}) {
+  const idStr = position.id.toString();
+  const { data: stats } = useWtnStats(idStr);
+  const redeemableIcp = (stats == null ? void 0 : stats.redeemableIcpValue) ?? 0;
+  const totalEarned = (stats == null ? void 0 : stats.totalEarned) ?? 0;
+  const percentReturn = (stats == null ? void 0 : stats.percentReturn) ?? 0;
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    motion.div,
+    {
+      initial: { opacity: 0, y: 12 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.3, delay: index2 * 0.06 },
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Link,
+        {
+          to: "/wtn-detail/$positionId",
+          params: { positionId: idStr },
+          "data-ocid": `dashboard.wtn.item.${index2 + 1}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60 border-border/60 transition-smooth hover:border-accent/40 hover:shadow-elevated relative h-full", children: [
+            syncing && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "output",
+              {
+                className: "bg-accent/5 border-accent/30 absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[1px]",
+                "data-ocid": `dashboard.wtn.syncing.${index2 + 1}`,
+                "aria-live": "polite",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-card/90 border-border/60 flex items-center gap-2 rounded-full border px-3 py-1.5 shadow-sm", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "text-accent size-3.5 animate-spin" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground text-xs font-medium", children: "Syncing…" })
+                ] })
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5 min-w-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent/15 text-accent flex size-9 shrink-0 items-center justify-center rounded-lg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Droplets, { className: "size-4.5" }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-w-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { className: "font-mono text-sm font-semibold truncate", children: position.name || `WTN #${idStr}` }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground font-mono text-[11px] truncate", children: shortenPrincipal(position.ownerId.toString(), 8) })
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Badge,
+                {
+                  variant: "outline",
+                  className: "border-accent/40 bg-accent/10 text-accent text-[10px]",
+                  "data-ocid": `dashboard.wtn.badge.${index2 + 1}`,
+                  children: "WTN"
+                }
+              )
+            ] }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Redeemable" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-baseline gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground font-mono text-xl font-semibold", children: formatIcpCompact(
+                    BigInt(Math.trunc(redeemableIcp * Number(E8S_PER_ICP)))
+                  ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: cn(
+                        "font-mono text-xs",
+                        percentReturn >= 0 ? "text-primary" : "text-destructive"
+                      ),
+                      children: formatPercent(percentReturn)
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground font-mono text-[11px] mt-1", children: [
+                  "Earned",
+                  " ",
+                  formatIcpCompact(
+                    BigInt(Math.trunc(totalEarned * Number(E8S_PER_ICP)))
+                  ),
+                  " ",
+                  "ICP"
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-border/40 border-t pt-2.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-[11px] tracking-wider uppercase", children: "Start date" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground font-mono text-xs", children: formatTimestamp(position.startDate) })
+              ] })
+            ] })
+          ] })
+        }
+      )
+    }
+  );
+}
+function SyncStatusBadge$1({
+  status,
+  errorReason
+}) {
+  if (status === "failed") {
+    const label = errorReason ? `Sync failed: ${errorReason}` : "Sync failed";
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Badge,
+      {
+        variant: "outline",
+        className: "border-destructive/40 bg-destructive/10 text-destructive gap-1 text-[10px] max-w-[180px] truncate",
+        "data-ocid": "dashboard.neuron.status.failed",
+        title: label,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-destructive size-1.5 rounded-full" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate", children: label })
+        ]
+      }
+    );
+  }
+  if (status === "hotkeyRequired") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Badge,
+      {
+        variant: "outline",
+        className: "border-accent/40 bg-accent/10 text-accent gap-1 text-[10px]",
+        "data-ocid": "dashboard.neuron.status.hotkey_required",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-accent size-1.5 rounded-full" }),
+          "Hotkey required"
+        ]
+      }
+    );
+  }
+  if (status === "synced") {
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Badge,
+      {
+        variant: "outline",
+        className: "border-primary/30 bg-primary/5 text-primary gap-1 text-[10px]",
+        "data-ocid": "dashboard.neuron.status.synced",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary size-1.5 rounded-full" }),
+          "Synced"
+        ]
+      }
+    );
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    Badge,
+    {
+      variant: "outline",
+      className: "border-border bg-muted text-muted-foreground gap-1 text-[10px]",
+      "data-ocid": "dashboard.neuron.status.pending",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-muted-foreground size-1.5 rounded-full" }),
+        "Pending"
+      ]
+    }
+  );
+}
+function NeuronGridSkeleton() {
+  const cards = [0, 1, 2];
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", children: cards.map((n2) => /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "bg-card/60", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-10 w-full" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-2/3" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-4 w-1/2" })
+    ] })
+  ] }, `skeleton-card-${n2}`)) });
+}
+function EmptyState({ onAdd }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "bg-muted/30 border-border/60 flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center",
+      "data-ocid": "dashboard.empty_state",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-primary/10 text-primary mb-4 flex size-14 items-center justify-center rounded-2xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrainCircuit, { className: "size-7" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-foreground font-display text-lg font-semibold", children: "No neurons tracked yet" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground mt-2 max-w-sm text-sm", children: "Add your first NNS neuron to start tracking staked ICP, maturity growth, and governance reward events." }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Button,
+          {
+            onClick: onAdd,
+            className: "mt-6",
+            "data-ocid": "dashboard.empty_state.add_neuron",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "size-4" }),
+              "Add your first neuron"
+            ]
+          }
+        )
+      ]
+    }
+  );
+}
+var AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
+var AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
+var EVENT_OPTIONS = { bubbles: false, cancelable: true };
+var FOCUS_SCOPE_NAME = "FocusScope";
+var FocusScope = reactExports.forwardRef((props, forwardedRef) => {
+  const {
+    loop = false,
+    trapped = false,
+    onMountAutoFocus: onMountAutoFocusProp,
+    onUnmountAutoFocus: onUnmountAutoFocusProp,
+    ...scopeProps
+  } = props;
+  const [container, setContainer] = reactExports.useState(null);
+  const onMountAutoFocus = useCallbackRef$1(onMountAutoFocusProp);
+  const onUnmountAutoFocus = useCallbackRef$1(onUnmountAutoFocusProp);
+  const lastFocusedElementRef = reactExports.useRef(null);
+  const composedRefs = useComposedRefs(forwardedRef, (node) => setContainer(node));
+  const focusScope = reactExports.useRef({
+    paused: false,
+    pause() {
+      this.paused = true;
+    },
+    resume() {
+      this.paused = false;
+    }
+  }).current;
+  reactExports.useEffect(() => {
+    if (trapped) {
+      let handleFocusIn2 = function(event) {
+        if (focusScope.paused || !container) return;
+        const target = event.target;
+        if (container.contains(target)) {
+          lastFocusedElementRef.current = target;
+        } else {
+          focus(lastFocusedElementRef.current, { select: true });
+        }
+      }, handleFocusOut2 = function(event) {
+        if (focusScope.paused || !container) return;
+        const relatedTarget = event.relatedTarget;
+        if (relatedTarget === null) return;
+        if (!container.contains(relatedTarget)) {
+          focus(lastFocusedElementRef.current, { select: true });
+        }
+      }, handleMutations2 = function(mutations) {
+        const focusedElement = document.activeElement;
+        if (focusedElement !== document.body) return;
+        for (const mutation of mutations) {
+          if (mutation.removedNodes.length > 0) focus(container);
+        }
+      };
+      document.addEventListener("focusin", handleFocusIn2);
+      document.addEventListener("focusout", handleFocusOut2);
+      const mutationObserver = new MutationObserver(handleMutations2);
+      if (container) mutationObserver.observe(container, { childList: true, subtree: true });
+      return () => {
+        document.removeEventListener("focusin", handleFocusIn2);
+        document.removeEventListener("focusout", handleFocusOut2);
+        mutationObserver.disconnect();
+      };
+    }
+  }, [trapped, container, focusScope.paused]);
+  reactExports.useEffect(() => {
+    if (container) {
+      focusScopesStack.add(focusScope);
+      const previouslyFocusedElement = document.activeElement;
+      const hasFocusedCandidate = container.contains(previouslyFocusedElement);
+      if (!hasFocusedCandidate) {
+        const mountEvent = new CustomEvent(AUTOFOCUS_ON_MOUNT, EVENT_OPTIONS);
+        container.addEventListener(AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
+        container.dispatchEvent(mountEvent);
+        if (!mountEvent.defaultPrevented) {
+          focusFirst(removeLinks(getTabbableCandidates(container)), { select: true });
+          if (document.activeElement === previouslyFocusedElement) {
+            focus(container);
+          }
+        }
+      }
+      return () => {
+        container.removeEventListener(AUTOFOCUS_ON_MOUNT, onMountAutoFocus);
+        setTimeout(() => {
+          const unmountEvent = new CustomEvent(AUTOFOCUS_ON_UNMOUNT, EVENT_OPTIONS);
+          container.addEventListener(AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
+          container.dispatchEvent(unmountEvent);
+          if (!unmountEvent.defaultPrevented) {
+            focus(previouslyFocusedElement ?? document.body, { select: true });
+          }
+          container.removeEventListener(AUTOFOCUS_ON_UNMOUNT, onUnmountAutoFocus);
+          focusScopesStack.remove(focusScope);
+        }, 0);
+      };
+    }
+  }, [container, onMountAutoFocus, onUnmountAutoFocus, focusScope]);
+  const handleKeyDown = reactExports.useCallback(
+    (event) => {
+      if (!loop && !trapped) return;
+      if (focusScope.paused) return;
+      const isTabKey = event.key === "Tab" && !event.altKey && !event.ctrlKey && !event.metaKey;
+      const focusedElement = document.activeElement;
+      if (isTabKey && focusedElement) {
+        const container2 = event.currentTarget;
+        const [first, last2] = getTabbableEdges(container2);
+        const hasTabbableElementsInside = first && last2;
+        if (!hasTabbableElementsInside) {
+          if (focusedElement === container2) event.preventDefault();
+        } else {
+          if (!event.shiftKey && focusedElement === last2) {
+            event.preventDefault();
+            if (loop) focus(first, { select: true });
+          } else if (event.shiftKey && focusedElement === first) {
+            event.preventDefault();
+            if (loop) focus(last2, { select: true });
+          }
+        }
+      }
+    },
+    [loop, trapped, focusScope.paused]
+  );
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { tabIndex: -1, ...scopeProps, ref: composedRefs, onKeyDown: handleKeyDown });
+});
+FocusScope.displayName = FOCUS_SCOPE_NAME;
+function focusFirst(candidates, { select = false } = {}) {
+  const previouslyFocusedElement = document.activeElement;
+  for (const candidate of candidates) {
+    focus(candidate, { select });
+    if (document.activeElement !== previouslyFocusedElement) return;
+  }
+}
+function getTabbableEdges(container) {
+  const candidates = getTabbableCandidates(container);
+  const first = findVisible(candidates, container);
+  const last2 = findVisible(candidates.reverse(), container);
+  return [first, last2];
+}
+function getTabbableCandidates(container) {
+  const nodes = [];
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT, {
+    acceptNode: (node) => {
+      const isHiddenInput = node.tagName === "INPUT" && node.type === "hidden";
+      if (node.disabled || node.hidden || isHiddenInput) return NodeFilter.FILTER_SKIP;
+      return node.tabIndex >= 0 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    }
+  });
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  return nodes;
+}
+function findVisible(elements, container) {
+  for (const element of elements) {
+    if (!isHidden(element, { upTo: container })) return element;
+  }
+}
+function isHidden(node, { upTo }) {
+  if (getComputedStyle(node).visibility === "hidden") return true;
+  while (node) {
+    if (upTo !== void 0 && node === upTo) return false;
+    if (getComputedStyle(node).display === "none") return true;
+    node = node.parentElement;
+  }
+  return false;
+}
+function isSelectableInput(element) {
+  return element instanceof HTMLInputElement && "select" in element;
+}
+function focus(element, { select = false } = {}) {
+  if (element && element.focus) {
+    const previouslyFocusedElement = document.activeElement;
+    element.focus({ preventScroll: true });
+    if (element !== previouslyFocusedElement && isSelectableInput(element) && select)
+      element.select();
+  }
+}
+var focusScopesStack = createFocusScopesStack();
+function createFocusScopesStack() {
+  let stack = [];
+  return {
+    add(focusScope) {
+      const activeFocusScope = stack[0];
+      if (focusScope !== activeFocusScope) {
+        activeFocusScope == null ? void 0 : activeFocusScope.pause();
+      }
+      stack = arrayRemove(stack, focusScope);
+      stack.unshift(focusScope);
+    },
+    remove(focusScope) {
+      var _a2;
+      stack = arrayRemove(stack, focusScope);
+      (_a2 = stack[0]) == null ? void 0 : _a2.resume();
+    }
+  };
+}
+function arrayRemove(array2, item) {
+  const updatedArray = [...array2];
+  const index2 = updatedArray.indexOf(item);
+  if (index2 !== -1) {
+    updatedArray.splice(index2, 1);
+  }
+  return updatedArray;
+}
+function removeLinks(items) {
+  return items.filter((item) => item.tagName !== "A");
+}
+var count = 0;
+function useFocusGuards() {
+  reactExports.useEffect(() => {
+    const edgeGuards = document.querySelectorAll("[data-radix-focus-guard]");
+    document.body.insertAdjacentElement("afterbegin", edgeGuards[0] ?? createFocusGuard());
+    document.body.insertAdjacentElement("beforeend", edgeGuards[1] ?? createFocusGuard());
+    count++;
+    return () => {
+      if (count === 1) {
+        document.querySelectorAll("[data-radix-focus-guard]").forEach((node) => node.remove());
+      }
+      count--;
+    };
+  }, []);
+}
+function createFocusGuard() {
+  const element = document.createElement("span");
+  element.setAttribute("data-radix-focus-guard", "");
+  element.tabIndex = 0;
+  element.style.outline = "none";
+  element.style.opacity = "0";
+  element.style.position = "fixed";
+  element.style.pointerEvents = "none";
+  return element;
+}
+var __assign = function() {
+  __assign = Object.assign || function __assign2(t2) {
+    for (var s2, i = 1, n2 = arguments.length; i < n2; i++) {
+      s2 = arguments[i];
+      for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2)) t2[p2] = s2[p2];
+    }
+    return t2;
+  };
+  return __assign.apply(this, arguments);
+};
+function __rest(s2, e3) {
+  var t2 = {};
+  for (var p2 in s2) if (Object.prototype.hasOwnProperty.call(s2, p2) && e3.indexOf(p2) < 0)
+    t2[p2] = s2[p2];
+  if (s2 != null && typeof Object.getOwnPropertySymbols === "function")
+    for (var i = 0, p2 = Object.getOwnPropertySymbols(s2); i < p2.length; i++) {
+      if (e3.indexOf(p2[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s2, p2[i]))
+        t2[p2[i]] = s2[p2[i]];
+    }
+  return t2;
+}
+function __spreadArray(to, from, pack) {
+  if (pack || arguments.length === 2) for (var i = 0, l2 = from.length, ar; i < l2; i++) {
+    if (ar || !(i in from)) {
+      if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+      ar[i] = from[i];
+    }
+  }
+  return to.concat(ar || Array.prototype.slice.call(from));
+}
+typeof SuppressedError === "function" ? SuppressedError : function(error, suppressed, message) {
+  var e3 = new Error(message);
+  return e3.name = "SuppressedError", e3.error = error, e3.suppressed = suppressed, e3;
+};
+var zeroRightClassName = "right-scroll-bar-position";
+var fullWidthClassName = "width-before-scroll-bar";
+var noScrollbarsClassName = "with-scroll-bars-hidden";
+var removedBarSizeVariable = "--removed-body-scroll-bar-size";
+function assignRef(ref, value) {
+  if (typeof ref === "function") {
+    ref(value);
+  } else if (ref) {
+    ref.current = value;
+  }
+  return ref;
+}
+function useCallbackRef(initialValue, callback) {
+  var ref = reactExports.useState(function() {
+    return {
+      // value
+      value: initialValue,
+      // last callback
+      callback,
+      // "memoized" public interface
+      facade: {
+        get current() {
+          return ref.value;
+        },
+        set current(value) {
+          var last2 = ref.value;
+          if (last2 !== value) {
+            ref.value = value;
+            ref.callback(value, last2);
+          }
+        }
+      }
+    };
+  })[0];
+  ref.callback = callback;
+  return ref.facade;
+}
+var useIsomorphicLayoutEffect = typeof window !== "undefined" ? reactExports.useLayoutEffect : reactExports.useEffect;
+var currentValues = /* @__PURE__ */ new WeakMap();
+function useMergeRefs(refs, defaultValue) {
+  var callbackRef = useCallbackRef(null, function(newValue) {
+    return refs.forEach(function(ref) {
+      return assignRef(ref, newValue);
+    });
+  });
+  useIsomorphicLayoutEffect(function() {
+    var oldValue = currentValues.get(callbackRef);
+    if (oldValue) {
+      var prevRefs_1 = new Set(oldValue);
+      var nextRefs_1 = new Set(refs);
+      var current_1 = callbackRef.current;
+      prevRefs_1.forEach(function(ref) {
+        if (!nextRefs_1.has(ref)) {
+          assignRef(ref, null);
+        }
+      });
+      nextRefs_1.forEach(function(ref) {
+        if (!prevRefs_1.has(ref)) {
+          assignRef(ref, current_1);
+        }
+      });
+    }
+    currentValues.set(callbackRef, refs);
+  }, [refs]);
+  return callbackRef;
+}
+function ItoI(a2) {
+  return a2;
+}
+function innerCreateMedium(defaults2, middleware) {
+  if (middleware === void 0) {
+    middleware = ItoI;
+  }
+  var buffer = [];
+  var assigned = false;
+  var medium = {
+    read: function() {
+      if (assigned) {
+        throw new Error("Sidecar: could not `read` from an `assigned` medium. `read` could be used only with `useMedium`.");
+      }
+      if (buffer.length) {
+        return buffer[buffer.length - 1];
+      }
+      return defaults2;
+    },
+    useMedium: function(data) {
+      var item = middleware(data, assigned);
+      buffer.push(item);
+      return function() {
+        buffer = buffer.filter(function(x3) {
+          return x3 !== item;
+        });
+      };
+    },
+    assignSyncMedium: function(cb) {
+      assigned = true;
+      while (buffer.length) {
+        var cbs = buffer;
+        buffer = [];
+        cbs.forEach(cb);
+      }
+      buffer = {
+        push: function(x3) {
+          return cb(x3);
+        },
+        filter: function() {
+          return buffer;
+        }
+      };
+    },
+    assignMedium: function(cb) {
+      assigned = true;
+      var pendingQueue = [];
+      if (buffer.length) {
+        var cbs = buffer;
+        buffer = [];
+        cbs.forEach(cb);
+        pendingQueue = buffer;
+      }
+      var executeQueue = function() {
+        var cbs2 = pendingQueue;
+        pendingQueue = [];
+        cbs2.forEach(cb);
+      };
+      var cycle = function() {
+        return Promise.resolve().then(executeQueue);
+      };
+      cycle();
+      buffer = {
+        push: function(x3) {
+          pendingQueue.push(x3);
+          cycle();
+        },
+        filter: function(filter2) {
+          pendingQueue = pendingQueue.filter(filter2);
+          return buffer;
+        }
+      };
+    }
+  };
+  return medium;
+}
+function createSidecarMedium(options) {
+  if (options === void 0) {
+    options = {};
+  }
+  var medium = innerCreateMedium(null);
+  medium.options = __assign({ async: true, ssr: false }, options);
+  return medium;
+}
+var SideCar$1 = function(_a2) {
+  var sideCar = _a2.sideCar, rest = __rest(_a2, ["sideCar"]);
+  if (!sideCar) {
+    throw new Error("Sidecar: please provide `sideCar` property to import the right car");
+  }
+  var Target = sideCar.read();
+  if (!Target) {
+    throw new Error("Sidecar medium not found");
+  }
+  return reactExports.createElement(Target, __assign({}, rest));
+};
+SideCar$1.isSideCarExport = true;
+function exportSidecar(medium, exported) {
+  medium.useMedium(exported);
+  return SideCar$1;
+}
+var effectCar = createSidecarMedium();
+var nothing = function() {
+  return;
+};
+var RemoveScroll = reactExports.forwardRef(function(props, parentRef) {
+  var ref = reactExports.useRef(null);
+  var _a2 = reactExports.useState({
+    onScrollCapture: nothing,
+    onWheelCapture: nothing,
+    onTouchMoveCapture: nothing
+  }), callbacks = _a2[0], setCallbacks = _a2[1];
+  var forwardProps = props.forwardProps, children = props.children, className = props.className, removeScrollBar = props.removeScrollBar, enabled = props.enabled, shards = props.shards, sideCar = props.sideCar, noRelative = props.noRelative, noIsolation = props.noIsolation, inert = props.inert, allowPinchZoom = props.allowPinchZoom, _b2 = props.as, Container = _b2 === void 0 ? "div" : _b2, gapMode = props.gapMode, rest = __rest(props, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noRelative", "noIsolation", "inert", "allowPinchZoom", "as", "gapMode"]);
+  var SideCar2 = sideCar;
+  var containerRef = useMergeRefs([ref, parentRef]);
+  var containerProps = __assign(__assign({}, rest), callbacks);
+  return reactExports.createElement(
+    reactExports.Fragment,
+    null,
+    enabled && reactExports.createElement(SideCar2, { sideCar: effectCar, removeScrollBar, shards, noRelative, noIsolation, inert, setCallbacks, allowPinchZoom: !!allowPinchZoom, lockRef: ref, gapMode }),
+    forwardProps ? reactExports.cloneElement(reactExports.Children.only(children), __assign(__assign({}, containerProps), { ref: containerRef })) : reactExports.createElement(Container, __assign({}, containerProps, { className, ref: containerRef }), children)
+  );
+});
+RemoveScroll.defaultProps = {
+  enabled: true,
+  removeScrollBar: true,
+  inert: false
+};
+RemoveScroll.classNames = {
+  fullWidth: fullWidthClassName,
+  zeroRight: zeroRightClassName
+};
+var getNonce = function() {
+  if (typeof __webpack_nonce__ !== "undefined") {
+    return __webpack_nonce__;
+  }
+  return void 0;
+};
+function makeStyleTag() {
+  if (!document)
+    return null;
+  var tag = document.createElement("style");
+  tag.type = "text/css";
+  var nonce = getNonce();
+  if (nonce) {
+    tag.setAttribute("nonce", nonce);
+  }
+  return tag;
+}
+function injectStyles(tag, css) {
+  if (tag.styleSheet) {
+    tag.styleSheet.cssText = css;
+  } else {
+    tag.appendChild(document.createTextNode(css));
+  }
+}
+function insertStyleTag(tag) {
+  var head = document.head || document.getElementsByTagName("head")[0];
+  head.appendChild(tag);
+}
+var stylesheetSingleton = function() {
+  var counter = 0;
+  var stylesheet = null;
+  return {
+    add: function(style2) {
+      if (counter == 0) {
+        if (stylesheet = makeStyleTag()) {
+          injectStyles(stylesheet, style2);
+          insertStyleTag(stylesheet);
+        }
+      }
+      counter++;
+    },
+    remove: function() {
+      counter--;
+      if (!counter && stylesheet) {
+        stylesheet.parentNode && stylesheet.parentNode.removeChild(stylesheet);
+        stylesheet = null;
+      }
+    }
+  };
+};
+var styleHookSingleton = function() {
+  var sheet = stylesheetSingleton();
+  return function(styles, isDynamic) {
+    reactExports.useEffect(function() {
+      sheet.add(styles);
+      return function() {
+        sheet.remove();
+      };
+    }, [styles && isDynamic]);
+  };
+};
+var styleSingleton = function() {
+  var useStyle2 = styleHookSingleton();
+  var Sheet = function(_a2) {
+    var styles = _a2.styles, dynamic = _a2.dynamic;
+    useStyle2(styles, dynamic);
+    return null;
+  };
+  return Sheet;
+};
+var zeroGap = {
+  left: 0,
+  top: 0,
+  right: 0,
+  gap: 0
+};
+var parse = function(x3) {
+  return parseInt(x3 || "", 10) || 0;
+};
+var getOffset2 = function(gapMode) {
+  var cs = window.getComputedStyle(document.body);
+  var left = cs[gapMode === "padding" ? "paddingLeft" : "marginLeft"];
+  var top = cs[gapMode === "padding" ? "paddingTop" : "marginTop"];
+  var right = cs[gapMode === "padding" ? "paddingRight" : "marginRight"];
+  return [parse(left), parse(top), parse(right)];
+};
+var getGapWidth = function(gapMode) {
+  if (gapMode === void 0) {
+    gapMode = "margin";
+  }
+  if (typeof window === "undefined") {
+    return zeroGap;
+  }
+  var offsets = getOffset2(gapMode);
+  var documentWidth = document.documentElement.clientWidth;
+  var windowWidth = window.innerWidth;
+  return {
+    left: offsets[0],
+    top: offsets[1],
+    right: offsets[2],
+    gap: Math.max(0, windowWidth - documentWidth + offsets[2] - offsets[0])
+  };
+};
+var Style = styleSingleton();
+var lockAttribute = "data-scroll-locked";
+var getStyles = function(_a2, allowRelative, gapMode, important) {
+  var left = _a2.left, top = _a2.top, right = _a2.right, gap = _a2.gap;
+  if (gapMode === void 0) {
+    gapMode = "margin";
+  }
+  return "\n  .".concat(noScrollbarsClassName, " {\n   overflow: hidden ").concat(important, ";\n   padding-right: ").concat(gap, "px ").concat(important, ";\n  }\n  body[").concat(lockAttribute, "] {\n    overflow: hidden ").concat(important, ";\n    overscroll-behavior: contain;\n    ").concat([
+    allowRelative && "position: relative ".concat(important, ";"),
+    gapMode === "margin" && "\n    padding-left: ".concat(left, "px;\n    padding-top: ").concat(top, "px;\n    padding-right: ").concat(right, "px;\n    margin-left:0;\n    margin-top:0;\n    margin-right: ").concat(gap, "px ").concat(important, ";\n    "),
+    gapMode === "padding" && "padding-right: ".concat(gap, "px ").concat(important, ";")
+  ].filter(Boolean).join(""), "\n  }\n  \n  .").concat(zeroRightClassName, " {\n    right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " {\n    margin-right: ").concat(gap, "px ").concat(important, ";\n  }\n  \n  .").concat(zeroRightClassName, " .").concat(zeroRightClassName, " {\n    right: 0 ").concat(important, ";\n  }\n  \n  .").concat(fullWidthClassName, " .").concat(fullWidthClassName, " {\n    margin-right: 0 ").concat(important, ";\n  }\n  \n  body[").concat(lockAttribute, "] {\n    ").concat(removedBarSizeVariable, ": ").concat(gap, "px;\n  }\n");
+};
+var getCurrentUseCounter = function() {
+  var counter = parseInt(document.body.getAttribute(lockAttribute) || "0", 10);
+  return isFinite(counter) ? counter : 0;
+};
+var useLockAttribute = function() {
+  reactExports.useEffect(function() {
+    document.body.setAttribute(lockAttribute, (getCurrentUseCounter() + 1).toString());
+    return function() {
+      var newCounter = getCurrentUseCounter() - 1;
+      if (newCounter <= 0) {
+        document.body.removeAttribute(lockAttribute);
+      } else {
+        document.body.setAttribute(lockAttribute, newCounter.toString());
+      }
+    };
+  }, []);
+};
+var RemoveScrollBar = function(_a2) {
+  var noRelative = _a2.noRelative, noImportant = _a2.noImportant, _b2 = _a2.gapMode, gapMode = _b2 === void 0 ? "margin" : _b2;
+  useLockAttribute();
+  var gap = reactExports.useMemo(function() {
+    return getGapWidth(gapMode);
+  }, [gapMode]);
+  return reactExports.createElement(Style, { styles: getStyles(gap, !noRelative, gapMode, !noImportant ? "!important" : "") });
+};
+var passiveSupported = false;
+if (typeof window !== "undefined") {
+  try {
+    var options = Object.defineProperty({}, "passive", {
+      get: function() {
+        passiveSupported = true;
+        return true;
+      }
+    });
+    window.addEventListener("test", options, options);
+    window.removeEventListener("test", options, options);
+  } catch (err) {
+    passiveSupported = false;
+  }
+}
+var nonPassive = passiveSupported ? { passive: false } : false;
+var alwaysContainsScroll = function(node) {
+  return node.tagName === "TEXTAREA";
+};
+var elementCanBeScrolled = function(node, overflow) {
+  if (!(node instanceof Element)) {
+    return false;
+  }
+  var styles = window.getComputedStyle(node);
+  return (
+    // not-not-scrollable
+    styles[overflow] !== "hidden" && // contains scroll inside self
+    !(styles.overflowY === styles.overflowX && !alwaysContainsScroll(node) && styles[overflow] === "visible")
+  );
+};
+var elementCouldBeVScrolled = function(node) {
+  return elementCanBeScrolled(node, "overflowY");
+};
+var elementCouldBeHScrolled = function(node) {
+  return elementCanBeScrolled(node, "overflowX");
+};
+var locationCouldBeScrolled = function(axis, node) {
+  var ownerDocument = node.ownerDocument;
+  var current = node;
+  do {
+    if (typeof ShadowRoot !== "undefined" && current instanceof ShadowRoot) {
+      current = current.host;
+    }
+    var isScrollable = elementCouldBeScrolled(axis, current);
+    if (isScrollable) {
+      var _a2 = getScrollVariables(axis, current), scrollHeight = _a2[1], clientHeight = _a2[2];
+      if (scrollHeight > clientHeight) {
+        return true;
+      }
+    }
+    current = current.parentNode;
+  } while (current && current !== ownerDocument.body);
+  return false;
+};
+var getVScrollVariables = function(_a2) {
+  var scrollTop = _a2.scrollTop, scrollHeight = _a2.scrollHeight, clientHeight = _a2.clientHeight;
+  return [
+    scrollTop,
+    scrollHeight,
+    clientHeight
+  ];
+};
+var getHScrollVariables = function(_a2) {
+  var scrollLeft = _a2.scrollLeft, scrollWidth = _a2.scrollWidth, clientWidth = _a2.clientWidth;
+  return [
+    scrollLeft,
+    scrollWidth,
+    clientWidth
+  ];
+};
+var elementCouldBeScrolled = function(axis, node) {
+  return axis === "v" ? elementCouldBeVScrolled(node) : elementCouldBeHScrolled(node);
+};
+var getScrollVariables = function(axis, node) {
+  return axis === "v" ? getVScrollVariables(node) : getHScrollVariables(node);
+};
+var getDirectionFactor = function(axis, direction) {
+  return axis === "h" && direction === "rtl" ? -1 : 1;
+};
+var handleScroll = function(axis, endTarget, event, sourceDelta, noOverscroll) {
+  var directionFactor = getDirectionFactor(axis, window.getComputedStyle(endTarget).direction);
+  var delta = directionFactor * sourceDelta;
+  var target = event.target;
+  var targetInLock = endTarget.contains(target);
+  var shouldCancelScroll = false;
+  var isDeltaPositive = delta > 0;
+  var availableScroll = 0;
+  var availableScrollTop = 0;
+  do {
+    if (!target) {
+      break;
+    }
+    var _a2 = getScrollVariables(axis, target), position = _a2[0], scroll_1 = _a2[1], capacity = _a2[2];
+    var elementScroll = scroll_1 - capacity - directionFactor * position;
+    if (position || elementScroll) {
+      if (elementCouldBeScrolled(axis, target)) {
+        availableScroll += elementScroll;
+        availableScrollTop += position;
+      }
+    }
+    var parent_1 = target.parentNode;
+    target = parent_1 && parent_1.nodeType === Node.DOCUMENT_FRAGMENT_NODE ? parent_1.host : parent_1;
+  } while (
+    // portaled content
+    !targetInLock && target !== document.body || // self content
+    targetInLock && (endTarget.contains(target) || endTarget === target)
+  );
+  if (isDeltaPositive && (Math.abs(availableScroll) < 1 || false)) {
+    shouldCancelScroll = true;
+  } else if (!isDeltaPositive && (Math.abs(availableScrollTop) < 1 || false)) {
+    shouldCancelScroll = true;
+  }
+  return shouldCancelScroll;
+};
+var getTouchXY = function(event) {
+  return "changedTouches" in event ? [event.changedTouches[0].clientX, event.changedTouches[0].clientY] : [0, 0];
+};
+var getDeltaXY = function(event) {
+  return [event.deltaX, event.deltaY];
+};
+var extractRef = function(ref) {
+  return ref && "current" in ref ? ref.current : ref;
+};
+var deltaCompare = function(x3, y2) {
+  return x3[0] === y2[0] && x3[1] === y2[1];
+};
+var generateStyle = function(id2) {
+  return "\n  .block-interactivity-".concat(id2, " {pointer-events: none;}\n  .allow-interactivity-").concat(id2, " {pointer-events: all;}\n");
+};
+var idCounter = 0;
+var lockStack = [];
+function RemoveScrollSideCar(props) {
+  var shouldPreventQueue = reactExports.useRef([]);
+  var touchStartRef = reactExports.useRef([0, 0]);
+  var activeAxis = reactExports.useRef();
+  var id2 = reactExports.useState(idCounter++)[0];
+  var Style2 = reactExports.useState(styleSingleton)[0];
+  var lastProps = reactExports.useRef(props);
+  reactExports.useEffect(function() {
+    lastProps.current = props;
+  }, [props]);
+  reactExports.useEffect(function() {
+    if (props.inert) {
+      document.body.classList.add("block-interactivity-".concat(id2));
+      var allow_1 = __spreadArray([props.lockRef.current], (props.shards || []).map(extractRef), true).filter(Boolean);
+      allow_1.forEach(function(el) {
+        return el.classList.add("allow-interactivity-".concat(id2));
+      });
+      return function() {
+        document.body.classList.remove("block-interactivity-".concat(id2));
+        allow_1.forEach(function(el) {
+          return el.classList.remove("allow-interactivity-".concat(id2));
+        });
+      };
+    }
+    return;
+  }, [props.inert, props.lockRef.current, props.shards]);
+  var shouldCancelEvent = reactExports.useCallback(function(event, parent) {
+    if ("touches" in event && event.touches.length === 2 || event.type === "wheel" && event.ctrlKey) {
+      return !lastProps.current.allowPinchZoom;
+    }
+    var touch = getTouchXY(event);
+    var touchStart = touchStartRef.current;
+    var deltaX = "deltaX" in event ? event.deltaX : touchStart[0] - touch[0];
+    var deltaY = "deltaY" in event ? event.deltaY : touchStart[1] - touch[1];
+    var currentAxis;
+    var target = event.target;
+    var moveDirection = Math.abs(deltaX) > Math.abs(deltaY) ? "h" : "v";
+    if ("touches" in event && moveDirection === "h" && target.type === "range") {
+      return false;
+    }
+    var selection = window.getSelection();
+    var anchorNode = selection && selection.anchorNode;
+    var isTouchingSelection = anchorNode ? anchorNode === target || anchorNode.contains(target) : false;
+    if (isTouchingSelection) {
+      return false;
+    }
+    var canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
+    if (!canBeScrolledInMainDirection) {
+      return true;
+    }
+    if (canBeScrolledInMainDirection) {
+      currentAxis = moveDirection;
+    } else {
+      currentAxis = moveDirection === "v" ? "h" : "v";
+      canBeScrolledInMainDirection = locationCouldBeScrolled(moveDirection, target);
+    }
+    if (!canBeScrolledInMainDirection) {
+      return false;
+    }
+    if (!activeAxis.current && "changedTouches" in event && (deltaX || deltaY)) {
+      activeAxis.current = currentAxis;
+    }
+    if (!currentAxis) {
+      return true;
+    }
+    var cancelingAxis = activeAxis.current || currentAxis;
+    return handleScroll(cancelingAxis, parent, event, cancelingAxis === "h" ? deltaX : deltaY);
+  }, []);
+  var shouldPrevent = reactExports.useCallback(function(_event) {
+    var event = _event;
+    if (!lockStack.length || lockStack[lockStack.length - 1] !== Style2) {
+      return;
+    }
+    var delta = "deltaY" in event ? getDeltaXY(event) : getTouchXY(event);
+    var sourceEvent = shouldPreventQueue.current.filter(function(e3) {
+      return e3.name === event.type && (e3.target === event.target || event.target === e3.shadowParent) && deltaCompare(e3.delta, delta);
+    })[0];
+    if (sourceEvent && sourceEvent.should) {
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (!sourceEvent) {
+      var shardNodes = (lastProps.current.shards || []).map(extractRef).filter(Boolean).filter(function(node) {
+        return node.contains(event.target);
+      });
+      var shouldStop = shardNodes.length > 0 ? shouldCancelEvent(event, shardNodes[0]) : !lastProps.current.noIsolation;
+      if (shouldStop) {
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+      }
+    }
+  }, []);
+  var shouldCancel = reactExports.useCallback(function(name, delta, target, should) {
+    var event = { name, delta, target, should, shadowParent: getOutermostShadowParent(target) };
+    shouldPreventQueue.current.push(event);
+    setTimeout(function() {
+      shouldPreventQueue.current = shouldPreventQueue.current.filter(function(e3) {
+        return e3 !== event;
+      });
+    }, 1);
+  }, []);
+  var scrollTouchStart = reactExports.useCallback(function(event) {
+    touchStartRef.current = getTouchXY(event);
+    activeAxis.current = void 0;
+  }, []);
+  var scrollWheel = reactExports.useCallback(function(event) {
+    shouldCancel(event.type, getDeltaXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
+  }, []);
+  var scrollTouchMove = reactExports.useCallback(function(event) {
+    shouldCancel(event.type, getTouchXY(event), event.target, shouldCancelEvent(event, props.lockRef.current));
+  }, []);
+  reactExports.useEffect(function() {
+    lockStack.push(Style2);
+    props.setCallbacks({
+      onScrollCapture: scrollWheel,
+      onWheelCapture: scrollWheel,
+      onTouchMoveCapture: scrollTouchMove
+    });
+    document.addEventListener("wheel", shouldPrevent, nonPassive);
+    document.addEventListener("touchmove", shouldPrevent, nonPassive);
+    document.addEventListener("touchstart", scrollTouchStart, nonPassive);
+    return function() {
+      lockStack = lockStack.filter(function(inst) {
+        return inst !== Style2;
+      });
+      document.removeEventListener("wheel", shouldPrevent, nonPassive);
+      document.removeEventListener("touchmove", shouldPrevent, nonPassive);
+      document.removeEventListener("touchstart", scrollTouchStart, nonPassive);
+    };
+  }, []);
+  var removeScrollBar = props.removeScrollBar, inert = props.inert;
+  return reactExports.createElement(
+    reactExports.Fragment,
+    null,
+    inert ? reactExports.createElement(Style2, { styles: generateStyle(id2) }) : null,
+    removeScrollBar ? reactExports.createElement(RemoveScrollBar, { noRelative: props.noRelative, gapMode: props.gapMode }) : null
+  );
+}
+function getOutermostShadowParent(node) {
+  var shadowParent = null;
+  while (node !== null) {
+    if (node instanceof ShadowRoot) {
+      shadowParent = node.host;
+      node = node.host;
+    }
+    node = node.parentNode;
+  }
+  return shadowParent;
+}
+const SideCar = exportSidecar(effectCar, RemoveScrollSideCar);
+var ReactRemoveScroll = reactExports.forwardRef(function(props, ref) {
+  return reactExports.createElement(RemoveScroll, __assign({}, props, { ref, sideCar: SideCar }));
+});
+ReactRemoveScroll.classNames = RemoveScroll.classNames;
+var getDefaultParent = function(originalTarget) {
+  if (typeof document === "undefined") {
+    return null;
+  }
+  var sampleTarget = Array.isArray(originalTarget) ? originalTarget[0] : originalTarget;
+  return sampleTarget.ownerDocument.body;
+};
+var counterMap = /* @__PURE__ */ new WeakMap();
+var uncontrolledNodes = /* @__PURE__ */ new WeakMap();
+var markerMap = {};
+var lockCount = 0;
+var unwrapHost = function(node) {
+  return node && (node.host || unwrapHost(node.parentNode));
+};
+var correctTargets = function(parent, targets) {
+  return targets.map(function(target) {
+    if (parent.contains(target)) {
+      return target;
+    }
+    var correctedTarget = unwrapHost(target);
+    if (correctedTarget && parent.contains(correctedTarget)) {
+      return correctedTarget;
+    }
+    console.error("aria-hidden", target, "in not contained inside", parent, ". Doing nothing");
+    return null;
+  }).filter(function(x3) {
+    return Boolean(x3);
+  });
+};
+var applyAttributeToOthers = function(originalTarget, parentNode, markerName, controlAttribute) {
+  var targets = correctTargets(parentNode, Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
+  if (!markerMap[markerName]) {
+    markerMap[markerName] = /* @__PURE__ */ new WeakMap();
+  }
+  var markerCounter = markerMap[markerName];
+  var hiddenNodes = [];
+  var elementsToKeep = /* @__PURE__ */ new Set();
+  var elementsToStop = new Set(targets);
+  var keep = function(el) {
+    if (!el || elementsToKeep.has(el)) {
+      return;
+    }
+    elementsToKeep.add(el);
+    keep(el.parentNode);
+  };
+  targets.forEach(keep);
+  var deep = function(parent) {
+    if (!parent || elementsToStop.has(parent)) {
+      return;
+    }
+    Array.prototype.forEach.call(parent.children, function(node) {
+      if (elementsToKeep.has(node)) {
+        deep(node);
+      } else {
+        try {
+          var attr = node.getAttribute(controlAttribute);
+          var alreadyHidden = attr !== null && attr !== "false";
+          var counterValue = (counterMap.get(node) || 0) + 1;
+          var markerValue = (markerCounter.get(node) || 0) + 1;
+          counterMap.set(node, counterValue);
+          markerCounter.set(node, markerValue);
+          hiddenNodes.push(node);
+          if (counterValue === 1 && alreadyHidden) {
+            uncontrolledNodes.set(node, true);
+          }
+          if (markerValue === 1) {
+            node.setAttribute(markerName, "true");
+          }
+          if (!alreadyHidden) {
+            node.setAttribute(controlAttribute, "true");
+          }
+        } catch (e3) {
+          console.error("aria-hidden: cannot operate on ", node, e3);
+        }
+      }
+    });
+  };
+  deep(parentNode);
+  elementsToKeep.clear();
+  lockCount++;
+  return function() {
+    hiddenNodes.forEach(function(node) {
+      var counterValue = counterMap.get(node) - 1;
+      var markerValue = markerCounter.get(node) - 1;
+      counterMap.set(node, counterValue);
+      markerCounter.set(node, markerValue);
+      if (!counterValue) {
+        if (!uncontrolledNodes.has(node)) {
+          node.removeAttribute(controlAttribute);
+        }
+        uncontrolledNodes.delete(node);
+      }
+      if (!markerValue) {
+        node.removeAttribute(markerName);
+      }
+    });
+    lockCount--;
+    if (!lockCount) {
+      counterMap = /* @__PURE__ */ new WeakMap();
+      counterMap = /* @__PURE__ */ new WeakMap();
+      uncontrolledNodes = /* @__PURE__ */ new WeakMap();
+      markerMap = {};
+    }
+  };
+};
+var hideOthers = function(originalTarget, parentNode, markerName) {
+  if (markerName === void 0) {
+    markerName = "data-aria-hidden";
+  }
+  var targets = Array.from(Array.isArray(originalTarget) ? originalTarget : [originalTarget]);
+  var activeParentNode = getDefaultParent(originalTarget);
+  if (!activeParentNode) {
+    return function() {
+      return null;
+    };
+  }
+  targets.push.apply(targets, Array.from(activeParentNode.querySelectorAll("[aria-live], script")));
+  return applyAttributeToOthers(targets, activeParentNode, markerName, "aria-hidden");
+};
+var DIALOG_NAME = "Dialog";
+var [createDialogContext, createDialogScope] = createContextScope(DIALOG_NAME);
+var [DialogProvider, useDialogContext] = createDialogContext(DIALOG_NAME);
+var Dialog$1 = (props) => {
+  const {
+    __scopeDialog,
+    children,
+    open: openProp,
+    defaultOpen,
+    onOpenChange,
+    modal = true
+  } = props;
+  const triggerRef = reactExports.useRef(null);
+  const contentRef = reactExports.useRef(null);
+  const [open, setOpen] = useControllableState({
+    prop: openProp,
+    defaultProp: defaultOpen ?? false,
+    onChange: onOpenChange,
+    caller: DIALOG_NAME
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    DialogProvider,
+    {
+      scope: __scopeDialog,
+      triggerRef,
+      contentRef,
+      contentId: useId(),
+      titleId: useId(),
+      descriptionId: useId(),
+      open,
+      onOpenChange: setOpen,
+      onOpenToggle: reactExports.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
+      modal,
+      children
+    }
+  );
+};
+Dialog$1.displayName = DIALOG_NAME;
+var TRIGGER_NAME$2 = "DialogTrigger";
+var DialogTrigger = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeDialog, ...triggerProps } = props;
+    const context = useDialogContext(TRIGGER_NAME$2, __scopeDialog);
+    const composedTriggerRef = useComposedRefs(forwardedRef, context.triggerRef);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.button,
+      {
+        type: "button",
+        "aria-haspopup": "dialog",
+        "aria-expanded": context.open,
+        "aria-controls": context.contentId,
+        "data-state": getState$2(context.open),
+        ...triggerProps,
+        ref: composedTriggerRef,
+        onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
+      }
+    );
+  }
+);
+DialogTrigger.displayName = TRIGGER_NAME$2;
+var PORTAL_NAME$1 = "DialogPortal";
+var [PortalProvider, usePortalContext] = createDialogContext(PORTAL_NAME$1, {
+  forceMount: void 0
+});
+var DialogPortal$1 = (props) => {
+  const { __scopeDialog, forceMount, children, container } = props;
+  const context = useDialogContext(PORTAL_NAME$1, __scopeDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider, { scope: __scopeDialog, forceMount, children: reactExports.Children.map(children, (child) => /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$2, { asChild: true, container, children: child }) })) });
+};
+DialogPortal$1.displayName = PORTAL_NAME$1;
+var OVERLAY_NAME$1 = "DialogOverlay";
+var DialogOverlay$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const portalContext = usePortalContext(OVERLAY_NAME$1, props.__scopeDialog);
+    const { forceMount = portalContext.forceMount, ...overlayProps } = props;
+    const context = useDialogContext(OVERLAY_NAME$1, props.__scopeDialog);
+    return context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(DialogOverlayImpl, { ...overlayProps, ref: forwardedRef }) }) : null;
+  }
+);
+DialogOverlay$1.displayName = OVERLAY_NAME$1;
+var Slot = /* @__PURE__ */ createSlot("DialogOverlay.RemoveScroll");
+var DialogOverlayImpl = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeDialog, ...overlayProps } = props;
+    const context = useDialogContext(OVERLAY_NAME$1, __scopeDialog);
+    return (
+      // Make sure `Content` is scrollable even when it doesn't live inside `RemoveScroll`
+      // ie. when `Overlay` and `Content` are siblings
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ReactRemoveScroll, { as: Slot, allowPinchZoom: true, shards: [context.contentRef], children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Primitive.div,
+        {
+          "data-state": getState$2(context.open),
+          ...overlayProps,
+          ref: forwardedRef,
+          style: { pointerEvents: "auto", ...overlayProps.style }
+        }
+      ) })
+    );
+  }
+);
+var CONTENT_NAME$2 = "DialogContent";
+var DialogContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const portalContext = usePortalContext(CONTENT_NAME$2, props.__scopeDialog);
+    const { forceMount = portalContext.forceMount, ...contentProps } = props;
+    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: context.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(DialogContentNonModal, { ...contentProps, ref: forwardedRef }) });
+  }
+);
+DialogContent$1.displayName = CONTENT_NAME$2;
+var DialogContentModal = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
+    const contentRef = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, context.contentRef, contentRef);
+    reactExports.useEffect(() => {
+      const content = contentRef.current;
+      if (content) return hideOthers(content);
+    }, []);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DialogContentImpl,
+      {
+        ...props,
+        ref: composedRefs,
+        trapFocus: context.open,
+        disableOutsidePointerEvents: true,
+        onCloseAutoFocus: composeEventHandlers(props.onCloseAutoFocus, (event) => {
+          var _a2;
+          event.preventDefault();
+          (_a2 = context.triggerRef.current) == null ? void 0 : _a2.focus();
+        }),
+        onPointerDownOutside: composeEventHandlers(props.onPointerDownOutside, (event) => {
+          const originalEvent = event.detail.originalEvent;
+          const ctrlLeftClick = originalEvent.button === 0 && originalEvent.ctrlKey === true;
+          const isRightClick = originalEvent.button === 2 || ctrlLeftClick;
+          if (isRightClick) event.preventDefault();
+        }),
+        onFocusOutside: composeEventHandlers(
+          props.onFocusOutside,
+          (event) => event.preventDefault()
+        )
+      }
+    );
+  }
+);
+var DialogContentNonModal = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const context = useDialogContext(CONTENT_NAME$2, props.__scopeDialog);
+    const hasInteractedOutsideRef = reactExports.useRef(false);
+    const hasPointerDownOutsideRef = reactExports.useRef(false);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      DialogContentImpl,
+      {
+        ...props,
+        ref: forwardedRef,
+        trapFocus: false,
+        disableOutsidePointerEvents: false,
+        onCloseAutoFocus: (event) => {
+          var _a2, _b2;
+          (_a2 = props.onCloseAutoFocus) == null ? void 0 : _a2.call(props, event);
+          if (!event.defaultPrevented) {
+            if (!hasInteractedOutsideRef.current) (_b2 = context.triggerRef.current) == null ? void 0 : _b2.focus();
+            event.preventDefault();
+          }
+          hasInteractedOutsideRef.current = false;
+          hasPointerDownOutsideRef.current = false;
+        },
+        onInteractOutside: (event) => {
+          var _a2, _b2;
+          (_a2 = props.onInteractOutside) == null ? void 0 : _a2.call(props, event);
+          if (!event.defaultPrevented) {
+            hasInteractedOutsideRef.current = true;
+            if (event.detail.originalEvent.type === "pointerdown") {
+              hasPointerDownOutsideRef.current = true;
+            }
+          }
+          const target = event.target;
+          const targetIsTrigger = (_b2 = context.triggerRef.current) == null ? void 0 : _b2.contains(target);
+          if (targetIsTrigger) event.preventDefault();
+          if (event.detail.originalEvent.type === "focusin" && hasPointerDownOutsideRef.current) {
+            event.preventDefault();
+          }
+        }
+      }
+    );
+  }
+);
+var DialogContentImpl = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeDialog, trapFocus, onOpenAutoFocus, onCloseAutoFocus, ...contentProps } = props;
+    const context = useDialogContext(CONTENT_NAME$2, __scopeDialog);
+    const contentRef = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, contentRef);
+    useFocusGuards();
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        FocusScope,
+        {
+          asChild: true,
+          loop: true,
+          trapped: trapFocus,
+          onMountAutoFocus: onOpenAutoFocus,
+          onUnmountAutoFocus: onCloseAutoFocus,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            DismissableLayer,
+            {
+              role: "dialog",
+              id: context.contentId,
+              "aria-describedby": context.descriptionId,
+              "aria-labelledby": context.titleId,
+              "data-state": getState$2(context.open),
+              ...contentProps,
+              ref: composedRefs,
+              onDismiss: () => context.onOpenChange(false)
+            }
+          )
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(TitleWarning, { titleId: context.titleId }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning$1, { contentRef, descriptionId: context.descriptionId })
+      ] })
+    ] });
+  }
+);
+var TITLE_NAME$1 = "DialogTitle";
+var DialogTitle$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeDialog, ...titleProps } = props;
+    const context = useDialogContext(TITLE_NAME$1, __scopeDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.h2, { id: context.titleId, ...titleProps, ref: forwardedRef });
+  }
+);
+DialogTitle$1.displayName = TITLE_NAME$1;
+var DESCRIPTION_NAME$1 = "DialogDescription";
+var DialogDescription$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeDialog, ...descriptionProps } = props;
+    const context = useDialogContext(DESCRIPTION_NAME$1, __scopeDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.p, { id: context.descriptionId, ...descriptionProps, ref: forwardedRef });
+  }
+);
+DialogDescription$1.displayName = DESCRIPTION_NAME$1;
+var CLOSE_NAME = "DialogClose";
+var DialogClose = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeDialog, ...closeProps } = props;
+    const context = useDialogContext(CLOSE_NAME, __scopeDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.button,
+      {
+        type: "button",
+        ...closeProps,
+        ref: forwardedRef,
+        onClick: composeEventHandlers(props.onClick, () => context.onOpenChange(false))
+      }
+    );
+  }
+);
+DialogClose.displayName = CLOSE_NAME;
+function getState$2(open) {
+  return open ? "open" : "closed";
+}
+var TITLE_WARNING_NAME = "DialogTitleWarning";
+var [WarningProvider, useWarningContext] = createContext2(TITLE_WARNING_NAME, {
+  contentName: CONTENT_NAME$2,
+  titleName: TITLE_NAME$1,
+  docsSlug: "dialog"
+});
+var TitleWarning = ({ titleId }) => {
+  const titleWarningContext = useWarningContext(TITLE_WARNING_NAME);
+  const MESSAGE = `\`${titleWarningContext.contentName}\` requires a \`${titleWarningContext.titleName}\` for the component to be accessible for screen reader users.
+
+If you want to hide the \`${titleWarningContext.titleName}\`, you can wrap it with our VisuallyHidden component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/${titleWarningContext.docsSlug}`;
+  reactExports.useEffect(() => {
+    if (titleId) {
+      const hasTitle = document.getElementById(titleId);
+      if (!hasTitle) console.error(MESSAGE);
+    }
+  }, [MESSAGE, titleId]);
+  return null;
+};
+var DESCRIPTION_WARNING_NAME = "DialogDescriptionWarning";
+var DescriptionWarning$1 = ({ contentRef, descriptionId }) => {
+  const descriptionWarningContext = useWarningContext(DESCRIPTION_WARNING_NAME);
+  const MESSAGE = `Warning: Missing \`Description\` or \`aria-describedby={undefined}\` for {${descriptionWarningContext.contentName}}.`;
+  reactExports.useEffect(() => {
+    var _a2;
+    const describedById = (_a2 = contentRef.current) == null ? void 0 : _a2.getAttribute("aria-describedby");
+    if (descriptionId && describedById) {
+      const hasDescription = document.getElementById(descriptionId);
+      if (!hasDescription) console.warn(MESSAGE);
+    }
+  }, [MESSAGE, contentRef, descriptionId]);
+  return null;
+};
+var Root$2 = Dialog$1;
+var Trigger = DialogTrigger;
+var Portal = DialogPortal$1;
+var Overlay = DialogOverlay$1;
+var Content = DialogContent$1;
+var Title = DialogTitle$1;
+var Description = DialogDescription$1;
+var Close = DialogClose;
+var ROOT_NAME = "AlertDialog";
+var [createAlertDialogContext] = createContextScope(ROOT_NAME, [
+  createDialogScope
+]);
+var useDialogScope = createDialogScope();
+var AlertDialog$1 = (props) => {
+  const { __scopeAlertDialog, ...alertDialogProps } = props;
+  const dialogScope = useDialogScope(__scopeAlertDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$2, { ...dialogScope, ...alertDialogProps, modal: true });
+};
+AlertDialog$1.displayName = ROOT_NAME;
+var TRIGGER_NAME$1 = "AlertDialogTrigger";
+var AlertDialogTrigger$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...triggerProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger, { ...dialogScope, ...triggerProps, ref: forwardedRef });
+  }
+);
+AlertDialogTrigger$1.displayName = TRIGGER_NAME$1;
+var PORTAL_NAME = "AlertDialogPortal";
+var AlertDialogPortal$1 = (props) => {
+  const { __scopeAlertDialog, ...portalProps } = props;
+  const dialogScope = useDialogScope(__scopeAlertDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { ...dialogScope, ...portalProps });
+};
+AlertDialogPortal$1.displayName = PORTAL_NAME;
+var OVERLAY_NAME = "AlertDialogOverlay";
+var AlertDialogOverlay$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...overlayProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Overlay, { ...dialogScope, ...overlayProps, ref: forwardedRef });
+  }
+);
+AlertDialogOverlay$1.displayName = OVERLAY_NAME;
+var CONTENT_NAME$1 = "AlertDialogContent";
+var [AlertDialogContentProvider, useAlertDialogContentContext] = createAlertDialogContext(CONTENT_NAME$1);
+var Slottable = /* @__PURE__ */ createSlottable("AlertDialogContent");
+var AlertDialogContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, children, ...contentProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    const contentRef = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(forwardedRef, contentRef);
+    const cancelRef = reactExports.useRef(null);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      WarningProvider,
+      {
+        contentName: CONTENT_NAME$1,
+        titleName: TITLE_NAME,
+        docsSlug: "alert-dialog",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogContentProvider, { scope: __scopeAlertDialog, cancelRef, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          Content,
+          {
+            role: "alertdialog",
+            ...dialogScope,
+            ...contentProps,
+            ref: composedRefs,
+            onOpenAutoFocus: composeEventHandlers(contentProps.onOpenAutoFocus, (event) => {
+              var _a2;
+              event.preventDefault();
+              (_a2 = cancelRef.current) == null ? void 0 : _a2.focus({ preventScroll: true });
+            }),
+            onPointerDownOutside: (event) => event.preventDefault(),
+            onInteractOutside: (event) => event.preventDefault(),
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Slottable, { children }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(DescriptionWarning, { contentRef })
+            ]
+          }
+        ) })
+      }
+    );
+  }
+);
+AlertDialogContent$1.displayName = CONTENT_NAME$1;
+var TITLE_NAME = "AlertDialogTitle";
+var AlertDialogTitle$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...titleProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Title, { ...dialogScope, ...titleProps, ref: forwardedRef });
+  }
+);
+AlertDialogTitle$1.displayName = TITLE_NAME;
+var DESCRIPTION_NAME = "AlertDialogDescription";
+var AlertDialogDescription$1 = reactExports.forwardRef((props, forwardedRef) => {
+  const { __scopeAlertDialog, ...descriptionProps } = props;
+  const dialogScope = useDialogScope(__scopeAlertDialog);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Description, { ...dialogScope, ...descriptionProps, ref: forwardedRef });
+});
+AlertDialogDescription$1.displayName = DESCRIPTION_NAME;
+var ACTION_NAME = "AlertDialogAction";
+var AlertDialogAction$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...actionProps } = props;
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Close, { ...dialogScope, ...actionProps, ref: forwardedRef });
+  }
+);
+AlertDialogAction$1.displayName = ACTION_NAME;
+var CANCEL_NAME = "AlertDialogCancel";
+var AlertDialogCancel$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeAlertDialog, ...cancelProps } = props;
+    const { cancelRef } = useAlertDialogContentContext(CANCEL_NAME, __scopeAlertDialog);
+    const dialogScope = useDialogScope(__scopeAlertDialog);
+    const ref = useComposedRefs(forwardedRef, cancelRef);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Close, { ...dialogScope, ...cancelProps, ref });
+  }
+);
+AlertDialogCancel$1.displayName = CANCEL_NAME;
+var DescriptionWarning = ({ contentRef }) => {
+  const MESSAGE = `\`${CONTENT_NAME$1}\` requires a description for the component to be accessible for screen reader users.
+
+You can add a description to the \`${CONTENT_NAME$1}\` by passing a \`${DESCRIPTION_NAME}\` component as a child, which also benefits sighted users by adding visible context to the dialog.
+
+Alternatively, you can use your own component as a description by assigning it an \`id\` and passing the same value to the \`aria-describedby\` prop in \`${CONTENT_NAME$1}\`. If the description is confusing or duplicative for sighted users, you can use the \`@radix-ui/react-visually-hidden\` primitive as a wrapper around your description component.
+
+For more information, see https://radix-ui.com/primitives/docs/components/alert-dialog`;
+  reactExports.useEffect(() => {
+    var _a2;
+    const hasDescription = document.getElementById(
+      (_a2 = contentRef.current) == null ? void 0 : _a2.getAttribute("aria-describedby")
+    );
+    if (!hasDescription) console.warn(MESSAGE);
+  }, [MESSAGE, contentRef]);
+  return null;
+};
+var Root2 = AlertDialog$1;
+var Trigger2 = AlertDialogTrigger$1;
+var Portal2 = AlertDialogPortal$1;
+var Overlay2 = AlertDialogOverlay$1;
+var Content2 = AlertDialogContent$1;
+var Action = AlertDialogAction$1;
+var Cancel = AlertDialogCancel$1;
+var Title2 = AlertDialogTitle$1;
+var Description2 = AlertDialogDescription$1;
+function AlertDialog({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2, { "data-slot": "alert-dialog", ...props });
+}
+function AlertDialogTrigger({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger2, { "data-slot": "alert-dialog-trigger", ...props });
+}
+function AlertDialogPortal({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal2, { "data-slot": "alert-dialog-portal", ...props });
+}
+function AlertDialogOverlay({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Overlay2,
+    {
+      "data-slot": "alert-dialog-overlay",
+      className: cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function AlertDialogContent({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(AlertDialogPortal, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(AlertDialogOverlay, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Content2,
+      {
+        "data-slot": "alert-dialog-content",
+        className: cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
+          className
+        ),
+        ...props
+      }
+    )
+  ] });
+}
+function AlertDialogHeader({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      "data-slot": "alert-dialog-header",
+      className: cn("flex flex-col gap-2 text-center sm:text-left", className),
+      ...props
+    }
+  );
+}
+function AlertDialogFooter({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      "data-slot": "alert-dialog-footer",
+      className: cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function AlertDialogTitle({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Title2,
+    {
+      "data-slot": "alert-dialog-title",
+      className: cn("text-lg font-semibold", className),
+      ...props
+    }
+  );
+}
+function AlertDialogDescription({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Description2,
+    {
+      "data-slot": "alert-dialog-description",
+      className: cn("text-muted-foreground text-sm", className),
+      ...props
+    }
+  );
+}
+function AlertDialogAction({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Action,
+    {
+      className: cn(buttonVariants(), className),
+      ...props
+    }
+  );
+}
+function AlertDialogCancel({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Cancel,
+    {
+      className: cn(buttonVariants({ variant: "outline" }), className),
+      ...props
+    }
+  );
+}
+var COLLAPSIBLE_NAME = "Collapsible";
+var [createCollapsibleContext] = createContextScope(COLLAPSIBLE_NAME);
+var [CollapsibleProvider, useCollapsibleContext] = createCollapsibleContext(COLLAPSIBLE_NAME);
+var Collapsible$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeCollapsible,
+      open: openProp,
+      defaultOpen,
+      disabled,
+      onOpenChange,
+      ...collapsibleProps
+    } = props;
+    const [open, setOpen] = useControllableState({
+      prop: openProp,
+      defaultProp: defaultOpen ?? false,
+      onChange: onOpenChange,
+      caller: COLLAPSIBLE_NAME
+    });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CollapsibleProvider,
+      {
+        scope: __scopeCollapsible,
+        disabled,
+        contentId: useId(),
+        open,
+        onOpenToggle: reactExports.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Primitive.div,
+          {
+            "data-state": getState$1(open),
+            "data-disabled": disabled ? "" : void 0,
+            ...collapsibleProps,
+            ref: forwardedRef
+          }
+        )
+      }
+    );
+  }
+);
+Collapsible$1.displayName = COLLAPSIBLE_NAME;
+var TRIGGER_NAME = "CollapsibleTrigger";
+var CollapsibleTrigger$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeCollapsible, ...triggerProps } = props;
+    const context = useCollapsibleContext(TRIGGER_NAME, __scopeCollapsible);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.button,
+      {
+        type: "button",
+        "aria-controls": context.contentId,
+        "aria-expanded": context.open || false,
+        "data-state": getState$1(context.open),
+        "data-disabled": context.disabled ? "" : void 0,
+        disabled: context.disabled,
+        ...triggerProps,
+        ref: forwardedRef,
+        onClick: composeEventHandlers(props.onClick, context.onOpenToggle)
+      }
+    );
+  }
+);
+CollapsibleTrigger$1.displayName = TRIGGER_NAME;
+var CONTENT_NAME = "CollapsibleContent";
+var CollapsibleContent$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { forceMount, ...contentProps } = props;
+    const context = useCollapsibleContext(CONTENT_NAME, props.__scopeCollapsible);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: ({ present }) => /* @__PURE__ */ jsxRuntimeExports.jsx(CollapsibleContentImpl, { ...contentProps, ref: forwardedRef, present }) });
+  }
+);
+CollapsibleContent$1.displayName = CONTENT_NAME;
+var CollapsibleContentImpl = reactExports.forwardRef((props, forwardedRef) => {
+  const { __scopeCollapsible, present, children, ...contentProps } = props;
+  const context = useCollapsibleContext(CONTENT_NAME, __scopeCollapsible);
+  const [isPresent, setIsPresent] = reactExports.useState(present);
+  const ref = reactExports.useRef(null);
+  const composedRefs = useComposedRefs(forwardedRef, ref);
+  const heightRef = reactExports.useRef(0);
+  const height = heightRef.current;
+  const widthRef = reactExports.useRef(0);
+  const width = widthRef.current;
+  const isOpen = context.open || isPresent;
+  const isMountAnimationPreventedRef = reactExports.useRef(isOpen);
+  const originalStylesRef = reactExports.useRef(void 0);
+  reactExports.useEffect(() => {
+    const rAF = requestAnimationFrame(() => isMountAnimationPreventedRef.current = false);
+    return () => cancelAnimationFrame(rAF);
+  }, []);
+  useLayoutEffect2(() => {
+    const node = ref.current;
+    if (node) {
+      originalStylesRef.current = originalStylesRef.current || {
+        transitionDuration: node.style.transitionDuration,
+        animationName: node.style.animationName
+      };
+      node.style.transitionDuration = "0s";
+      node.style.animationName = "none";
+      const rect = node.getBoundingClientRect();
+      heightRef.current = rect.height;
+      widthRef.current = rect.width;
+      if (!isMountAnimationPreventedRef.current) {
+        node.style.transitionDuration = originalStylesRef.current.transitionDuration;
+        node.style.animationName = originalStylesRef.current.animationName;
+      }
+      setIsPresent(present);
+    }
+  }, [context.open, present]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Primitive.div,
+    {
+      "data-state": getState$1(context.open),
+      "data-disabled": context.disabled ? "" : void 0,
+      id: context.contentId,
+      hidden: !isOpen,
+      ...contentProps,
+      ref: composedRefs,
+      style: {
+        [`--radix-collapsible-content-height`]: height ? `${height}px` : void 0,
+        [`--radix-collapsible-content-width`]: width ? `${width}px` : void 0,
+        ...props.style
+      },
+      children: isOpen && children
+    }
+  );
+});
+function getState$1(open) {
+  return open ? "open" : "closed";
+}
+var Root$1 = Collapsible$1;
+function Collapsible({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$1, { "data-slot": "collapsible", ...props });
+}
+function CollapsibleTrigger({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    CollapsibleTrigger$1,
+    {
+      "data-slot": "collapsible-trigger",
+      ...props
+    }
+  );
+}
+function CollapsibleContent({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    CollapsibleContent$1,
+    {
+      "data-slot": "collapsible-content",
+      ...props
+    }
+  );
+}
+function Dialog({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root$2, { "data-slot": "dialog", ...props });
+}
+function DialogPortal({
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { "data-slot": "dialog-portal", ...props });
+}
+function DialogOverlay({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Overlay,
+    {
+      "data-slot": "dialog-overlay",
+      className: cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogPortal, { "data-slot": "dialog-portal", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(DialogOverlay, {}),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      Content,
+      {
+        "data-slot": "dialog-content",
+        className: cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg",
+          className
+        ),
+        ...props,
+        children: [
+          children,
+          showCloseButton && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Close,
+            {
+              "data-slot": "dialog-close",
+              className: "ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(X, {}),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "Close" })
+              ]
+            }
+          )
+        ]
+      }
+    )
+  ] });
+}
+function DialogHeader({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      "data-slot": "dialog-header",
+      className: cn("flex flex-col gap-2 text-center sm:text-left", className),
+      ...props
+    }
+  );
+}
+function DialogFooter({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      "data-slot": "dialog-footer",
+      className: cn(
+        "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
+        className
+      ),
+      ...props
+    }
+  );
+}
+function DialogTitle({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Title,
+    {
+      "data-slot": "dialog-title",
+      className: cn("text-lg leading-none font-semibold", className),
+      ...props
+    }
+  );
+}
+function DialogDescription({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Description,
+    {
+      "data-slot": "dialog-description",
+      className: cn("text-muted-foreground text-sm", className),
+      ...props
+    }
+  );
+}
+function usePrevious(value) {
+  const ref = reactExports.useRef({ value, previous: value });
+  return reactExports.useMemo(() => {
+    if (ref.current.value !== value) {
+      ref.current.previous = ref.current.value;
+      ref.current.value = value;
+    }
+    return ref.current.previous;
+  }, [value]);
+}
+var SWITCH_NAME = "Switch";
+var [createSwitchContext] = createContextScope(SWITCH_NAME);
+var [SwitchProvider, useSwitchContext] = createSwitchContext(SWITCH_NAME);
+var Switch$1 = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const {
+      __scopeSwitch,
+      name,
+      checked: checkedProp,
+      defaultChecked,
+      required,
+      disabled,
+      value = "on",
+      onCheckedChange,
+      form,
+      ...switchProps
+    } = props;
+    const [button, setButton] = reactExports.useState(null);
+    const composedRefs = useComposedRefs(forwardedRef, (node) => setButton(node));
+    const hasConsumerStoppedPropagationRef = reactExports.useRef(false);
+    const isFormControl = button ? form || !!button.closest("form") : true;
+    const [checked, setChecked] = useControllableState({
+      prop: checkedProp,
+      defaultProp: defaultChecked ?? false,
+      onChange: onCheckedChange,
+      caller: SWITCH_NAME
+    });
+    return /* @__PURE__ */ jsxRuntimeExports.jsxs(SwitchProvider, { scope: __scopeSwitch, checked, disabled, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Primitive.button,
+        {
+          type: "button",
+          role: "switch",
+          "aria-checked": checked,
+          "aria-required": required,
+          "data-state": getState(checked),
+          "data-disabled": disabled ? "" : void 0,
+          disabled,
+          value,
+          ...switchProps,
+          ref: composedRefs,
+          onClick: composeEventHandlers(props.onClick, (event) => {
+            setChecked((prevChecked) => !prevChecked);
+            if (isFormControl) {
+              hasConsumerStoppedPropagationRef.current = event.isPropagationStopped();
+              if (!hasConsumerStoppedPropagationRef.current) event.stopPropagation();
+            }
+          })
+        }
+      ),
+      isFormControl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        SwitchBubbleInput,
+        {
+          control: button,
+          bubbles: !hasConsumerStoppedPropagationRef.current,
+          name,
+          value,
+          checked,
+          required,
+          disabled,
+          form,
+          style: { transform: "translateX(-100%)" }
+        }
+      )
+    ] });
+  }
+);
+Switch$1.displayName = SWITCH_NAME;
+var THUMB_NAME = "SwitchThumb";
+var SwitchThumb = reactExports.forwardRef(
+  (props, forwardedRef) => {
+    const { __scopeSwitch, ...thumbProps } = props;
+    const context = useSwitchContext(THUMB_NAME, __scopeSwitch);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Primitive.span,
+      {
+        "data-state": getState(context.checked),
+        "data-disabled": context.disabled ? "" : void 0,
+        ...thumbProps,
+        ref: forwardedRef
+      }
+    );
+  }
+);
+SwitchThumb.displayName = THUMB_NAME;
+var BUBBLE_INPUT_NAME = "SwitchBubbleInput";
+var SwitchBubbleInput = reactExports.forwardRef(
+  ({
+    __scopeSwitch,
+    control,
+    checked,
+    bubbles = true,
+    ...props
+  }, forwardedRef) => {
+    const ref = reactExports.useRef(null);
+    const composedRefs = useComposedRefs(ref, forwardedRef);
+    const prevChecked = usePrevious(checked);
+    const controlSize = useSize(control);
+    reactExports.useEffect(() => {
+      const input = ref.current;
+      if (!input) return;
+      const inputProto = window.HTMLInputElement.prototype;
+      const descriptor = Object.getOwnPropertyDescriptor(
+        inputProto,
+        "checked"
+      );
+      const setChecked = descriptor.set;
+      if (prevChecked !== checked && setChecked) {
+        const event = new Event("click", { bubbles });
+        setChecked.call(input, checked);
+        input.dispatchEvent(event);
+      }
+    }, [prevChecked, checked, bubbles]);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "input",
+      {
+        type: "checkbox",
+        "aria-hidden": true,
+        defaultChecked: checked,
+        ...props,
+        tabIndex: -1,
+        ref: composedRefs,
+        style: {
+          ...props.style,
+          ...controlSize,
+          position: "absolute",
+          pointerEvents: "none",
+          opacity: 0,
+          margin: 0
+        }
+      }
+    );
+  }
+);
+SwitchBubbleInput.displayName = BUBBLE_INPUT_NAME;
+function getState(checked) {
+  return checked ? "checked" : "unchecked";
+}
+var Root = Switch$1;
+var Thumb = SwitchThumb;
+function Switch({
+  className,
+  ...props
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Root,
+    {
+      "data-slot": "switch",
+      className: cn(
+        "peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 inline-flex h-[1.15rem] w-8 shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      ),
+      ...props,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Thumb,
+        {
+          "data-slot": "switch-thumb",
+          className: cn(
+            "bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block size-4 rounded-full ring-0 transition-transform data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0"
+          )
+        }
+      )
+    }
+  );
+}
+function Textarea({ className, ...props }) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "textarea",
+    {
+      "data-slot": "textarea",
+      className: cn(
+        "border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+        className
+      ),
+      ...props
+    }
+  );
+}
 const ACTIVITY_PAGE_SIZE$1 = 25;
 const ACTIVITY_MAX_HEIGHT$1 = "max-h-[400px]";
 function nsToDateKey(ns) {
@@ -81775,7 +82191,7 @@ function MaturityChart({
             }
           ),
           /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Tooltip,
+            Tooltip$2,
             {
               contentStyle: {
                 backgroundColor: "oklch(var(--popover))",
@@ -82465,7 +82881,7 @@ function MonthlyBreakdownSection({
               }
             ),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Tooltip,
+              Tooltip$2,
               {
                 cursor: { fill: "oklch(var(--chart-1) / 0.08)" },
                 contentStyle: {

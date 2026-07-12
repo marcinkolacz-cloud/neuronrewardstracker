@@ -19,6 +19,7 @@ module {
   public type DailyReward = RewardTypes.DailyReward;
   public type NeuronStats = StatsTypes.NeuronStats;
   public type PortfolioStats = StatsTypes.PortfolioStats;
+  public type PortfolioRewardStats = StatsTypes.PortfolioRewardStats;
   public type MonthlyBreakdown = StatsTypes.MonthlyBreakdown;
   public type NeuronId = Common.NeuronId;
   public type E8s = Common.E8s;
@@ -209,6 +210,11 @@ module {
     var totalRewards : Int = 0;
     var neuronCount : Nat = 0;
 
+    // NNS-only accumulators (the per-source breakdown of the combined totals).
+    var nnsStaked : Nat64 = 0;
+    var nnsCapitalContributed : Nat64 = 0;
+    var nnsRewards : Int = 0;
+
     // For blended APY: capital-weighted average of per-neuron apy30d across
     // neurons that have 30+ days of history. The weight is the per-neuron
     // `totalCapitalContributedE8s` (initial stake + top-ups), NOT the raw
@@ -222,7 +228,7 @@ module {
     var totalMaturity : Nat64 = 0;
 
     // For totalRewardsThisMonthE8s: sum of #normalGrowth positive deltas
-    // from the current calendar month across all neurons.
+    // from the current calendar month across all neurons (NNS-only).
     var totalRewardsThisMonth : Nat64 = 0;
     let nowNs : Int = Time.now();
     let nowSeconds = nowNs / 1_000_000_000;
@@ -236,6 +242,7 @@ module {
         // totalStaked sums the sync-sourced stakedE8s (from
         // cached_neuron_stake_e8s), not the manual initialStakeE8s fallback.
         totalStaked := totalStaked + neuron.stakedE8s;
+        nnsStaked := nnsStaked + neuron.stakedE8s;
 
         switch (rewards.get(id)) {
           case (?history) {
@@ -246,6 +253,8 @@ module {
             let perNeuron = getNeuronStats(neuron, historyArray);
             totalCapitalContributed := totalCapitalContributed + perNeuron.totalCapitalContributedE8s;
             totalRewards += perNeuron.totalRewardsE8s;
+            nnsCapitalContributed := nnsCapitalContributed + perNeuron.totalCapitalContributedE8s;
+            nnsRewards += perNeuron.totalRewardsE8s;
 
             // Per-neuron APY for the blended calculation. Only neurons with
             // 30+ days of history contribute, weighted by their capital
@@ -295,6 +304,12 @@ module {
     var wtnTotalStakedFloat : Float = 0.0;
     var wtnTotalCapitalFloat : Float = 0.0;
     var wtnTotalEarnedFloat : Float = 0.0;
+    // WTN #organicGrowth redeemableIcpValue deltas within the current
+    // calendar month (Float ICP). Computed the same way the NNS monthly
+    // logic works: iterate WTN snapshots, filter by current year/month and
+    // eventType == #organicGrowth, sum the redeemableIcpValue delta (the
+    // day-over-day change in redeemableIcpValue on organic-growth days).
+    var wtnRewardsThisMonthFloat : Float = 0.0;
 
     wtnPositions.forEach(func(id, position) {
       if (Principal.equal(position.ownerId, owner)) {
@@ -303,6 +318,27 @@ module {
         wtnTotalStakedFloat += contribution.redeemableIcpValue;
         wtnTotalCapitalFloat += contribution.totalCapitalContributed;
         wtnTotalEarnedFloat += contribution.totalEarned;
+
+        // Sum #organicGrowth redeemableIcpValue deltas in the current
+        // calendar month. The delta is the day-over-day change in
+        // redeemableIcpValue (current - previous), mirroring the NNS
+        // #normalGrowth deltaE8s logic.
+        var prevRedeemable : ?Float = null;
+        for (s in history.vals()) {
+          let sSeconds = s.date / 1_000_000_000;
+          let sDays = sSeconds / 86_400;
+          let (sYear, sMonth) = daysToYearMonth(sDays);
+          let sKey = sYear * 12 + sMonth;
+          if (s.eventType == #organicGrowth and sKey == currentMonthKey) {
+            switch (prevRedeemable) {
+              case (?prev) {
+                wtnRewardsThisMonthFloat += s.redeemableIcpValue - prev;
+              };
+              case null {};
+            };
+          };
+          prevRedeemable := ?s.redeemableIcpValue;
+        };
       };
     });
 
@@ -311,10 +347,14 @@ module {
     let wtnTotalStakedE8s = floatIcpToE8s(wtnTotalStakedFloat);
     let wtnTotalCapitalE8s = floatIcpToE8s(wtnTotalCapitalFloat);
     let wtnTotalEarnedE8s = floatIcpToE8s(wtnTotalEarnedFloat);
+    let wtnRewardsThisMonthE8s = floatIcpToE8s(wtnRewardsThisMonthFloat);
 
     totalStaked := totalStaked + wtnTotalStakedE8s;
     totalCapitalContributed := totalCapitalContributed + wtnTotalCapitalE8s;
     totalRewards += wtnTotalEarnedE8s.toNat();
+
+    // combinedRewardsThisMonthE8s = NNS monthly + WTN monthly (converted to e8s).
+    let combinedRewardsThisMonthE8s : Nat64 = totalRewardsThisMonth + wtnRewardsThisMonthE8s;
 
     let percentageReturn : Float = if (totalCapitalContributed == 0) {
       0.0;
@@ -337,6 +377,267 @@ module {
       blendedApy;
       totalMaturityE8s = totalMaturity;
       totalRewardsThisMonthE8s = totalRewardsThisMonth;
+      // --- additive NNS/WTN split fields ---
+      nnsStakedE8s = nnsStaked;
+      wtnStakedE8s = wtnTotalStakedE8s;
+      nnsCapitalContributedE8s = nnsCapitalContributed;
+      wtnCapitalContributedE8s = wtnTotalCapitalE8s;
+      nnsRewardsE8s = nnsRewards;
+      wtnRewardsE8s = wtnTotalEarnedE8s.toNat();
+      nnsRewardsThisMonthE8s = totalRewardsThisMonth;
+      wtnRewardsThisMonthFloat = wtnRewardsThisMonthFloat;
+      combinedRewardsThisMonthE8s = combinedRewardsThisMonthE8s;
+    };
+  };
+
+  /// Portfolio-wide reward statistics aggregating across ALL neurons AND WTN
+  /// positions for a caller. Mirrors the per-neuron `getNeuronStats` shape but
+  /// summed across the whole portfolio. The monthly breakdown combines NNS
+  /// `#normalGrowth` deltas (e8s) and WTN `#organicGrowth`
+  /// `redeemableIcpValue` deltas (converted to e8s via `floatIcpToE8s`) into a
+  /// single `MonthlyBreakdown[]` list grouped by year+month, with
+  /// `populateMomDeltas` applied.
+  ///
+  /// Capital vs rewards accounting (portfolio-wide, same as getPortfolioStats):
+  ///   - `totalCapitalContributedE8s` = NNS capital (initial stake +
+  ///     #externalTopUp deltas) + WTN capital (latest totalIcpPaid), converted
+  ///     to e8s.
+  ///   - `totalRewardsE8s` = NNS rewards (organic #normalGrowth only) + WTN
+  ///     rewards (sum of #organicGrowth redeemableIcpValue deltas), converted
+  ///     to e8s.
+  ///   - `averageDailyRewardE8s` = totalRewards / totalDays, where totalDays is
+  ///     the number of days from the earliest snapshot timestamp to now (or 1
+  ///     if there is no history, to avoid division by zero).
+  ///   - `apy30d` = capital-weighted blended APY across neurons with 30+ days
+  ///     of history (same as getPortfolioStats.blendedApy). WTN positions do
+  ///     not have a per-position APY30d, so they contribute capital to the
+  ///     denominator but not to the numerator.
+  ///   - `overallReturnPct` = totalRewards / totalCapitalContributed * 100.
+  ///   - `monthlyReadings` = total count of monthly breakdown entries.
+  ///   - `monthly` = aggregated MonthlyBreakdown[] across NNS rewards AND WTN
+  ///     #organicGrowth deltas, grouped by year+month, with populateMomDeltas.
+  public func getPortfolioRewardStats(
+    neurons : Map.Map<NeuronId, Neuron>,
+    rewards : Map.Map<NeuronId, List.List<DailyReward>>,
+    wtnPositions : Map.Map<WtnPositionId, WtnPosition>,
+    wtnSnapshots : Map.Map<WtnPositionId, List.List<WtnSnapshot>>,
+    owner : Principal,
+  ) : PortfolioRewardStats {
+    var totalCapitalContributed : Nat64 = 0;
+    var totalRewards : Int = 0;
+
+    // For blended APY (same capital-weighted logic as getPortfolioStats).
+    var apyWeightSum : Float = 0.0;
+    var apyCapitalSum : Float = 0.0;
+
+    // For averageDailyRewardE8s: track the earliest snapshot timestamp so we
+    // can compute the total number of days in the history window.
+    var earliestTs : ?Int = null;
+
+    // Monthly aggregation keyed by (year, month) encoded as year * 12 + month.
+    // Combines NNS #normalGrowth deltas (e8s) and WTN #organicGrowth
+    // redeemableIcpValue deltas (converted to e8s).
+    let monthly = Map.empty<Nat, MonthlyBreakdown>();
+
+    neurons.forEach(func(id, neuron) {
+      if (Principal.equal(neuron.ownerId, owner)) {
+        switch (rewards.get(id)) {
+          case (?history) {
+            let historyArray = history.toArray();
+
+            // Per-neuron stats for the capital/rewards split (single source
+            // of truth, consistent with getPortfolioStats).
+            let perNeuron = getNeuronStats(neuron, historyArray);
+            totalCapitalContributed := totalCapitalContributed + perNeuron.totalCapitalContributedE8s;
+            totalRewards += perNeuron.totalRewardsE8s;
+
+            // Blended APY: capital-weighted, only neurons with 30+ days.
+            if (has30DaysHistory(historyArray)) {
+              let capitalFloat = perNeuron.totalCapitalContributedE8s.toNat().toFloat();
+              apyWeightSum += capitalFloat * perNeuron.apy30d;
+              apyCapitalSum += capitalFloat;
+            };
+
+            // Track earliest timestamp for the daily-average window.
+            let sorted = historyArray.sort(func(a, b) = Int.compare(a.timestamp, b.timestamp));
+            if (sorted.size() > 0) {
+              let first = sorted[0];
+              switch (earliestTs) {
+                case (?e) {
+                  if (first.timestamp < e) { earliestTs := ?first.timestamp };
+                };
+                case null { earliestTs := ?first.timestamp };
+              };
+            };
+
+            // Monthly aggregation: only #normalGrowth positive deltas count
+            // as organic growth (same as getNeuronStats). Other event types
+            // are excluded from the per-month earned total.
+            for (r in sorted.vals()) {
+              if (r.eventType == #normalGrowth and r.deltaE8s > 0) {
+                let seconds = r.timestamp / 1_000_000_000;
+                let days = seconds / 86_400;
+                let (year, month) = daysToYearMonth(days);
+                let key = year * 12 + month;
+                let monthContribution : Int = r.deltaE8s;
+                switch (monthly.get(key)) {
+                  case (?existing) {
+                    monthly.add(
+                      key,
+                      {
+                        year;
+                        month;
+                        totalDeltaE8s = existing.totalDeltaE8s + monthContribution;
+                        readingCount = existing.readingCount + 1;
+                        momDeltaE8s = 0;
+                      },
+                    );
+                  };
+                  case null {
+                    monthly.add(
+                      key,
+                      {
+                        year;
+                        month;
+                        totalDeltaE8s = monthContribution;
+                        readingCount = 1;
+                        momDeltaE8s = 0;
+                      },
+                    );
+                  };
+                };
+              };
+            };
+          };
+          case null {};
+        };
+      };
+    });
+
+    // Fold WTN positions: capital, rewards, and #organicGrowth monthly deltas.
+    var wtnTotalCapitalFloat : Float = 0.0;
+    var wtnTotalEarnedFloat : Float = 0.0;
+
+    wtnPositions.forEach(func(id, position) {
+      if (Principal.equal(position.ownerId, owner)) {
+        let history = WtnLib.getWtnSnapshots(wtnSnapshots, id);
+        let contribution = WtnLib.getWtnPortfolioContribution(position, history);
+        wtnTotalCapitalFloat += contribution.totalCapitalContributed;
+        wtnTotalEarnedFloat += contribution.totalEarned;
+
+        // Track earliest WTN snapshot timestamp for the daily-average window.
+        if (history.size() > 0) {
+          let first = history[0];
+          switch (earliestTs) {
+            case (?e) {
+              if (first.date < e) { earliestTs := ?first.date };
+            };
+            case null { earliestTs := ?first.date };
+          };
+        };
+
+        // Monthly aggregation: WTN #organicGrowth redeemableIcpValue deltas
+        // (current - previous), converted to e8s via floatIcpToE8s. This
+        // mirrors the NNS #normalGrowth deltaE8s logic above.
+        var prevRedeemable : ?Float = null;
+        for (s in history.vals()) {
+          if (s.eventType == #organicGrowth) {
+            let deltaFloat : Float = switch (prevRedeemable) {
+              case (?prev) { s.redeemableIcpValue - prev };
+              case null { 0.0 };
+            };
+            // Only count positive organic growth as reward (mirrors NNS
+            // #normalGrowth positive-delta gating).
+            if (deltaFloat > 0.0) {
+              let deltaE8s : Int = floatIcpToE8s(deltaFloat).toNat();
+              let seconds = s.date / 1_000_000_000;
+              let days = seconds / 86_400;
+              let (year, month) = daysToYearMonth(days);
+              let key = year * 12 + month;
+              switch (monthly.get(key)) {
+                case (?existing) {
+                  monthly.add(
+                    key,
+                    {
+                      year;
+                      month;
+                      totalDeltaE8s = existing.totalDeltaE8s + deltaE8s;
+                      readingCount = existing.readingCount + 1;
+                      momDeltaE8s = 0;
+                    },
+                  );
+                };
+                case null {
+                  monthly.add(
+                    key,
+                    {
+                      year;
+                      month;
+                      totalDeltaE8s = deltaE8s;
+                      readingCount = 1;
+                      momDeltaE8s = 0;
+                    },
+                  );
+                };
+              };
+            };
+          };
+          prevRedeemable := ?s.redeemableIcpValue;
+        };
+      };
+    });
+
+    // Convert WTN Float ICP totals to e8s and combine with NNS totals.
+    let wtnTotalCapitalE8s = floatIcpToE8s(wtnTotalCapitalFloat);
+    let wtnTotalEarnedE8s = floatIcpToE8s(wtnTotalEarnedFloat);
+    totalCapitalContributed := totalCapitalContributed + wtnTotalCapitalE8s;
+    totalRewards += wtnTotalEarnedE8s.toNat();
+
+    // averageDailyRewardE8s: totalRewards / totalDays. totalDays is the
+    // number of days from the earliest snapshot to now (at least 1 to avoid
+    // division by zero).
+    let nowNs : Int = Time.now();
+    let totalDays : Nat = switch (earliestTs) {
+      case (?e) {
+        let spanNs : Int = nowNs - e;
+        let spanDays : Int = spanNs / 1_000_000_000 / 86_400;
+        if (spanDays < 1) { 1 } else { Int.abs(spanDays) };
+      };
+      case null { 1 };
+    };
+    let averageDaily : Int = totalRewards / totalDays;
+
+    // apy30d: capital-weighted blended APY (same as getPortfolioStats.blendedApy).
+    let apy30d : Float = if (apyCapitalSum == 0.0) {
+      0.0;
+    } else {
+      apyWeightSum / apyCapitalSum;
+    };
+
+    // overallReturnPct: totalRewards / totalCapitalContributed * 100.
+    let overallReturnPct : Float = if (totalCapitalContributed == 0) {
+      0.0;
+    } else {
+      (totalRewards.toFloat() / totalCapitalContributed.toNat().toFloat()) * 100.0;
+    };
+
+    // Sort monthly entries chronologically by encoded key, then populate
+    // momDeltaE8s = current month totalDeltaE8s - previous month totalDeltaE8s.
+    let monthlyArray = monthly.toArray();
+    let sortedMonthly = monthlyArray.sort(func(a, b) = Nat.compare(a.0, b.0));
+    let sortedMonthlyRecords : [MonthlyBreakdown] = sortedMonthly.map(
+      func(_, v) = v,
+    );
+    let monthlyOut : [MonthlyBreakdown] = populateMomDeltas(sortedMonthlyRecords);
+
+    {
+      totalCapitalContributedE8s = totalCapitalContributed;
+      totalRewardsE8s = totalRewards;
+      averageDailyRewardE8s = averageDaily;
+      apy30d;
+      overallReturnPct;
+      monthlyReadings = monthlyOut.size();
+      monthly = monthlyOut;
     };
   };
 

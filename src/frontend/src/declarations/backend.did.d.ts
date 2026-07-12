@@ -81,14 +81,32 @@ export interface NeuronStats {
   'monthly' : Array<MonthlyBreakdown>,
   'overallReturnPct' : number,
 }
-export interface PortfolioStats {
-  'totalMaturityE8s' : bigint,
-  'totalRewardsThisMonthE8s' : bigint,
+export interface PortfolioRewardStats {
+  'monthlyReadings' : bigint,
+  'averageDailyRewardE8s' : bigint,
   'totalRewardsE8s' : bigint,
+  'totalCapitalContributedE8s' : E8s,
+  'apy30d' : number,
+  'monthly' : Array<MonthlyBreakdown>,
+  'overallReturnPct' : number,
+}
+export interface PortfolioStats {
+  'wtnRewardsThisMonthFloat' : number,
+  'totalMaturityE8s' : bigint,
+  'wtnRewardsE8s' : bigint,
+  'nnsStakedE8s' : E8s,
+  'totalRewardsThisMonthE8s' : bigint,
+  'wtnCapitalContributedE8s' : E8s,
+  'totalRewardsE8s' : bigint,
+  'combinedRewardsThisMonthE8s' : bigint,
   'blendedApy' : number,
   'totalStakedE8s' : E8s,
+  'nnsRewardsThisMonthE8s' : bigint,
   'totalCapitalContributedE8s' : E8s,
   'percentageReturn' : number,
+  'nnsCapitalContributedE8s' : E8s,
+  'nnsRewardsE8s' : bigint,
+  'wtnStakedE8s' : E8s,
   'neuronCount' : bigint,
 }
 export interface PriceSnapshot {
@@ -200,6 +218,7 @@ export interface _SERVICE {
   'getCurrentIcpPrice' : ActorMethod<[], PriceSnapshot>,
   'getHistoricalIcpPrice' : ActorMethod<[string], PriceSnapshot>,
   'getNeuronStats' : ActorMethod<[NeuronId], NeuronStats>,
+  'getPortfolioRewardStats' : ActorMethod<[], PortfolioRewardStats>,
   'getPortfolioStats' : ActorMethod<[], PortfolioStats>,
   'getRewardHistory' : ActorMethod<[NeuronId], Array<DailyReward>>,
   'getSyncError' : ActorMethod<[NeuronId], [] | [string]>,

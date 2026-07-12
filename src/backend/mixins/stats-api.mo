@@ -45,4 +45,17 @@ mixin (
     };
     StatsLib.getPortfolioStats(neurons, rewards, wtnPositions, wtnSnapshots, caller);
   };
+
+  /// Portfolio-wide reward statistics aggregating across ALL neurons AND WTN
+  /// positions for the caller: total capital contributed, total rewards,
+  /// average daily reward, 30-day APY, overall return %, and a monthly
+  /// breakdown combining NNS #normalGrowth deltas and WTN #organicGrowth
+  /// deltas. Mirrors the per-neuron getNeuronStats panel at the portfolio
+  /// level.
+  public shared ({ caller }) func getPortfolioRewardStats() : async StatsTypes.PortfolioRewardStats {
+    if (Principal.isAnonymous(caller)) {
+      Runtime.trap("Anonymous caller not allowed");
+    };
+    StatsLib.getPortfolioRewardStats(neurons, rewards, wtnPositions, wtnSnapshots, caller);
+  };
 };
