@@ -107,7 +107,7 @@ actor {
     { response with headers = [] };
   };
 
-  include PricesApi(priceCache, transform);
+  include PricesApi(priceCache, transform, grantedPrincipals);
 
   // --- OQL: expose stored collections for natural-language queries ---
   // Neurons are per-user data — each signed-in caller reads only their own rows.

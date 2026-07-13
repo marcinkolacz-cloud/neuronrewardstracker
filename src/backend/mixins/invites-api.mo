@@ -92,6 +92,9 @@ mixin (
   /// Returns false and grants nothing for invalid, already-used, or
   /// revoked codes.
   public shared ({ caller }) func checkAccess(code : Text) : async Bool {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Anonymous caller not allowed");
+    };
     InvitesLib.checkAccess(inviteCodes, grantedPrincipals, caller, code);
   };
 
@@ -102,8 +105,13 @@ mixin (
   };
 
   /// Query: does the given Principal have granted access? Used by mutating
-  /// entry points (in other domains) to gate access.
-  public query func isPrincipalGranted(principal : Principal) : async Bool {
+  /// entry points (in other domains) to gate access. Restricted to
+  /// non-anonymous callers to prevent anonymous enumeration of the
+  /// granted-access list.
+  public query ({ caller }) func isPrincipalGranted(principal : Principal) : async Bool {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Anonymous caller not allowed");
+    };
     InvitesLib.isGranted(grantedPrincipals, principal);
   };
 };

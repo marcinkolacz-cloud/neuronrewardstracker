@@ -5,3 +5,5 @@ dist/
 .platform/
 .pnpm-store/
 .cache/
+.dfx/
+.dfx/

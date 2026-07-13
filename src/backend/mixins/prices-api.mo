@@ -5,10 +5,13 @@ import HttpOutcall "mo:caffeineai-http-outcalls/outcall";
 import PriceTypes "../types/prices";
 import Common "../types/common";
 import PricesLib "../lib/prices";
+import InvitesLib "../lib/invites";
+import Set "mo:core/Set";
 
 mixin (
   priceCache : Map.Map<Text, PriceTypes.CachedPrice>,
   transform : shared query HttpOutcall.TransformationInput -> async HttpOutcall.TransformationOutput,
+  grantedPrincipals : Set.Set<Principal>,
 ) {
   /// Fetch the current ICP price in USD and PLN. Serves from the stable price
   /// cache when the "current" entry is within the TTL (10 minutes); otherwise
@@ -18,6 +21,9 @@ mixin (
   public shared ({ caller }) func getCurrentIcpPrice() : async PriceTypes.PriceSnapshot {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     await PricesLib.getCurrentIcpPrice(priceCache, transform);
   };
@@ -32,6 +38,9 @@ mixin (
   ) : async PriceTypes.PriceSnapshot {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
+    };
+    if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
+      Runtime.trap("Access not granted. Please redeem an invite code.");
     };
     await PricesLib.getHistoricalIcpPrice(priceCache, date, transform);
   };

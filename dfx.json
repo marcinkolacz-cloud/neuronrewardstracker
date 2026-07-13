@@ -1,0 +1,15 @@
+{
+  "canisters": {
+    "backend": {
+      "type": "custom",
+      "wasm": "src/backend/dist/backend.wasm",
+      "candid": "src/backend/dist/backend.did",
+      "build": "cd src/backend && mops build"
+    },
+    "frontend": {
+      "type": "assets",
+      "source": ["src/frontend/dist"],
+      "build": "cd src/frontend && pnpm build"
+    }
+  }
+}

@@ -213,7 +213,7 @@ export function MonthlyBreakdownSection({
 
   const chartData = useMemo(
     () =>
-      sorted.map((m) => ({
+      [...sorted].reverse().map((m) => ({
         label: formatMonthLabel(m.year, m.month),
         icp: e8sToIcpNumber(m.totalDeltaE8s),
         raw: m.totalDeltaE8s,
