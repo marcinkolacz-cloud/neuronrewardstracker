@@ -256,7 +256,7 @@ export interface _SERVICE {
   'listMyWtnPositions' : ActorMethod<[], Array<WtnPosition>>,
   'reassignAdminPrincipal' : ActorMethod<[Principal], undefined>,
   'recordSnapshot' : ActorMethod<
-    [NeuronId, bigint, bigint, boolean],
+    [NeuronId, bigint, bigint, boolean, bigint],
     DailyReward
   >,
   'recordWtnSnapshot' : ActorMethod<

@@ -291,7 +291,7 @@ export interface backendInterface {
     listInviteCodes(): Promise<Array<InviteCode>>;
     listMyNeurons(): Promise<Array<Neuron>>;
     listMyWtnPositions(): Promise<Array<WtnPosition>>;
-    recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean): Promise<DailyReward>;
+    recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean, timestamp: bigint): Promise<DailyReward>;
     recordWtnSnapshot(positionId: WtnPositionId, date: bigint, nicpHeld: number, totalIcpPaid: number, redeemableIcpValue: number): Promise<WtnSnapshot>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
     removeWtnPosition(positionId: WtnPositionId): Promise<void>;

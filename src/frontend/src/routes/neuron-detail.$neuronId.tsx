@@ -477,8 +477,14 @@ export function NeuronDetailPage() {
                   timestamp,
                 },
                 {
-                  onSuccess: () => toast.success("Snapshot recorded"),
-                  onError: (err) => toast.error(err.message),
+                  onSuccess: (data) => {
+                    window.alert("SUCCESS: " + JSON.stringify(data, (_k, v) => typeof v === "bigint" ? v.toString() : v));
+                    toast.success("Snapshot recorded");
+                  },
+                  onError: (err) => {
+                    window.alert("ERROR: " + (err instanceof Error ? err.message : String(err)));
+                    toast.error(err instanceof Error ? err.message : "Failed to record snapshot");
+                  },
                 },
               );
             }}

@@ -293,11 +293,12 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdminPrincipal' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerGranted' : IDL.Func([], [IDL.Bool], ['query']),
     'isPrincipalGranted' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
-    'listInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], []),
+    'listInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], ['query']),
     'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], ['query']),
     'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], ['query']),
+    'reassignAdminPrincipal' : IDL.Func([IDL.Principal], [], []),
     'recordSnapshot' : IDL.Func(
-        [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool],
+        [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool, IDL.Int],
         [DailyReward],
         [],
       ),
@@ -313,6 +314,7 @@ export const idlFactory = ({ IDL }) => {
     'schema' : IDL.Func([], [IDL.Text], ['query']),
     'setAdminPrincipal' : IDL.Func([], [], []),
     'startDailySync' : IDL.Func([], [], []),
+    'stopDailySync' : IDL.Func([], [], []),
     'syncAllMyNeurons' : IDL.Func([], [IDL.Vec(SyncResult)], []),
     'syncNeuron' : IDL.Func([NeuronId], [SyncResult], []),
     'transform' : IDL.Func(
