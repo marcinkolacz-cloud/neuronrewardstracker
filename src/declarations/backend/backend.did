@@ -300,6 +300,7 @@ service : {
   listInviteCodes: () -> (vec InviteCode) query;
   listMyNeurons: () -> (vec Neuron) query;
   listMyWtnPositions: () -> (vec WtnPosition) query;
+  reassignAdminPrincipal: (newAdmin: principal) -> ();
   recordSnapshot: (neuronId: NeuronId, unstakedMaturityE8s: nat64,
    stakedMaturityE8s: nat64, autoStakeMaturity: bool) -> (DailyReward);
   recordWtnSnapshot: (positionId: WtnPositionId, date: int, nicpHeld:
@@ -318,6 +319,12 @@ service : {
   /// (the timer reschedules itself from its own async callback, which also
   /// has the system capability).
   startDailySync: () -> ();
+  /// Admin-only: stop the daily auto-sync. The next scheduled timer firing
+  /// will see _dailySyncInstalled = false and exit immediately without
+  /// doing any governance sync work and without rescheduling itself, which
+  /// permanently ends the loop (nothing re-arms it). Call startDailySync()
+  /// again later to re-enable automatic daily syncing.
+  stopDailySync: () -> ();
   syncAllMyNeurons: () -> (vec SyncResult);
   syncNeuron: (neuronId: NeuronId) -> (SyncResult);
   /// IC HTTP outcall transform callback. Required by the IC HTTP outcall

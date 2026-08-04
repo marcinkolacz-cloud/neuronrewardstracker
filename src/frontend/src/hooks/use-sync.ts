@@ -100,6 +100,7 @@ export function useRecordSnapshot() {
       unstakedMaturityE8s: bigint;
       stakedMaturityE8s: bigint;
       autoStakeMaturity: boolean;
+      timestamp: bigint;
     }
   >({
     mutationFn: async (vars) => {
@@ -109,6 +110,7 @@ export function useRecordSnapshot() {
         vars.unstakedMaturityE8s,
         vars.stakedMaturityE8s,
         vars.autoStakeMaturity,
+        vars.timestamp,
       );
     },
     onSuccess: (_data, vars) => {

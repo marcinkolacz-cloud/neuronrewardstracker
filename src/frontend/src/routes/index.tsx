@@ -59,7 +59,7 @@ import {
   usePortfolioRewardStats,
   usePortfolioStats,
 } from "@/hooks/use-stats";
-import { useSyncAllNeurons, useSyncError } from "@/hooks/use-sync";
+import { useSyncError } from "@/hooks/use-sync";
 import { useWtnPositions, useWtnStats } from "@/hooks/use-wtn";
 import { useBackendActor } from "@/lib/backend-actor";
 import type {
@@ -115,7 +115,6 @@ export function DashboardPage() {
   const { data: rewardStats, isLoading: rewardStatsLoading } =
     usePortfolioRewardStats();
   const priceQuery = useIcpPrice();
-  const syncAll = useSyncAllNeurons();
   const queryClient = useQueryClient();
   const { actor } = useBackendActor();
   const navigate = useNavigate();
@@ -125,46 +124,10 @@ export function DashboardPage() {
   const wtnCount = wtnPositions?.length ?? 0;
   const isEmpty =
     !neuronsLoading && !wtnLoading && neuronCount === 0 && wtnCount === 0;
-  const isSyncingAll = syncAll.isPending;
-
-  const handleSyncAll = async () => {
-    try {
-      const results = await syncAll.mutateAsync();
-      // The hook's onSuccess already invalidates with refetchType:'active',
-      // but we await a fresh invalidation here so the UI waits for the
-      // mutation to fully settle (and the active refetches to be queued)
-      // before toasting. This guarantees the user sees the loading state
-      // for the whole sync duration, then updated timestamps/stats after.
-      await queryClient.invalidateQueries({
-        predicate: (q) =>
-          q.queryKey[0] === "neurons" ||
-          q.queryKey[0] === "neuron-stats" ||
-          q.queryKey[0] === "rewards" ||
-          q.queryKey[0] === "sync-status" ||
-          q.queryKey[0] === "sync-error" ||
-          q.queryKey[0] === "portfolio-stats" ||
-          q.queryKey[0] === "portfolio-reward-stats",
-        refetchType: "active",
-      });
-      const failed = results.filter(
-        (r) => r.status === ("failed" as SyncStatus),
-      );
-      const needsHotkey = results.some(
-        (r) => r.status === ("hotkeyRequired" as SyncStatus),
-      );
-      if (failed.length > 0) {
-        toast.error(
-          `${failed.length} neuron${failed.length === 1 ? "" : "s"} failed to sync`,
-        );
-      } else if (needsHotkey) {
-        toast.warning("Synced — some neurons need a hotkey to fully sync");
-      } else {
-        toast.success("Synced all neurons with NNS governance");
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to sync");
-    }
-  };
+  // Refresh All removed (2026-08-04): governance sync is manual-only now
+  // (per-neuron "Sync now" + manual snapshot entry). Kept as a constant
+  // so the rest of the component doesn't need further changes.
+  const isSyncingAll = false;
 
   const handleRefreshPrice = () => {
     priceQuery.refetch();
@@ -302,17 +265,6 @@ export function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleSyncAll}
-              disabled={syncAll.isPending || isEmpty}
-              data-ocid="dashboard.refresh_all"
-            >
-              <RefreshCw
-                className={syncAll.isPending ? "size-4 animate-spin" : "size-4"}
-              />
-              Refresh All
-            </Button>
             <TooltipProvider delayDuration={300}>
               <Tooltip>
                 <TooltipTrigger asChild>

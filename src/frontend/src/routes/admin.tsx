@@ -44,6 +44,7 @@ import {
   useIsCallerAdmin,
   useRevokeInvite,
 } from "@/hooks/use-invites";
+import { useBackendActor } from "@/lib/backend-actor";
 import { formatTimestampDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -55,6 +56,7 @@ import {
   Plus,
   ShieldAlert,
   ShieldCheck,
+  TimerOff,
   Trash2,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -258,6 +260,29 @@ function AdminPanel() {
         </section>
       </div>
 
+      {/* Danger zone — one-off manual controls, not part of the regular
+          invite-code workflow. Kept minimal and separate from the main
+          panel styling on purpose. */}
+      <div className="relative mx-auto max-w-5xl px-4 pb-8 sm:px-6 lg:px-8">
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="text-foreground flex items-center gap-2 text-base font-semibold">
+              <TimerOff className="text-destructive size-4" />
+              Danger zone
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-3 text-sm">
+              Stop the automatic daily NNS governance sync. Data entry
+              switches to fully manual (same as WTN positions). This cannot
+              be undone from this button — re-enabling requires a backend
+              call.
+            </p>
+            <StopDailySyncButton />
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Revoke confirmation dialog */}
       <Dialog
         open={revokeTarget !== null}
@@ -303,6 +328,48 @@ function AdminPanel() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function StopDailySyncButton() {
+  const { actor } = useBackendActor();
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+
+  const handleClick = () => {
+    window.alert("Button clicked — starting call...");
+    if (!actor) {
+      window.alert("actor is null/undefined — not ready yet");
+      return;
+    }
+    setStatus("loading");
+    actor
+      .stopDailySync()
+      .then(() => {
+        setStatus("done");
+        window.alert("SUCCESS: stopDailySync returned OK");
+      })
+      .catch((err: unknown) => {
+        setStatus("idle");
+        window.alert(
+          "ERROR: " + (err instanceof Error ? err.message : String(err)),
+        );
+      });
+  };
+
+  return (
+    <Button
+      variant="destructive"
+      onClick={handleClick}
+      disabled={status === "loading" || status === "done"}
+      data-ocid="admin.stop_daily_sync"
+    >
+      {status === "loading" ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : (
+        <TimerOff className="size-4" />
+      )}
+      {status === "done" ? "Stopped" : "Stop daily auto-sync"}
+    </Button>
   );
 }
 

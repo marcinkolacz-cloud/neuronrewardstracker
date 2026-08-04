@@ -501,7 +501,7 @@ actor {
         #listMyNeurons : () -> ();
         #listMyWtnPositions : () -> ();
         #reassignAdminPrincipal : () -> (newAdmin : Principal);
-        #recordSnapshot : () -> (neuronId : Common.NeuronId, unstakedMaturityE8s : Nat64, stakedMaturityE8s : Nat64, autoStakeMaturity : Bool);
+        #recordSnapshot : () -> (neuronId : Common.NeuronId, unstakedMaturityE8s : Nat64, stakedMaturityE8s : Nat64, autoStakeMaturity : Bool, timestamp : Int);
         #recordWtnSnapshot : () -> (positionId : WtnTypes.WtnPositionId, date : Int, nicpHeld : Float, totalIcpPaid : Float, redeemableIcpValue : Float);
         #removeNeuron : () -> (neuronId : NeuronTypes.NeuronId);
         #removeWtnPosition : () -> (positionId : WtnTypes.WtnPositionId);
@@ -510,6 +510,7 @@ actor {
         #schema : () -> ();
         #setAdminPrincipal : () -> ();
         #startDailySync : () -> ();
+        #stopDailySync : () -> ();
         #syncAllMyNeurons : () -> ();
         #syncNeuron : () -> (neuronId : Common.NeuronId);
         #transform : () -> (input : HttpOutcall.TransformationInput);
@@ -564,6 +565,7 @@ actor {
       case (#schema _) "schema";
       case (#setAdminPrincipal _) "setAdminPrincipal";
       case (#startDailySync _) "startDailySync";
+      case (#stopDailySync _) "stopDailySync";
       case (#syncAllMyNeurons _) "syncAllMyNeurons";
       case (#syncNeuron _) "syncNeuron";
       case (#transform _) "transform";
@@ -579,6 +581,12 @@ actor {
     Timer.setTimer<system>(
       #seconds delaySeconds,
       func() : async () {
+        // Daily auto-sync permanently disabled per user request (2026-08-04).
+        // Unconditional return regardless of _dailySyncInstalled's stored
+        // value, so this is effective immediately on deploy without needing
+        // any follow-up call. Manual "Sync now" / "Refresh All" and manual
+        // snapshot entry remain the only ways to update neuron data.
+        return;
         for ((neuronId, neuron) in neurons.entries()) {
           ignore await GovernanceSyncLib.doSync(
             governance,
@@ -619,5 +627,14 @@ actor {
     if (_dailySyncInstalled) { return };
     _dailySyncInstalled := true;
     ignore await scheduleNextSync();
+  };
+
+  /// Admin-only: stop the daily auto-sync. The next scheduled timer firing
+  /// will see _dailySyncInstalled = false and exit immediately without
+  /// doing any governance sync work and without rescheduling itself, which
+  /// permanently ends the loop (nothing re-arms it). Call startDailySync()
+  /// again later to re-enable automatic daily syncing.
+  public shared func stopDailySync() : async () {
+    _dailySyncInstalled := false;
   };
 };

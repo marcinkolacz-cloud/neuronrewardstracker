@@ -2,7 +2,6 @@ import List "mo:core/List";
 import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Runtime "mo:core/Runtime";
-import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Types "../types/rewards";
 import Common "../types/common";
@@ -28,6 +27,7 @@ mixin (
     unstakedMaturityE8s : Nat64,
     stakedMaturityE8s : Nat64,
     autoStakeMaturity : Bool,
+    timestamp : Int,
   ) : async Types.DailyReward {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
@@ -37,13 +37,16 @@ mixin (
     };
     // Verify the caller owns the neuron.
     ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
+    // `timestamp` is caller-supplied (mirrors recordWtnSnapshot's `date`
+    // param) so manual entries can be backfilled for a specific day instead
+    // of always using the moment the button was clicked (Time.now()).
     RewardsLib.recordSnapshot(
       rewards,
       neuronId,
       unstakedMaturityE8s,
       stakedMaturityE8s,
       autoStakeMaturity,
-      Time.now(),
+      timestamp,
       null,
       0 : Nat64,
     );

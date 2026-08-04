@@ -467,13 +467,14 @@ export function NeuronDetailPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <NeuronStatsCard stats={stats} />
           <SnapshotEntryForm
-            onSubmit={(unstaked, staked, autoStake) => {
+            onSubmit={(unstaked, staked, autoStake, timestamp) => {
               recordSnapshot.mutate(
                 {
                   neuronId: BigInt(neuronId),
                   unstakedMaturityE8s: unstaked,
                   stakedMaturityE8s: staked,
                   autoStakeMaturity: autoStake,
+                  timestamp,
                 },
                 {
                   onSuccess: () => toast.success("Snapshot recorded"),
@@ -2126,12 +2127,14 @@ function SnapshotEntryForm({
     unstakedMaturityE8s: bigint,
     stakedMaturityE8s: bigint,
     autoStakeMaturity: boolean,
+    timestamp: bigint,
   ) => void;
   submitting: boolean;
 }) {
   const [unstaked, setUnstaked] = useState("");
   const [staked, setStaked] = useState("0");
   const [autoStake, setAutoStake] = useState(false);
+  const [datetime, setDatetime] = useState("");
 
   const handleSubmit = (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -2145,10 +2148,20 @@ function SnapshotEntryForm({
       toast.error("Enter a valid staked maturity amount");
       return;
     }
-    onSubmit(unstakedE8s, stakedE8s, autoStake);
+    if (!datetime) {
+      toast.error("Pick a date and time");
+      return;
+    }
+    const timestamp = datetimeLocalToNs(datetime);
+    if (timestamp <= 0n) {
+      toast.error("Pick a valid date and time");
+      return;
+    }
+    onSubmit(unstakedE8s, stakedE8s, autoStake, timestamp);
     setUnstaked("");
     setStaked("0");
     setAutoStake(false);
+    setDatetime("");
   };
 
   return (
@@ -2194,6 +2207,23 @@ function SnapshotEntryForm({
               value={staked}
               onChange={(e) => setStaked(e.target.value)}
               data-ocid="neuron_detail.snapshot.staked.input"
+              className="font-mono"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="neuron-snapshot-datetime"
+              data-ocid="neuron_detail.snapshot.datetime.label"
+            >
+              Timestamp
+            </Label>
+            <Input
+              id="neuron-snapshot-datetime"
+              type="datetime-local"
+              value={datetime}
+              onChange={(e) => setDatetime(e.target.value)}
+              data-ocid="neuron_detail.snapshot.datetime.input"
               className="font-mono"
               required
             />

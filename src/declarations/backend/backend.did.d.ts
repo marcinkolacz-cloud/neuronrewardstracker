@@ -254,6 +254,7 @@ export interface _SERVICE {
   'listInviteCodes' : ActorMethod<[], Array<InviteCode>>,
   'listMyNeurons' : ActorMethod<[], Array<Neuron>>,
   'listMyWtnPositions' : ActorMethod<[], Array<WtnPosition>>,
+  'reassignAdminPrincipal' : ActorMethod<[Principal], undefined>,
   'recordSnapshot' : ActorMethod<
     [NeuronId, bigint, bigint, boolean],
     DailyReward
@@ -277,6 +278,14 @@ export interface _SERVICE {
    * / has the system capability).
    */
   'startDailySync' : ActorMethod<[], undefined>,
+  /**
+   * / Admin-only: stop the daily auto-sync. The next scheduled timer firing
+   * / will see _dailySyncInstalled = false and exit immediately without
+   * / doing any governance sync work and without rescheduling itself, which
+   * / permanently ends the loop (nothing re-arms it). Call startDailySync()
+   * / again later to re-enable automatic daily syncing.
+   */
+  'stopDailySync' : ActorMethod<[], undefined>,
   'syncAllMyNeurons' : ActorMethod<[], Array<SyncResult>>,
   'syncNeuron' : ActorMethod<[NeuronId], SyncResult>,
   /**
