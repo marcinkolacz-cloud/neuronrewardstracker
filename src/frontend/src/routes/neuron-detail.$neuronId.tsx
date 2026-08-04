@@ -1189,6 +1189,7 @@ function ActivityFeed({
   const [visibleCount, setVisibleCount] = useState(ACTIVITY_PAGE_SIZE);
   const [editing, setEditing] = useState<DailyReward | null>(null);
   const [deleting, setDeleting] = useState<DailyReward | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "table">("table");
 
   // Most recent entries first.
   const reversed = useMemo(() => [...rewards].reverse(), [rewards]);
@@ -1232,9 +1233,32 @@ function ActivityFeed({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Activity feed</CardTitle>
-          <Badge variant="secondary" className="font-mono text-[10px]">
-            {rewards.length}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="font-mono text-[10px]">
+              {rewards.length}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setViewMode((m) => (m === "list" ? "table" : "list"))}
+              data-ocid="neuron_detail.activity.view_toggle"
+            >
+              {viewMode === "list" ? "Table view" : "List view"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => {
+                const csv = rewardsToCsv(rewards);
+                downloadCsv("activity-feed.csv", csv);
+              }}
+              data-ocid="neuron_detail.activity.export_button"
+            >
+              Export
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -1253,6 +1277,37 @@ function ActivityFeed({
             <p className="text-muted-foreground mt-3 text-sm">
               No reward events recorded yet.
             </p>
+          </div>
+        ) : viewMode === "table" ? (
+          <div className="overflow-auto rounded-md border border-border/60 max-h-[500px]">
+            <table className="w-full text-xs">
+              <thead className="sticky top-0 bg-card z-10">
+                <tr className="border-b border-border/60">
+                  <th className="text-left p-2 font-medium text-muted-foreground">#</th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">Event</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Delta</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Unstaked</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Staked</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Stake delta</th>
+                  <th className="text-center p-2 font-medium text-muted-foreground">Auto-stake</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reversed.map((r, i) => (
+                  <tr key={"tr-" + i}>
+                    <td className="p-2">{i + 1}</td>
+                    <td className="p-2">{formatTimestampDateTime(r.timestamp)}</td>
+                    <td className="p-2">{EVENT_TYPE_LABEL[r.eventType] ?? r.eventType}</td>
+                    <td className="p-2 text-right font-mono">{e8sToIcpNumber(r.deltaE8s).toFixed(4)}</td>
+                    <td className="p-2 text-right font-mono">{e8sToIcpNumber(r.unstakedMaturityE8s).toFixed(4)}</td>
+                    <td className="p-2 text-right font-mono">{e8sToIcpNumber(r.stakedMaturityE8s).toFixed(4)}</td>
+                    <td className="p-2 text-right font-mono">{e8sToIcpNumber(r.stakeDeltaE8s).toFixed(4)}</td>
+                    <td className="p-2 text-center">{r.autoStakeMaturity ? "Yes" : "No"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="space-y-3">
@@ -1888,11 +1943,13 @@ function MonthlyBreakdownSection({
 
   const chartData = useMemo(
     () =>
-      sorted.map((m) => ({
-        label: formatMonthLabel(m.year, m.month),
-        icp: e8sToIcpNumber(m.totalDeltaE8s),
-        raw: m.totalDeltaE8s,
-      })),
+      [...sorted]
+        .reverse()
+        .map((m) => ({
+          label: formatMonthLabel(m.year, m.month),
+          icp: e8sToIcpNumber(m.totalDeltaE8s),
+          raw: m.totalDeltaE8s,
+        })),
     [sorted],
   );
 

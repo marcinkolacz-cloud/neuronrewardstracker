@@ -44,7 +44,7 @@ mixin (
   };
 
   /// List all neurons owned by the caller.
-  public shared ({ caller }) func listMyNeurons() : async [Types.Neuron] {
+  public query ({ caller }) func listMyNeurons() : async [Types.Neuron] {
     NeuronsLib.listMyNeurons(neurons, caller);
   };
 

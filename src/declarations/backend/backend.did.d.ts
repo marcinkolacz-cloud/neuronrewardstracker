@@ -265,20 +265,6 @@ export interface _SERVICE {
   'removeNeuron' : ActorMethod<[NeuronId], undefined>,
   'removeWtnPosition' : ActorMethod<[WtnPositionId], undefined>,
   'revokeInviteCode' : ActorMethod<[string], undefined>,
-  /**
-   * / Schedule the next daily sync at 18:01 Europe/Warsaw. Recomputes the
-   * / target on every call so DST transitions do not cause drift. After the
-   * / sync runs, reschedules for the following 18:01 Warsaw.
-   * /
-   * / `Timer.setTimer<system>` requires the `<system>` capability, which is
-   * / available in `shared` functions and async callbacks but NOT in a plain
-   * / actor `func` or a transient-let initializer. This function is therefore
-   * / only ever called from two system-capable contexts: (1) the
-   * / `public shared func startDailySync()` below, and (2) the async timer
-   * / callback passed to `Timer.setTimer` (which itself has the system
-   * / capability, so rescheduling works). It must NOT be called from a plain
-   * / transient let or a non-shared private func.
-   */
   'scheduleNextSync' : ActorMethod<[], TimerId>,
   'schema' : ActorMethod<[], string>,
   'setAdminPrincipal' : ActorMethod<[], undefined>,

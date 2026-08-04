@@ -103,6 +103,17 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 
 /** Number of activity entries shown initially and per "Load more" click. */
@@ -147,6 +158,150 @@ function formatWtnPercent(
   return `${sign}${value.toFixed(decimals)}%`;
 }
 
+function WtnMaturityChart({
+  snapshots,
+}: {
+  snapshots: WtnSnapshot[];
+}) {
+  const chartData = useMemo(
+    () =>
+      snapshots.map((s) => ({
+        date: formatTimestamp(s.date),
+        redeemable: s.redeemableIcpValue,
+      })),
+    [snapshots],
+  );
+  const hasData = chartData.length > 0;
+  return (
+    <Card className="bg-card/60 border-border/60 h-full" data-ocid="wtn_detail.maturity_chart">
+      <CardHeader>
+        <CardTitle className="text-base">Maturity growth</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {hasData ? (
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                <defs>
+                  <linearGradient id="wtnMaturityFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="oklch(var(--chart-1))" stopOpacity={0.35} />
+                    <stop offset="100%" stopColor="oklch(var(--chart-1))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--border))" vertical={false} />
+                <XAxis dataKey="date" tick={{ fill: "oklch(var(--muted-foreground))", fontSize: 10 }} />
+                <YAxis tick={{ fill: "oklch(var(--muted-foreground))", fontSize: 10 }} width={48} />
+                <Tooltip
+                  formatter={(value: number) => [formatWtnIcp(value, 4), "Redeemable"]}
+                  contentStyle={{ fontSize: 12 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="redeemable"
+                  stroke="oklch(var(--chart-1))"
+                  fill="url(#wtnMaturityFill)"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <p className="text-muted-foreground py-10 text-center text-sm">
+            No snapshots recorded yet.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function WtnMonthlyBreakdownChart({
+  snapshots,
+}: {
+  snapshots: WtnSnapshot[];
+}) {
+  const monthly = useMemo(() => {
+    const map = new Map<string, { year: number; month: number; total: number }>();
+    for (let i = 1; i < snapshots.length; i++) {
+      const cur = snapshots[i];
+      const prev = snapshots[i - 1];
+      if (cur.eventType !== WtnEventType.organicGrowth) continue;
+      const d = new Date(Number(cur.date / 1_000_000n));
+      const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}`;
+      const delta = cur.redeemableIcpValue - prev.redeemableIcpValue;
+      const existing = map.get(key);
+      if (existing) {
+        existing.total += delta;
+      } else {
+        map.set(key, { year: d.getUTCFullYear(), month: d.getUTCMonth(), total: delta });
+      }
+    }
+    return [...map.values()].sort((a, b) => {
+      const y = b.year - a.year;
+      if (y !== 0) return y;
+      return b.month - a.month;
+    });
+  }, [snapshots]);
+
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const chartData = useMemo(
+    () =>
+      [...monthly].reverse().map((m) => ({
+        label: `${monthNames[m.month]} ${m.year}`,
+        icp: m.total,
+      })),
+    [monthly],
+  );
+  const hasData = monthly.length > 0;
+
+  return (
+    <Card className="bg-card/60 border-border/60" data-ocid="wtn_detail.monthly_breakdown">
+      <CardHeader>
+        <CardTitle className="text-base">Monthly breakdown</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {hasData ? (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--border))" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fill: "oklch(var(--muted-foreground))", fontSize: 10 }} />
+                  <YAxis tick={{ fill: "oklch(var(--muted-foreground))", fontSize: 10 }} width={48} />
+                  <Tooltip formatter={(value: number) => [formatWtnIcp(value, 4), "ICP"]} contentStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="icp" fill="oklch(var(--chart-1))" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="overflow-auto rounded-md border border-border/60 max-h-64">
+              <table className="w-full text-xs">
+                <thead className="sticky top-0 bg-card z-10">
+                  <tr className="border-b border-border/60">
+                    <th className="text-left p-2 font-medium text-muted-foreground">Month</th>
+                    <th className="text-right p-2 font-medium text-muted-foreground">Growth</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthly.map((m, i) => (
+                    <tr key={`wtn-month-${i}`} className="border-b border-border/30">
+                      <td className="p-2">{monthNames[m.month]} {m.year}</td>
+                      <td className="p-2 text-right font-mono">{formatWtnIcp(m.total, 4)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <p className="text-muted-foreground py-10 text-center text-sm">
+            No organic growth recorded yet.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function WtnDetailPage() {
   const { positionId } = useParams({ strict: false });
   const idParam =
@@ -172,6 +327,20 @@ export function WtnDetailPage() {
     () => [...(snapshots ?? [])].sort((a, b) => Number(a.date - b.date)),
     [snapshots],
   );
+
+  const dailyGrowth = useMemo(() => {
+    if (sortedSnapshots.length < 2) return null;
+    let totalGrowth = 0;
+    for (let i = 1; i < sortedSnapshots.length; i++) {
+      if (sortedSnapshots[i].eventType !== WtnEventType.organicGrowth) continue;
+      totalGrowth += sortedSnapshots[i].redeemableIcpValue - sortedSnapshots[i - 1].redeemableIcpValue;
+    }
+    const first = sortedSnapshots[0];
+    const last = sortedSnapshots[sortedSnapshots.length - 1];
+    const daysElapsed = Number(last.date - first.date) / 1_000_000 / 1000 / 60 / 60 / 24;
+    if (daysElapsed <= 0) return null;
+    return totalGrowth / daysElapsed;
+  }, [sortedSnapshots]);
 
   const handleExportCsv = () => {
     if (!sortedSnapshots || sortedSnapshots.length === 0) {
@@ -291,7 +460,17 @@ export function WtnDetailPage() {
 
         {/* Stats panel */}
         <div className="mt-6">
-          <WtnStatsCard stats={stats} />
+          <WtnStatsCard stats={stats} dailyGrowth={dailyGrowth} />
+        </div>
+
+        {/* Maturity growth chart */}
+        <div className="mt-6">
+          <WtnMaturityChart snapshots={sortedSnapshots} />
+        </div>
+
+        {/* Monthly breakdown */}
+        <div className="mt-6">
+          <WtnMonthlyBreakdownChart snapshots={sortedSnapshots} />
         </div>
 
         {/* Activity feed */}
@@ -540,7 +719,13 @@ function WtnStat({
 /* Stats card                                                          */
 /* ------------------------------------------------------------------ */
 
-function WtnStatsCard({ stats }: { stats: WtnStats | undefined }) {
+function WtnStatsCard({
+  stats,
+  dailyGrowth,
+}: {
+  stats: WtnStats | undefined;
+  dailyGrowth: number | null;
+}) {
   return (
     <Card
       className="bg-card/60 border-border/60"
@@ -588,6 +773,13 @@ function WtnStatsCard({ stats }: { stats: WtnStats | undefined }) {
               valueClass={
                 stats.percentReturn >= 0 ? "text-primary" : "text-destructive"
               }
+            />
+            <Separator />
+            <WtnStatRow
+              label="Daily growth"
+              value={dailyGrowth == null ? "—" : formatWtnIcp(dailyGrowth, 6)}
+              hint="Average organic growth per day"
+              dataOcid="wtn_detail.stats.daily_growth"
             />
           </div>
         )}
@@ -643,6 +835,20 @@ const WTN_EVENT_LABEL: Record<WtnEventType, string> = {
   organicGrowth: "Organic growth",
 };
 
+function computeDailyGrowth(snapshots: WtnSnapshot[], index: number): number | null {
+  if (index === 0) return null;
+  const cur = snapshots[index];
+  const prev = snapshots[index - 1];
+  if (cur.eventType !== WtnEventType.organicGrowth) return null;
+  const delta = cur.redeemableIcpValue - prev.redeemableIcpValue;
+  const curDate = new Date(Number(cur.date / 1_000_000n));
+  const prevDate = new Date(Number(prev.date / 1_000_000n));
+  const curCalendarDay = Date.UTC(curDate.getUTCFullYear(), curDate.getUTCMonth(), curDate.getUTCDate());
+  const prevCalendarDay = Date.UTC(prevDate.getUTCFullYear(), prevDate.getUTCMonth(), prevDate.getUTCDate());
+  const calendarDaysElapsed = Math.max(1, Math.round((curCalendarDay - prevCalendarDay) / (1000 * 60 * 60 * 24)));
+  return delta / calendarDaysElapsed;
+}
+
 function WtnActivityFeed({
   snapshots,
   loading,
@@ -669,6 +875,7 @@ function WtnActivityFeed({
   const [visibleCount, setVisibleCount] = useState(ACTIVITY_PAGE_SIZE);
   const [editing, setEditing] = useState<WtnSnapshot | null>(null);
   const [deleting, setDeleting] = useState<WtnSnapshot | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "table">("table");
 
   // Most recent entries first.
   const reversed = useMemo(() => [...snapshots].reverse(), [snapshots]);
@@ -710,9 +917,32 @@ function WtnActivityFeed({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Activity feed</CardTitle>
-          <Badge variant="secondary" className="font-mono text-[10px]">
-            {snapshots.length}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="font-mono text-[10px]">
+              {snapshots.length}
+            </Badge>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => setViewMode((m) => (m === "list" ? "table" : "list"))}
+              data-ocid="wtn_detail.activity.view_toggle"
+            >
+              {viewMode === "list" ? "Table view" : "List view"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => {
+                const csv = wtnSnapshotsToCsv(snapshots);
+                downloadCsv("wtn-activity-feed.csv", csv);
+              }}
+              data-ocid="wtn_detail.activity.export_button"
+            >
+              Export
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -734,6 +964,45 @@ function WtnActivityFeed({
             <p className="text-muted-foreground mt-3 text-sm">
               No snapshots recorded yet. Record your first snapshot below.
             </p>
+          </div>
+        ) : viewMode === "table" ? (
+          <div className="overflow-auto rounded-md border border-border/60 max-h-[500px]">
+            <table className="w-full text-xs">
+              <thead className="sticky top-0 bg-card z-10">
+                <tr className="border-b border-border/60">
+                  <th className="text-left p-2 font-medium text-muted-foreground">#</th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left p-2 font-medium text-muted-foreground">Event</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">nICP held</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Total ICP paid</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Redeemable ICP</th>
+                  <th className="text-right p-2 font-medium text-muted-foreground">Daily growth</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reversed.map((s, i) => {
+                  const originalIndex = reversed.length - 1 - i;
+                  const dailyGrowthValue = computeDailyGrowth(snapshots, originalIndex);
+                  return (
+                  <tr
+                    key={"wtn-table-" + i}
+                    className="border-b border-border/30 hover:bg-muted/30"
+                    data-ocid={`wtn_detail.activity.table_row.${i + 1}`}
+                  >
+                    <td className="p-2 text-muted-foreground">{i + 1}</td>
+                    <td className="p-2 whitespace-nowrap">{formatTimestampDateTime(s.date)}</td>
+                    <td className="p-2">{WTN_EVENT_LABEL[s.eventType]}</td>
+                    <td className="p-2 text-right font-mono">{s.nicpHeld.toFixed(4)}</td>
+                    <td className="p-2 text-right font-mono">{s.totalIcpPaid.toFixed(4)}</td>
+                    <td className="p-2 text-right font-mono">{s.redeemableIcpValue.toFixed(4)}</td>
+                    <td className="p-2 text-right font-mono">
+                      {dailyGrowthValue == null ? "—" : formatWtnIcp(dailyGrowthValue, 6, false)}
+                    </td>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="space-y-3">

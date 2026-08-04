@@ -293,7 +293,7 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdminPrincipal' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerGranted' : IDL.Func([], [IDL.Bool], ['query']),
     'isPrincipalGranted' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
-    'listInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], []),
+    'listInviteCodes' : IDL.Func([], [IDL.Vec(InviteCode)], ['query']),
     'listMyNeurons' : IDL.Func([], [IDL.Vec(Neuron)], ['query']),
     'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], ['query']),
     'recordSnapshot' : IDL.Func(

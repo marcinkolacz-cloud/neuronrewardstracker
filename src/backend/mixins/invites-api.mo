@@ -45,6 +45,14 @@ mixin (
     };
   };
 
+  /// Admin-only: reassign the admin principal to a new one. Also grants
+  /// the new admin access so they don't need an invite code.
+  public shared ({ caller }) func reassignAdminPrincipal(newAdmin : Principal) : async () {
+    _callerIsAdmin(caller);
+    adminPrincipal.value := ?newAdmin;
+    InvitesLib.grantAccess(grantedPrincipals, newAdmin);
+  };
+
   /// Query: has an admin been bootstrapped yet? Returns true when
   /// adminPrincipal is non-null. Used by the frontend to decide whether to
   /// show the "Set me as admin" button to the owner.
@@ -76,7 +84,7 @@ mixin (
 
   /// Admin-only: return all invite codes with status (used/unused/revoked)
   /// and created date.
-  public shared ({ caller }) func listInviteCodes() : async [Types.InviteCode] {
+  public shared query ({ caller }) func listInviteCodes() : async [Types.InviteCode] {
     _callerIsAdmin(caller);
     InvitesLib.listInviteCodes(inviteCodes);
   };

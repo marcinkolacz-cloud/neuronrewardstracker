@@ -1,4 +1,5 @@
 import List "mo:core/List";
+import Debug "mo:base/Debug";
 import Map "mo:core/Map";
 import Set "mo:core/Set";
 import Principal "mo:core/Principal";
@@ -455,6 +456,124 @@ actor {
   /// callback passed to `Timer.setTimer` (which itself has the system
   /// capability, so rescheduling works). It must NOT be called from a plain
   /// transient let or a non-shared private func.
+
+  // ===== TEMPORARY DIAGNOSTIC: log every incoming call =====
+  // Logs caller + method name for every ingress call (query and update), to
+  // find the source of unexpected cycle drain. Remove after diagnosis.
+  system func inspect(
+    {
+      arg : Blob;
+      caller : Principal;
+      msg : {
+        #_initialize_access_control : () -> ();
+        #_internet_identity_sign_in_finish : () -> ();
+        #_internet_identity_sign_in_start : () -> ();
+        #addNeuron : () -> (id : NeuronTypes.NeuronId, name : Text, startDate : Int, dissolveDelaySeconds : Nat64, initialStakeE8s : Nat64);
+        #addWtnPosition : () -> (name : Text, startDate : Int);
+        #assignCallerUserRole : () -> (user : Principal, role : AccessControl.UserRole);
+        #checkAccess : () -> (code : Text);
+        #deleteSnapshot : () -> (neuronId : Common.NeuronId, timestamp : Int);
+        #deleteWtnSnapshot : () -> (positionId : WtnTypes.WtnPositionId, date : Int);
+        #editSnapshot : () -> (neuronId : Common.NeuronId, timestamp : Int, newTimestamp : Int, newMaturityE8s : Nat64);
+        #editWtnSnapshot : () -> (positionId : WtnTypes.WtnPositionId, date : Int, newDate : Int, newNicpHeld : Float, newTotalIcpPaid : Float, newRedeemableIcpValue : Float);
+        #execute : () -> (qJson : Text);
+        #generateInviteCode : () -> ();
+        #getCallerUserRole : () -> ();
+        #getCurrentIcpPrice : () -> ();
+        #getHistoricalIcpPrice : () -> (date : Text);
+        #getNeuronStats : () -> (neuronId : Common.NeuronId);
+        #getPortfolioRewardStats : () -> ();
+        #getPortfolioStats : () -> ();
+        #getRewardHistory : () -> (neuronId : Common.NeuronId);
+        #getSyncError : () -> (neuronId : Common.NeuronId);
+        #getSyncStatus : () -> (neuronId : Common.NeuronId);
+        #getWtnPosition : () -> (positionId : WtnTypes.WtnPositionId);
+        #getWtnSnapshots : () -> (positionId : WtnTypes.WtnPositionId);
+        #getWtnStats : () -> (positionId : WtnTypes.WtnPositionId);
+        #importHistoricalData : () -> (neuronId : Common.NeuronId, entries : [RewardTypes.HistoricalEntry]);
+        #importWtnHistoricalData : () -> (positionId : WtnTypes.WtnPositionId, entries : [WtnTypes.WtnHistoricalEntry]);
+        #isAdminBootstrapped : () -> ();
+        #isCallerAdmin : () -> ();
+        #isCallerAdminPrincipal : () -> ();
+        #isCallerGranted : () -> ();
+        #isPrincipalGranted : () -> (principal : Principal);
+        #listInviteCodes : () -> ();
+        #listMyNeurons : () -> ();
+        #listMyWtnPositions : () -> ();
+        #reassignAdminPrincipal : () -> (newAdmin : Principal);
+        #recordSnapshot : () -> (neuronId : Common.NeuronId, unstakedMaturityE8s : Nat64, stakedMaturityE8s : Nat64, autoStakeMaturity : Bool);
+        #recordWtnSnapshot : () -> (positionId : WtnTypes.WtnPositionId, date : Int, nicpHeld : Float, totalIcpPaid : Float, redeemableIcpValue : Float);
+        #removeNeuron : () -> (neuronId : NeuronTypes.NeuronId);
+        #removeWtnPosition : () -> (positionId : WtnTypes.WtnPositionId);
+        #revokeInviteCode : () -> (code : Text);
+        #scheduleNextSync : () -> ();
+        #schema : () -> ();
+        #setAdminPrincipal : () -> ();
+        #startDailySync : () -> ();
+        #syncAllMyNeurons : () -> ();
+        #syncNeuron : () -> (neuronId : Common.NeuronId);
+        #transform : () -> (input : HttpOutcall.TransformationInput);
+        #updateNeuron : () -> (neuron : NeuronTypes.Neuron);
+        #updateWtnPosition : () -> (position : WtnTypes.WtnPosition);
+      };
+    }
+  ) : Bool {
+    let name = switch (msg) {
+      case (#_initialize_access_control _) "_initialize_access_control";
+      case (#_internet_identity_sign_in_finish _) "_internet_identity_sign_in_finish";
+      case (#_internet_identity_sign_in_start _) "_internet_identity_sign_in_start";
+      case (#addNeuron _) "addNeuron";
+      case (#addWtnPosition _) "addWtnPosition";
+      case (#assignCallerUserRole _) "assignCallerUserRole";
+      case (#checkAccess _) "checkAccess";
+      case (#deleteSnapshot _) "deleteSnapshot";
+      case (#deleteWtnSnapshot _) "deleteWtnSnapshot";
+      case (#editSnapshot _) "editSnapshot";
+      case (#editWtnSnapshot _) "editWtnSnapshot";
+      case (#execute _) "execute";
+      case (#generateInviteCode _) "generateInviteCode";
+      case (#getCallerUserRole _) "getCallerUserRole";
+      case (#getCurrentIcpPrice _) "getCurrentIcpPrice";
+      case (#getHistoricalIcpPrice _) "getHistoricalIcpPrice";
+      case (#getNeuronStats _) "getNeuronStats";
+      case (#getPortfolioRewardStats _) "getPortfolioRewardStats";
+      case (#getPortfolioStats _) "getPortfolioStats";
+      case (#getRewardHistory _) "getRewardHistory";
+      case (#getSyncError _) "getSyncError";
+      case (#getSyncStatus _) "getSyncStatus";
+      case (#getWtnPosition _) "getWtnPosition";
+      case (#getWtnSnapshots _) "getWtnSnapshots";
+      case (#getWtnStats _) "getWtnStats";
+      case (#importHistoricalData _) "importHistoricalData";
+      case (#importWtnHistoricalData _) "importWtnHistoricalData";
+      case (#isAdminBootstrapped _) "isAdminBootstrapped";
+      case (#isCallerAdmin _) "isCallerAdmin";
+      case (#isCallerAdminPrincipal _) "isCallerAdminPrincipal";
+      case (#isCallerGranted _) "isCallerGranted";
+      case (#isPrincipalGranted _) "isPrincipalGranted";
+      case (#listInviteCodes _) "listInviteCodes";
+      case (#listMyNeurons _) "listMyNeurons";
+      case (#listMyWtnPositions _) "listMyWtnPositions";
+      case (#reassignAdminPrincipal _) "reassignAdminPrincipal";
+      case (#recordSnapshot _) "recordSnapshot";
+      case (#recordWtnSnapshot _) "recordWtnSnapshot";
+      case (#removeNeuron _) "removeNeuron";
+      case (#removeWtnPosition _) "removeWtnPosition";
+      case (#revokeInviteCode _) "revokeInviteCode";
+      case (#scheduleNextSync _) "scheduleNextSync";
+      case (#schema _) "schema";
+      case (#setAdminPrincipal _) "setAdminPrincipal";
+      case (#startDailySync _) "startDailySync";
+      case (#syncAllMyNeurons _) "syncAllMyNeurons";
+      case (#syncNeuron _) "syncNeuron";
+      case (#transform _) "transform";
+      case (#updateNeuron _) "updateNeuron";
+      case (#updateWtnPosition _) "updateWtnPosition";
+    };
+    Debug.print("INSPECT caller=" # debug_show(caller) # " method=" # name # " argBytes=" # debug_show(arg.size()));
+    true;
+  };
+
   public shared func scheduleNextSync() : async Timer.TimerId {
     let delaySeconds = secondsUntilNextSync(Time.now());
     Timer.setTimer<system>(

@@ -75,7 +75,7 @@ mixin (
   };
 
   /// Query the current sync status for a neuron.
-  public shared ({ caller }) func getSyncStatus(
+  public query ({ caller }) func getSyncStatus(
     neuronId : Common.NeuronId,
   ) : async Types.SyncStatus {
     if (caller.isAnonymous()) {
@@ -89,7 +89,7 @@ mixin (
   /// Query the last stored sync error reason for a neuron. Returns null if
   /// the last sync succeeded or no sync has been attempted. The frontend uses
   /// this together with getSyncStatus to render "Sync failed: <reason>".
-  public shared ({ caller }) func getSyncError(
+  public query ({ caller }) func getSyncError(
     neuronId : Common.NeuronId,
   ) : async ?Text {
     if (caller.isAnonymous()) {

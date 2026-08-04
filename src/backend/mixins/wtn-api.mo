@@ -31,7 +31,7 @@ mixin (
   };
 
   /// List all WTN positions owned by the caller.
-  public shared ({ caller }) func listMyWtnPositions() : async [Types.WtnPosition] {
+  public query ({ caller }) func listMyWtnPositions() : async [Types.WtnPosition] {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
     };
@@ -41,7 +41,7 @@ mixin (
   /// Look up a WTN position owned by the caller. Returns null if the
   /// position does not exist; traps if it exists but is not owned by the
   /// caller.
-  public shared ({ caller }) func getWtnPosition(
+  public query ({ caller }) func getWtnPosition(
     positionId : Types.WtnPositionId,
   ) : async ?Types.WtnPosition {
     if (caller.isAnonymous()) {
@@ -107,7 +107,7 @@ mixin (
   };
 
   /// Return all snapshots for a WTN position, sorted by date ascending.
-  public shared ({ caller }) func getWtnSnapshots(
+  public query ({ caller }) func getWtnSnapshots(
     positionId : Types.WtnPositionId,
   ) : async [Types.WtnSnapshot] {
     if (caller.isAnonymous()) {
@@ -204,7 +204,7 @@ mixin (
 
   /// Aggregated stats for a single WTN position: total earned, total capital
   /// contributed, total withdrawn, and % return.
-  public shared ({ caller }) func getWtnStats(
+  public query ({ caller }) func getWtnStats(
     positionId : Types.WtnPositionId,
   ) : async Types.WtnStats {
     if (caller.isAnonymous()) {

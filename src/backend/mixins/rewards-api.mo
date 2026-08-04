@@ -50,7 +50,7 @@ mixin (
   };
 
   /// Return all snapshots for a neuron, sorted by timestamp ascending.
-  public shared ({ caller }) func getRewardHistory(
+  public query ({ caller }) func getRewardHistory(
     neuronId : Common.NeuronId,
   ) : async [Types.DailyReward] {
     if (caller.isAnonymous()) {

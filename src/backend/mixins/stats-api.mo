@@ -18,7 +18,7 @@ mixin (
 ) {
   /// Aggregated stats for a single neuron: total rewards, % return, average
   /// daily reward, and a monthly breakdown.
-  public shared ({ caller }) func getNeuronStats(
+  public query ({ caller }) func getNeuronStats(
     neuronId : Common.NeuronId,
   ) : async StatsTypes.NeuronStats {
     if (Principal.isAnonymous(caller)) {
@@ -39,7 +39,7 @@ mixin (
   /// WTN positions are folded into the portfolio totals (Total Staked,
   /// capital contributed, total rewards) but kept out of `neuronCount` so
   /// they remain visually distinguishable in the frontend.
-  public shared ({ caller }) func getPortfolioStats() : async StatsTypes.PortfolioStats {
+  public query ({ caller }) func getPortfolioStats() : async StatsTypes.PortfolioStats {
     if (Principal.isAnonymous(caller)) {
       Runtime.trap("Anonymous caller not allowed");
     };
@@ -52,7 +52,7 @@ mixin (
   /// breakdown combining NNS #normalGrowth deltas and WTN #organicGrowth
   /// deltas. Mirrors the per-neuron getNeuronStats panel at the portfolio
   /// level.
-  public shared ({ caller }) func getPortfolioRewardStats() : async StatsTypes.PortfolioRewardStats {
+  public query ({ caller }) func getPortfolioRewardStats() : async StatsTypes.PortfolioRewardStats {
     if (Principal.isAnonymous(caller)) {
       Runtime.trap("Anonymous caller not allowed");
     };
