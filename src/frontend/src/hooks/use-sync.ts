@@ -115,10 +115,19 @@ export function useRecordSnapshot() {
     },
     onSuccess: (_data, vars) => {
       const id = vars.neuronId.toString();
+      // Only invalidate this neuron's own stats/rewards immediately — do
+      // NOT force an eager refetch of the portfolio-wide aggregates
+      // (NEURONS_KEY / PORTFOLIO_KEY) on every manual entry. Those recompute
+      // from the FULL history of every neuron on the backend (expensive for
+      // neurons with years of daily-sync history) and were being paid for
+      // on every single manual snapshot even though nothing on the
+      // dashboard needed to be pixel-perfect the instant you save an entry.
+      // Marking them stale (default refetchType) lets them refresh lazily
+      // next time the dashboard is actually viewed, instead of eagerly.
       void queryClient.invalidateQueries({ queryKey: statsKey(id) });
       void queryClient.invalidateQueries({ queryKey: rewardsKey(id) });
-      void queryClient.invalidateQueries({ queryKey: NEURONS_KEY });
-      void queryClient.invalidateQueries({ queryKey: PORTFOLIO_KEY });
+      void queryClient.invalidateQueries({ queryKey: NEURONS_KEY, refetchType: "none" });
+      void queryClient.invalidateQueries({ queryKey: PORTFOLIO_KEY, refetchType: "none" });
     },
   });
 }
