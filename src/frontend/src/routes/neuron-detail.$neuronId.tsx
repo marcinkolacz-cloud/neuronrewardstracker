@@ -489,7 +489,7 @@ export function NeuronDetailPage() {
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <NeuronStatsCard stats={stats} />
           <SnapshotEntryForm
-            onSubmit={(unstaked, staked, autoStake, timestamp) => {
+            onSubmit={(unstaked, staked, autoStake, timestamp, externalTopUpE8s) => {
               recordSnapshot.mutate(
                 {
                   neuronId: BigInt(neuronId),
@@ -497,16 +497,11 @@ export function NeuronDetailPage() {
                   stakedMaturityE8s: staked,
                   autoStakeMaturity: autoStake,
                   timestamp,
+                  externalTopUpE8s,
                 },
                 {
-                  onSuccess: (data) => {
-                    window.alert("SUCCESS: " + JSON.stringify(data, (_k, v) => typeof v === "bigint" ? v.toString() : v));
-                    toast.success("Snapshot recorded");
-                  },
-                  onError: (err) => {
-                    window.alert("ERROR: " + (err instanceof Error ? err.message : String(err)));
-                    toast.error(err instanceof Error ? err.message : "Failed to record snapshot");
-                  },
+                  onSuccess: (data) => window.alert("SUCCESS: " + JSON.stringify(data, (_k, v) => typeof v === "bigint" ? v.toString() : v)),
+                  onError: (err) => window.alert("ERROR: " + (err instanceof Error ? err.message : String(err))),
                 },
               );
             }}
@@ -2156,6 +2151,7 @@ function SnapshotEntryForm({
     stakedMaturityE8s: bigint,
     autoStakeMaturity: boolean,
     timestamp: bigint,
+    externalTopUpE8s: bigint,
   ) => void;
   submitting: boolean;
 }) {
@@ -2163,6 +2159,7 @@ function SnapshotEntryForm({
   const [staked, setStaked] = useState("0");
   const [autoStake, setAutoStake] = useState(false);
   const [datetime, setDatetime] = useState("");
+  const [topUp, setTopUp] = useState("0");
 
   const handleSubmit = (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -2185,11 +2182,17 @@ function SnapshotEntryForm({
       toast.error("Pick a valid date and time");
       return;
     }
-    onSubmit(unstakedE8s, stakedE8s, autoStake, timestamp);
+    const topUpE8s = icpToE8s(topUp || "0");
+    if (topUpE8s == null) {
+      toast.error("Enter a valid external top-up amount (or leave at 0)");
+      return;
+    }
+    onSubmit(unstakedE8s, stakedE8s, autoStake, timestamp, topUpE8s);
     setUnstaked("");
     setStaked("0");
     setAutoStake(false);
     setDatetime("");
+    setTopUp("0");
   };
 
   return (
@@ -2255,6 +2258,28 @@ function SnapshotEntryForm({
               className="font-mono"
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="external-top-up"
+              data-ocid="neuron_detail.snapshot.top_up.label"
+            >
+              External top-up (ICP) — optional
+            </Label>
+            <Input
+              id="external-top-up"
+              inputMode="decimal"
+              placeholder="0.0000"
+              value={topUp}
+              onChange={(e) => setTopUp(e.target.value)}
+              data-ocid="neuron_detail.snapshot.top_up.input"
+              className="font-mono"
+            />
+            <p className="text-muted-foreground text-[11px]">
+              Fill this in only if you added fresh ICP to this neuron outside
+              this app (e.g. in the NNS app). It counts toward Total Capital
+              Contributed, separate from maturity rewards.
+            </p>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border/60 bg-muted/30 px-3 py-2.5">
             <div className="space-y-0.5">

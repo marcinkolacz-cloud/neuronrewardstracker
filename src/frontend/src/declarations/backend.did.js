@@ -298,7 +298,7 @@ export const idlFactory = ({ IDL }) => {
     'listMyWtnPositions' : IDL.Func([], [IDL.Vec(WtnPosition)], ['query']),
     'reassignAdminPrincipal' : IDL.Func([IDL.Principal], [], []),
     'recordSnapshot' : IDL.Func(
-        [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool, IDL.Int],
+        [NeuronId, IDL.Nat64, IDL.Nat64, IDL.Bool, IDL.Int, IDL.Nat64],
         [DailyReward],
         [],
       ),

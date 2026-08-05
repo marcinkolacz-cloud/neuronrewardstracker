@@ -353,7 +353,7 @@ export interface backendInterface {
     listInviteCodes(): Promise<Array<InviteCode>>;
     listMyNeurons(): Promise<Array<Neuron>>;
     listMyWtnPositions(): Promise<Array<WtnPosition>>;
-    recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean, timestamp: bigint): Promise<DailyReward>;
+    recordSnapshot(neuronId: NeuronId, unstakedMaturityE8s: bigint, stakedMaturityE8s: bigint, autoStakeMaturity: boolean, timestamp: bigint, externalTopUpE8s: bigint): Promise<DailyReward>;
     recordWtnSnapshot(positionId: WtnPositionId, date: bigint, nicpHeld: number, totalIcpPaid: number, redeemableIcpValue: number): Promise<WtnSnapshot>;
     removeNeuron(neuronId: NeuronId): Promise<void>;
     removeWtnPosition(positionId: WtnPositionId): Promise<void>;
@@ -1071,17 +1071,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async recordSnapshot(arg0: NeuronId, arg1: bigint, arg2: bigint, arg3: boolean, arg4: bigint): Promise<DailyReward> {
+    async recordSnapshot(arg0: NeuronId, arg1: bigint, arg2: bigint, arg3: boolean, arg4: bigint, arg5: bigint): Promise<DailyReward> {
         if (this.processError) {
             try {
-                const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3, arg4);
+                const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3, arg4, arg5);
                 return from_candid_DailyReward_n21(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3, arg4);
+            const result = await this.actor.recordSnapshot(arg0, arg1, arg2, arg3, arg4, arg5);
             return from_candid_DailyReward_n21(this._uploadFile, this._downloadFile, result);
         }
     }

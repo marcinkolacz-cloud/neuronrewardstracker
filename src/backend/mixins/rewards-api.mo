@@ -28,6 +28,7 @@ mixin (
     stakedMaturityE8s : Nat64,
     autoStakeMaturity : Bool,
     timestamp : Int,
+    externalTopUpE8s : Nat64,
   ) : async Types.DailyReward {
     if (caller.isAnonymous()) {
       Runtime.trap("Anonymous caller not allowed");
@@ -40,6 +41,15 @@ mixin (
     // `timestamp` is caller-supplied (mirrors recordWtnSnapshot's `date`
     // param) so manual entries can be backfilled for a specific day instead
     // of always using the moment the button was clicked (Time.now()).
+    // `externalTopUpE8s` > 0 means the person added ICP to the neuron
+    // outside this app (e.g. via the NNS app) — recorded as #externalTopUp
+    // so it counts toward Total Capital Contributed instead of being
+    // mistaken for a maturity reward.
+    let eventTypeOverride = if (externalTopUpE8s > (0 : Nat64)) {
+      ? #externalTopUp;
+    } else {
+      null;
+    };
     RewardsLib.recordSnapshot(
       rewards,
       neuronId,
@@ -47,8 +57,8 @@ mixin (
       stakedMaturityE8s,
       autoStakeMaturity,
       timestamp,
-      null,
-      0 : Nat64,
+      eventTypeOverride,
+      externalTopUpE8s,
     );
   };
 

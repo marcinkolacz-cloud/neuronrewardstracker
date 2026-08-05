@@ -302,8 +302,8 @@ service : {
   listMyWtnPositions: () -> (vec WtnPosition) query;
   reassignAdminPrincipal: (newAdmin: principal) -> ();
   recordSnapshot: (neuronId: NeuronId, unstakedMaturityE8s: nat64,
-   stakedMaturityE8s: nat64, autoStakeMaturity: bool, timestamp: int) ->
-   (DailyReward);
+   stakedMaturityE8s: nat64, autoStakeMaturity: bool, timestamp: int,
+   externalTopUpE8s: nat64) -> (DailyReward);
   recordWtnSnapshot: (positionId: WtnPositionId, date: int, nicpHeld:
    float64, totalIcpPaid: float64, redeemableIcpValue: float64) ->
    (WtnSnapshot);

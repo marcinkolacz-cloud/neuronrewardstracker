@@ -501,7 +501,7 @@ actor {
         #listMyNeurons : () -> ();
         #listMyWtnPositions : () -> ();
         #reassignAdminPrincipal : () -> (newAdmin : Principal);
-        #recordSnapshot : () -> (neuronId : Common.NeuronId, unstakedMaturityE8s : Nat64, stakedMaturityE8s : Nat64, autoStakeMaturity : Bool, timestamp : Int);
+        #recordSnapshot : () -> (neuronId : Common.NeuronId, unstakedMaturityE8s : Nat64, stakedMaturityE8s : Nat64, autoStakeMaturity : Bool, timestamp : Int, externalTopUpE8s : Nat64);
         #recordWtnSnapshot : () -> (positionId : WtnTypes.WtnPositionId, date : Int, nicpHeld : Float, totalIcpPaid : Float, redeemableIcpValue : Float);
         #removeNeuron : () -> (neuronId : NeuronTypes.NeuronId);
         #removeWtnPosition : () -> (positionId : WtnTypes.WtnPositionId);
