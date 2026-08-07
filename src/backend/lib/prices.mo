@@ -1,13 +1,50 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
 import Text "mo:core/Text";
+import Blob "mo:core/Blob";
+import Runtime "mo:core/Runtime";
 import Types "../types/prices";
 import HttpOutcall "mo:caffeineai-http-outcalls/outcall";
+import IC "mo:ic/Types";
+import Call "mo:ic/Call";
 import Json "mo:json";
 
 module {
   public type PriceSnapshot = Types.PriceSnapshot;
   public type CachedPrice = Types.CachedPrice;
+
+  /// caffeineai-http-outcalls@0.1.2's httpGetRequest hardcodes
+  /// max_response_bytes = null, which makes the IC default to charging for
+  /// a full 2MB response (~21.5B cycles) on EVERY call — even though
+  /// CoinGecko's JSON responses here are a few hundred bytes at most. This
+  /// local helper calls the same underlying mo:ic/Call.httpRequest (which
+  /// correctly auto-computes cycles from max_response_bytes) but with a
+  /// sane bound, cutting the cost from ~21.5B to a few tens of millions.
+  /// Measured root cause 2026-08-07: see https://internetcomputer.org/docs
+  /// "If you omit max_response_bytes... charges ~21.5 billion cycles".
+  func httpGetRequestBounded(
+    url : Text,
+    maxResponseBytes : Nat64,
+    transform : HttpOutcall.Transform,
+  ) : async Text {
+    let args : IC.HttpRequestArgs = {
+      url;
+      max_response_bytes = ?maxResponseBytes;
+      headers = [{ name = "User-Agent"; value = "caffeine.ai" }];
+      body = null;
+      method = #get;
+      transform = ?{
+        function = transform;
+        context = Blob.fromArray([]);
+      };
+      is_replicated = ?false;
+    };
+    let httpResponse = await Call.httpRequest(args);
+    switch (httpResponse.body.decodeUtf8()) {
+      case (null) { Runtime.trap("empty HTTP response") };
+      case (?decodedResponse) { decodedResponse };
+    };
+  };
 
   /// TTL for the "current" price cache entry, in nanoseconds (10 minutes).
   /// CoinGecko free tier is rate-limited (~10-30 calls/min, IP-based pool), so
@@ -60,7 +97,7 @@ module {
     // Cache miss or expired — make a fresh CoinGecko HTTP outcall.
     let url = "https://api.coingecko.com/api/v3/simple/price?ids=" # coinId # "&vs_currencies=usd,pln";
     try {
-      let body = await HttpOutcall.httpGetRequest(url, [], transform);
+      let body = await httpGetRequestBounded(url, 4096, transform);
       let parsed = Json.parse(body);
       switch (parsed) {
         case (#ok(json)) {
@@ -139,7 +176,7 @@ module {
     let nowNanos = Time.now();
 
     try {
-      let body = await HttpOutcall.httpGetRequest(url, [], transform);
+      let body = await httpGetRequestBounded(url, 4096, transform);
       let parsed = Json.parse(body);
       switch (parsed) {
         case (#ok(json)) {
