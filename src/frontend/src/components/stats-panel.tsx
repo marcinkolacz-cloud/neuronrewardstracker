@@ -118,11 +118,18 @@ export function RewardStatsCard({
   loading,
   title = "Reward statistics",
   dataOcidPrefix = "dashboard.reward_stats",
+  todayRewardE8s,
+  todayLoading = false,
 }: {
   stats: RewardStatsLike | null | undefined;
   loading: boolean;
   title?: string;
   dataOcidPrefix?: string;
+  /** Optional: today's exact recorded reward (sum of today's manual
+   * entries), shown alongside the historical average. Omit this prop to
+   * hide the row entirely (e.g. on the per-neuron page). */
+  todayRewardE8s?: bigint | null;
+  todayLoading?: boolean;
 }) {
   const monthlyCount = stats?.monthly?.length ?? 0;
   return (
@@ -156,6 +163,20 @@ export function RewardStatsCard({
               value={formatIcp(stats.averageDailyRewardE8s ?? 0n, 4)}
             />
             <Separator />
+            {todayRewardE8s !== undefined && (
+              <>
+                <StatRow
+                  label="Today"
+                  value={
+                    todayLoading
+                      ? "…"
+                      : formatIcp(todayRewardE8s ?? 0n, 4)
+                  }
+                  dataOcid={`${dataOcidPrefix}.today`}
+                />
+                <Separator />
+              </>
+            )}
             <StatRow
               label="APY (30-day)"
               value={formatApy(stats.apy30d ?? 0)}

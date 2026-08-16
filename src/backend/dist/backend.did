@@ -285,6 +285,7 @@ service : {
   getRewardHistory: (neuronId: NeuronId) -> (vec DailyReward) query;
   getSyncError: (neuronId: NeuronId) -> (opt text) query;
   getSyncStatus: (neuronId: NeuronId) -> (SyncStatus) query;
+  getTodayRewardE8s: (dayStartNs: int, dayEndNs: int) -> (int) query;
   getWtnPosition: (positionId: WtnPositionId) -> (opt WtnPosition) query;
   getWtnSnapshots: (positionId: WtnPositionId) -> (vec WtnSnapshot) query;
   getWtnStats: (positionId: WtnPositionId) -> (WtnStats) query;

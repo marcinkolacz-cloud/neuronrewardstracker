@@ -336,6 +336,7 @@ export interface backendInterface {
     getHistoricalIcpPrice(date: string): Promise<PriceSnapshot>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
     getPortfolioRewardStats(): Promise<PortfolioRewardStats>;
+    getTodayRewardE8s(dayStartNs: bigint, dayEndNs: bigint): Promise<bigint>;
     getPortfolioStats(): Promise<PortfolioStats>;
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
     getSyncError(neuronId: NeuronId): Promise<string | null>;
@@ -830,6 +831,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getPortfolioRewardStats();
+            return result;
+        }
+    }
+    async getTodayRewardE8s(arg0: bigint, arg1: bigint): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTodayRewardE8s(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTodayRewardE8s(arg0, arg1);
             return result;
         }
     }

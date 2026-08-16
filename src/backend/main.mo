@@ -487,6 +487,7 @@ actor {
         #getRewardHistory : () -> (neuronId : Common.NeuronId);
         #getSyncError : () -> (neuronId : Common.NeuronId);
         #getSyncStatus : () -> (neuronId : Common.NeuronId);
+        #getTodayRewardE8s : () -> (dayStartNs : Int, dayEndNs : Int);
         #getWtnPosition : () -> (positionId : WtnTypes.WtnPositionId);
         #getWtnSnapshots : () -> (positionId : WtnTypes.WtnPositionId);
         #getWtnStats : () -> (positionId : WtnTypes.WtnPositionId);
@@ -542,6 +543,7 @@ actor {
       case (#getRewardHistory _) "getRewardHistory";
       case (#getSyncError _) "getSyncError";
       case (#getSyncStatus _) "getSyncStatus";
+      case (#getTodayRewardE8s _) "getTodayRewardE8s";
       case (#getWtnPosition _) "getWtnPosition";
       case (#getWtnSnapshots _) "getWtnSnapshots";
       case (#getWtnStats _) "getWtnStats";

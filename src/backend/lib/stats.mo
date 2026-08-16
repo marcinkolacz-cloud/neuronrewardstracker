@@ -825,6 +825,72 @@ module {
     out;
   };
 
+  /// Sum of organic reward growth (NNS #normalGrowth deltas + WTN
+  /// #organicGrowth deltas, converted to e8s) across every neuron and WTN
+  /// position owned by `owner`, restricted to entries whose timestamp/date
+  /// falls in [dayStartNs, dayEndNs). The caller supplies the day boundary
+  /// (computed from the browser's local timezone) since the canister has no
+  /// timezone concept of its own — mirrors the caller-supplied `timestamp`
+  /// pattern already used for manual snapshot entry. Cheap: pure in-memory
+  /// scan of already-recorded history, no external calls.
+  public func getTodayRewardE8s(
+    neurons : Map.Map<NeuronId, Neuron>,
+    rewards : Map.Map<NeuronId, List.List<DailyReward>>,
+    wtnPositions : Map.Map<WtnPositionId, WtnPosition>,
+    wtnSnapshots : Map.Map<WtnPositionId, List.List<WtnSnapshot>>,
+    owner : Principal,
+    dayStartNs : Int,
+    dayEndNs : Int,
+  ) : Int {
+    var total : Int = 0;
+
+    neurons.forEach(func(id, neuron) {
+      if (Principal.equal(neuron.ownerId, owner)) {
+        switch (rewards.get(id)) {
+          case (?history) {
+            for (r in history.values()) {
+              if (
+                r.eventType == #normalGrowth and r.deltaE8s > 0 and
+                r.timestamp >= dayStartNs and r.timestamp < dayEndNs
+              ) {
+                total += r.deltaE8s;
+              };
+            };
+          };
+          case null {};
+        };
+      };
+    });
+
+    wtnPositions.forEach(func(id, position) {
+      if (Principal.equal(position.ownerId, owner)) {
+        switch (wtnSnapshots.get(id)) {
+          case (?history) {
+            let sorted = history.toArray().sort(func(a, b) = Int.compare(a.date, b.date));
+            var prevRedeemable : ?Float = null;
+            for (s in sorted.vals()) {
+              if (s.eventType == #organicGrowth and s.date >= dayStartNs and s.date < dayEndNs) {
+                switch (prevRedeemable) {
+                  case (?prev) {
+                    let deltaFloat = s.redeemableIcpValue - prev;
+                    if (deltaFloat > 0.0) {
+                      total += floatIcpToE8s(deltaFloat).toNat().toInt();
+                    };
+                  };
+                  case null {};
+                };
+              };
+              prevRedeemable := ?s.redeemableIcpValue;
+            };
+          };
+          case null {};
+        };
+      };
+    });
+
+    total;
+  };
+
   /// Convert days since Unix epoch to (year, month) where month is 1..12.
   /// Uses the proleptic Gregorian calendar via a simple algorithm.
   func daysToYearMonth(days : Int) : (Nat, Nat) {

@@ -58,4 +58,18 @@ mixin (
     };
     StatsLib.getPortfolioRewardStats(neurons, rewards, wtnPositions, wtnSnapshots, caller);
   };
+
+  /// Sum of today's organic reward growth across the caller's whole
+  /// portfolio (NNS + WTN), for [dayStartNs, dayEndNs). The frontend
+  /// supplies the day boundary computed in the browser's local timezone.
+  /// Cheap query: pure in-memory scan, no external calls.
+  public query ({ caller }) func getTodayRewardE8s(
+    dayStartNs : Int,
+    dayEndNs : Int,
+  ) : async Int {
+    if (Principal.isAnonymous(caller)) {
+      Runtime.trap("Anonymous caller not allowed");
+    };
+    StatsLib.getTodayRewardE8s(neurons, rewards, wtnPositions, wtnSnapshots, caller, dayStartNs, dayEndNs);
+  };
 };

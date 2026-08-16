@@ -62,3 +62,33 @@ export function usePortfolioRewardStats() {
     enabled: !!actor && !isFetching,
   });
 }
+
+/**
+ * Average daily reward over the trailing 30 FULL days (today excluded,
+ * since today's manual entry usually isn't in yet). Sums every
+ * #normalGrowth / #organicGrowth delta in that 30-day window (via the same
+ * backend range-sum used for a single day) and divides by 30 — a rolling
+ * average rather than the all-time one already shown lower on the page.
+ * Day boundaries are computed in the BROWSER's local timezone. Refetches
+ * every 5 minutes so it stays current across local midnight.
+ */
+export function useAverage30dReward() {
+  const { actor, isFetching } = useBackendActor();
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const windowStart = new Date(startOfToday);
+  windowStart.setDate(windowStart.getDate() - 30);
+  const dayStartNs = BigInt(windowStart.getTime()) * 1_000_000n;
+  const dayEndNs = BigInt(startOfToday.getTime()) * 1_000_000n;
+  return useQuery<bigint>({
+    queryKey: ["average-30d-reward", startOfToday.toDateString()] as const,
+    queryFn: async () => {
+      if (!actor) throw new Error("Backend actor not ready");
+      const sum = await actor.getTodayRewardE8s(dayStartNs, dayEndNs);
+      const clamped = sum < 0n ? 0n : sum;
+      return clamped / 30n;
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 5 * 60 * 1000,
+  });
+}

@@ -57,6 +57,7 @@ import { useSyncStatus } from "@/hooks/use-rewards";
 import {
   useNeuronStats,
   usePortfolioRewardStats,
+  useAverage30dReward,
   usePortfolioStats,
 } from "@/hooks/use-stats";
 import { useSyncError } from "@/hooks/use-sync";
@@ -93,6 +94,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   BrainCircuit,
+  CalendarClock,
   Coins,
   Download,
   Droplets,
@@ -114,6 +116,8 @@ export function DashboardPage() {
   const { data: portfolio, isLoading: portfolioLoading } = usePortfolioStats();
   const { data: rewardStats, isLoading: rewardStatsLoading } =
     usePortfolioRewardStats();
+  const { data: average30dReward, isLoading: average30dRewardLoading } =
+    useAverage30dReward();
   const priceQuery = useIcpPrice();
   const queryClient = useQueryClient();
   const { actor } = useBackendActor();
@@ -326,6 +330,8 @@ export function DashboardPage() {
             nnsRewards={portfolio?.nnsRewardsE8s ?? null}
             wtnRewards={portfolio?.wtnRewardsE8s ?? null}
             totalDisbursed={portfolio?.totalDisbursedE8s ?? null}
+            average30dReward={average30dReward ?? null}
+            average30dRewardLoading={average30dRewardLoading}
             loading={portfolioLoading}
           />
         </section>
@@ -427,6 +433,8 @@ function PortfolioSummary({
   nnsRewards,
   wtnRewards,
   totalDisbursed,
+  average30dReward,
+  average30dRewardLoading,
   loading,
 }: {
   totalPortfolioValue: bigint | null;
@@ -443,6 +451,8 @@ function PortfolioSummary({
   nnsRewards: bigint | null;
   wtnRewards: bigint | null;
   totalDisbursed: bigint | null;
+  average30dReward: bigint | null;
+  average30dRewardLoading: boolean;
   loading: boolean;
 }) {
   // WTN rewards-this-month comes from the backend as a float (ICP units,
@@ -454,7 +464,9 @@ function PortfolioSummary({
       ? BigInt(Math.trunc(wtnRewardsThisMonthFloat * Number(E8S_PER_ICP)))
       : 0n;
 
-  const stats = [
+  // Grouped into three rows of three, each row wrapped in its own bordered
+  // section (see render below) rather than one flat responsive grid.
+  const overviewRow = [
     {
       label: "Total Portfolio Value",
       value: formatIcp(totalPortfolioValue, 2),
@@ -462,14 +474,6 @@ function PortfolioSummary({
       accent: "text-primary",
       hint: "NNS stake + maturity + nICP redeemable",
       subline: "Includes accrued rewards from NNS neurons and nICP positions",
-    },
-    {
-      label: "Total nICP Maturity",
-      value: formatIcp((wtnStaked ?? 0n) - (wtnCapitalContributed ?? 0n), 2),
-      icon: Droplets,
-      accent: "text-accent",
-      hint: "WTN accrued growth",
-      subline: "nICP redeemable value minus capital contributed",
     },
     {
       label: "Total Capital Contributed",
@@ -480,6 +484,17 @@ function PortfolioSummary({
       subline: `${formatIcpCompact(nnsCapitalContributed ?? 0n)} (NNS) + ${formatIcpCompact(wtnCapitalContributed ?? 0n)} (nICP)`,
     },
     {
+      label: "Total Rewards Earned",
+      value: formatIcp(totalRewards, 2),
+      icon: BrainCircuit,
+      accent: "text-primary",
+      hint: "Lifetime rewards",
+      subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`,
+    },
+  ];
+
+  const maturityRow = [
+    {
       label: "Total Maturity",
       value: formatIcp(totalMaturity, 2),
       icon: Coins,
@@ -487,6 +502,25 @@ function PortfolioSummary({
       hint: "Withdrawable + staked",
       subline: null,
     },
+    {
+      label: "Total nICP Maturity",
+      value: formatIcp((wtnStaked ?? 0n) - (wtnCapitalContributed ?? 0n), 2),
+      icon: Droplets,
+      accent: "text-accent",
+      hint: "WTN accrued growth",
+      subline: "nICP redeemable value minus capital contributed",
+    },
+    {
+      label: "Total Withdrawn",
+      value: formatIcp(totalDisbursed, 2),
+      icon: Wallet,
+      accent: "text-muted-foreground",
+      hint: "Lifetime disbursed across NNS + nICP",
+      subline: null,
+    },
+  ];
+
+  const performanceRow = [
     {
       label: "Blended APY",
       value: formatApy(blendedApy),
@@ -499,6 +533,16 @@ function PortfolioSummary({
       subline: null,
     },
     {
+      label: "Avg Daily Reward (30d)",
+      value: average30dRewardLoading
+        ? "…"
+        : formatIcp(average30dReward ?? 0n, 4),
+      icon: CalendarClock,
+      accent: "text-primary",
+      hint: "Trailing 30-day average, combined NNS + nICP",
+      subline: null,
+    },
+    {
       label: "Earned This Month",
       value: formatIcp(rewardsThisMonth, 2),
       icon: Sparkles,
@@ -506,55 +550,51 @@ function PortfolioSummary({
       hint: "Combined NNS + nICP rewards",
       subline: `${formatIcpCompact(nnsRewardsThisMonth ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewardsThisMonthE8s)} (nICP)`,
     },
-    {
-      label: "Total Rewards Earned",
-      value: formatIcp(totalRewards, 2),
-      icon: BrainCircuit,
-      accent: "text-primary",
-      hint: "Lifetime rewards",
-      subline: `${formatIcpCompact(nnsRewards ?? 0n)} (NNS) + ${formatIcpCompact(wtnRewards ?? 0n)} (nICP)`,
-    },
-    {
-      label: "Total Withdrawn",
-      value: formatIcp(totalDisbursed, 2),
-      icon: Wallet,
-      accent: "text-muted-foreground",
-      hint: "Lifetime disbursed across NNS + nICP",
-      subline: null,
-    },
   ];
 
+  const rows = [overviewRow, maturityRow, performanceRow];
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.label} className="stat-card">
-          <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-              {stat.label}
-            </p>
-            <stat.icon className={cn("size-4", stat.accent)} />
-          </div>
-          <div className="mt-3">
-            {loading ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <p className="text-foreground font-mono text-2xl font-semibold tracking-tight">
-                {stat.value}
-              </p>
-            )}
-            {stat.subline && !loading && (
-              <p
-                className="value-pill mt-2"
-                data-ocid="dashboard.portfolio_summary.subline"
-              >
-                {stat.subline}
-              </p>
-            )}
-            {stat.hint && !loading && (
-              <p className="text-muted-foreground mt-1 font-mono text-xs">
-                {stat.hint}
-              </p>
-            )}
+    <div className="space-y-4">
+      {rows.map((row, rowIndex) => (
+        <div
+          key={`portfolio-summary-row-${rowIndex}`}
+          className="border-border/60 rounded-xl border p-4"
+          data-ocid={`dashboard.portfolio_summary.row_${rowIndex + 1}`}
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {row.map((stat) => (
+              <div key={stat.label} className="stat-card">
+                <div className="flex items-center justify-between">
+                  <p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                    {stat.label}
+                  </p>
+                  <stat.icon className={cn("size-4", stat.accent)} />
+                </div>
+                <div className="mt-3">
+                  {loading ? (
+                    <Skeleton className="h-8 w-32" />
+                  ) : (
+                    <p className="text-foreground font-mono text-2xl font-semibold tracking-tight">
+                      {stat.value}
+                    </p>
+                  )}
+                  {stat.subline && !loading && (
+                    <p
+                      className="value-pill mt-2"
+                      data-ocid="dashboard.portfolio_summary.subline"
+                    >
+                      {stat.subline}
+                    </p>
+                  )}
+                  {stat.hint && !loading && (
+                    <p className="text-muted-foreground mt-1 font-mono text-xs">
+                      {stat.hint}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ))}

@@ -235,6 +235,7 @@ export interface _SERVICE {
   'getRewardHistory' : ActorMethod<[NeuronId], Array<DailyReward>>,
   'getSyncError' : ActorMethod<[NeuronId], [] | [string]>,
   'getSyncStatus' : ActorMethod<[NeuronId], SyncStatus>,
+  'getTodayRewardE8s' : ActorMethod<[bigint, bigint], bigint>,
   'getWtnPosition' : ActorMethod<[WtnPositionId], [] | [WtnPosition]>,
   'getWtnSnapshots' : ActorMethod<[WtnPositionId], Array<WtnSnapshot>>,
   'getWtnStats' : ActorMethod<[WtnPositionId], WtnStats>,

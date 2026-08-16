@@ -267,6 +267,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getSyncError' : IDL.Func([NeuronId], [IDL.Opt(IDL.Text)], ['query']),
     'getSyncStatus' : IDL.Func([NeuronId], [SyncStatus], ['query']),
+    'getTodayRewardE8s' : IDL.Func([IDL.Int, IDL.Int], [IDL.Int], ['query']),
     'getWtnPosition' : IDL.Func(
         [WtnPositionId],
         [IDL.Opt(WtnPosition)],

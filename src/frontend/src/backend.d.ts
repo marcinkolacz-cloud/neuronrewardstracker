@@ -274,6 +274,7 @@ export interface backendInterface {
     getHistoricalIcpPrice(date: string): Promise<PriceSnapshot>;
     getNeuronStats(neuronId: NeuronId): Promise<NeuronStats>;
     getPortfolioRewardStats(): Promise<PortfolioRewardStats>;
+    getTodayRewardE8s(dayStartNs: bigint, dayEndNs: bigint): Promise<bigint>;
     getPortfolioStats(): Promise<PortfolioStats>;
     getRewardHistory(neuronId: NeuronId): Promise<Array<DailyReward>>;
     getSyncError(neuronId: NeuronId): Promise<string | null>;
