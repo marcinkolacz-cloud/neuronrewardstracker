@@ -36,16 +36,28 @@ mixin (
     if (not InvitesLib.isGranted(grantedPrincipals, caller)) {
       Runtime.trap("Access not granted. Please redeem an invite code.");
     };
-    // Verify the caller owns the neuron.
-    ignore NeuronsLib.getOwnedNeuron(neurons, caller, neuronId);
+    // Verify the caller owns the neuron, and keep the record so we can
+    // bump its stored stakedE8s below when there's an external top-up.
+    let neuron = switch (NeuronsLib.getOwnedNeuron(neurons, caller, neuronId)) {
+      case (?n) n;
+      case null { Runtime.trap("Neuron not found") };
+    };
     // `timestamp` is caller-supplied (mirrors recordWtnSnapshot's `date`
     // param) so manual entries can be backfilled for a specific day instead
     // of always using the moment the button was clicked (Time.now()).
     // `externalTopUpE8s` > 0 means the person added ICP to the neuron
     // outside this app (e.g. via the NNS app) — recorded as #externalTopUp
     // so it counts toward Total Capital Contributed instead of being
-    // mistaken for a maturity reward.
+    // mistaken for a maturity reward. It also bumps the neuron's own
+    // stakedE8s by the same amount in the same call, so the "Principal"
+    // shown on the dashboard/header stays in sync without a separate
+    // manual edit step.
     let eventTypeOverride = if (externalTopUpE8s > (0 : Nat64)) {
+      NeuronsLib.updateNeuron(
+        neurons,
+        caller,
+        { neuron with stakedE8s = neuron.stakedE8s + externalTopUpE8s },
+      );
       ? #externalTopUp;
     } else {
       null;

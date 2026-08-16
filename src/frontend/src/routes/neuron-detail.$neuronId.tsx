@@ -245,32 +245,15 @@ export function NeuronDetailPage() {
   };
 
   const handleEdit = () => {
-    window.alert("DEBUG: handleEdit v2 running, neuron=" + (neuron ? neuron.id.toString() : "null"));
     if (!neuron) return;
     const name = window.prompt("Neuron name", neuron.name);
-    window.alert("DEBUG: name prompt returned: " + JSON.stringify(name));
     if (name == null) return; // cancelled
-
-    // Staked ICP (the neuron's principal, NOT maturity — maturity is
-    // tracked separately via manual snapshots). Prompted as a second step
-    // so adding fresh ICP to a neuron in the NNS app can be reflected here
-    // (e.g. after topping up a classic neuron with more ICP).
-    const currentStakedIcp = e8sToIcpNumber(
-      neuron.stakedE8s > 0n ? neuron.stakedE8s : neuron.initialStakeE8s,
-    );
-    const stakedInput = window.prompt(
-      "Total staked ICP (principal, not maturity) — edit if you added ICP to this neuron in the NNS app",
-      currentStakedIcp.toString(),
-    );
-    if (stakedInput == null) return; // cancelled
-    const newStakedE8s = icpToE8s(stakedInput);
-    if (newStakedE8s == null) {
-      toast.error("Invalid staked ICP amount — update cancelled");
-      return;
-    }
-
+    // Staked ICP (principal) is no longer editable here — use the "External
+    // top-up" field on the manual snapshot form below instead, which bumps
+    // the neuron's stake AND records it toward Total Capital Contributed in
+    // one step (avoids the two mechanisms drifting out of sync).
     updateNeuron.mutate(
-      { ...neuron, name, stakedE8s: newStakedE8s },
+      { ...neuron, name },
       {
         onSuccess: () => toast.success("Neuron updated"),
         onError: (err) =>
