@@ -30,7 +30,10 @@ module {
     let args : IC.HttpRequestArgs = {
       url;
       max_response_bytes = ?maxResponseBytes;
-      headers = [{ name = "User-Agent"; value = "caffeine.ai" }];
+      headers = [
+        { name = "User-Agent"; value = "caffeine.ai" },
+        { name = "x-cg-demo-api-key"; value = "CG-CG1SzkwHmdupGNakpvtEUXcF" },
+      ];
       body = null;
       method = #get;
       transform = ?{
@@ -51,7 +54,7 @@ module {
   /// we avoid hammering the endpoint on every dashboard refresh.
   /// 10 minutes = 600_000_000_000 ns (precomputed literal — Motoko does not
   /// treat `10 * 60 * 1_000_000_000` as a static module-level expression).
-  let currentPriceTtlNanos : Int = 600_000_000_000;
+  let currentPriceTtlNanos : Int = 1_800_000_000_000;
 
   /// CoinGecko coin id for ICP.
   let coinId : Text = "internet-computer";
@@ -172,11 +175,11 @@ module {
     // Cache miss — convert YYYY-MM-DD to DD-MM-YYYY for the CoinGecko API.
     // `date` is expected in YYYY-MM-DD format (the cache key).
     let apiDate = convertToCoinGeckoDate(date);
-    let url = "https://api.coingecko.com/api/v3/coins/" # coinId # "/history?date=" # apiDate;
+    let url = "https://api.coingecko.com/api/v3/coins/" # coinId # "/history?date=" # apiDate # "&localization=false";
     let nowNanos = Time.now();
 
     try {
-      let body = await httpGetRequestBounded(url, 4096, transform);
+      let body = await httpGetRequestBounded(url, 65536, transform);
       let parsed = Json.parse(body);
       switch (parsed) {
         case (#ok(json)) {
